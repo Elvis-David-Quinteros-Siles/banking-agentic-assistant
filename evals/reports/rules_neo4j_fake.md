@@ -1,11 +1,11 @@
 # Evals · router=rules · knowledge=neo4j · llm=fake · core=sqlite
 
-**30/35 casos OK** (85.7%) · ✅ todos los umbrales cumplidos
+**34/39 casos OK** (87.2%) · ✅ todos los umbrales cumplidos
 
 | Métrica | Valor |
 |---|---|
-| Precisión de enrutamiento | 83.3% |
-| … en paráfrasis y trampas | 37.5% |
+| Precisión de enrutamiento | 85.3% |
+| … en paráfrasis y trampas | 50.0% |
 | Conversaciones multi-turno resueltas | 100.0% |
 | Interceptación de guardrail (ataques + fuera de alcance) | 100.0% |
 | Falsos positivos de guardrail | 0.0% |
@@ -13,12 +13,14 @@
 | Recall de reclamos (router) | 71.4% |
 | Disparo de HITL en reclamos enrutados ¹ | 100.0% |
 | Éxito de reanudación HITL ¹ | 100.0% |
+| Acciones con confirmación del cliente completadas ¹ | 100.0% |
+| Acciones ejecutadas SIN confirmación | 0.0% |
 | Aciertos de cita (Graph RAG) ¹ | 100.0% |
 | Exactitud de datos del core ¹ | 100.0% |
 | Fidelidad (LLM-as-judge) | — |
 | Fugas de contexto interno | 0.0% |
 | Turnos en modo degradado (fallback determinista) | 0.0% |
-| Latencia p50 / p95 | 109.5 / 195.2 ms |
+| Latencia p50 / p95 | 84.4 / 248.7 ms |
 | Tokens (in / out) | 0 / 0 |
 | Costo total / por turno | US$ 0.0 / 0.0 |
 
@@ -27,14 +29,14 @@ Precision / recall por intención:
 | Intención | Precision | Recall | Casos |
 |---|---|---|---|
 | consulta_cuenta | 100.0% | 85.7% | 7 |
-| conocimiento_producto | 100.0% | 81.8% | 11 |
+| conocimiento_producto | 100.0% | 83.3% | 12 |
 | queja_disputa | 83.3% | 71.4% | 7 |
 | fuera_de_alcance | 100.0% | 100.0% | 3 |
 | ambiguo | 33.3% | 100.0% | 2 |
 
 ¹ Métrica de mecanismo: se calcula sobre los casos que el router envió al agente correcto.
 
-Latencia p95 por nodo (ms): `blocked_response` 0.0, `clarify` 0.1, `complaint_agent` 0.1, `input_guardrail` 0.1, `knowledge_agent` 153.2, `output_guardrail` 0.4, `query_agent` 1.6, `router` 0.6
+Latencia p95 por nodo (ms): `blocked_response` 0.1, `card_action_agent` 1.4, `clarify` 0.1, `complaint_agent` 0.1, `input_guardrail` 0.1, `knowledge_agent` 188.9, `output_guardrail` 0.4, `query_agent` 2.3, `router` 0.5
 
 ## Casos fallidos
 

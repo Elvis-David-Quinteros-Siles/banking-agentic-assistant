@@ -178,6 +178,25 @@ TEMPLATES: dict[str, list[str]] = {
         "qué tal",
         "quiero hablar con alguien",
     ],
+    # Iteración 3: pedido imperativo de EJECUTAR un bloqueo (la acción requiere confirmación del cliente).
+    # Contraste con conocimiento ("perdí mi tarjeta, ¿qué hago?") y con queja ("me bloquearon sin avisar")
+    "accion_tarjeta": [
+        "bloquea mi {p_card}",
+        "quiero bloquear mi {p_card}",
+        "necesito bloquear mi {p_card} ya",
+        "bloqueen mi {p_card} por favor, me la robaron",
+        "me robaron la billetera, bloquea mi {p_card}",
+        "perdí mi {p_card}, bloquéala",
+        "desactiva mi {p_card}",
+        "por favor bloquear la {p_card} urgente",
+        "bloquéame la {p_card}, creo que la perdí",
+        "quiero que bloqueen mi {p_card} ahora mismo",
+        "cancelen mi {p_card}, me asaltaron",
+        "bloquear {p_card} por robo",
+        "ayúdame a bloquear mi {p_card}",
+        "se me perdió la {p_card}, bloquéenla",
+        "dejá bloqueada mi {p_card}",
+    ],
 }
 
 
@@ -193,6 +212,14 @@ EXTRA_TRAIN_TEMPLATES: dict[str, list[str]] = {
         "revisar cuánta plata hay en mi {p_account}",
         "¿cuántos bolivianos tengo en la cuenta?",
         "¿todavía tengo plata en mi {p_account}?",
+    ],
+    "conocimiento_producto": [
+        "¿cómo bloqueo mi tarjeta si me la roban?",
+        "¿qué pasa si bloqueo mi {p_card}?",
+        "¿cuánto tarda la reposición de la {p_card}?",
+    ],
+    "queja_disputa": [
+        "me bloquearon la {p_card} y no puedo pagar, quiero reclamar",
     ],
     "fuera_de_alcance": [
         "¿cómo gano plata rápido con apuestas?",
@@ -321,6 +348,15 @@ def main() -> None:
         # El test versionado es la referencia: comparar v1 vs v2 exige exactamente los mismos casos
         splits["test"] = [json.loads(line) for line in test_file.read_text(encoding="utf-8").splitlines() if line]
         print("test.jsonl existente conservado (usar --regenerate-test para sobrescribirlo)")
+        # Intenciones nuevas (p. ej. accion_tarjeta): se AGREGAN al test conservado; las filas previas
+        # no cambian, así v2 y v3 se comparan sobre los mismos casos más los de la intención nueva
+        known = {r["label"]["intent"] for r in splits["test"]}
+        new_rows = [r for r in test if r["label"]["intent"] not in known]
+        if new_rows:
+            splits["test"] += new_rows
+            print(
+                f"test.jsonl: +{len(new_rows)} filas de intenciones nuevas {sorted({r['label']['intent'] for r in new_rows})}"
+            )
         test_texts = {r["text"] for r in splits["test"]}
         for name in ("train", "val"):
             splits[name] = [r for r in splits[name] if r["text"] not in test_texts]

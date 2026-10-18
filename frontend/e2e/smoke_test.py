@@ -56,6 +56,18 @@ with sync_playwright() as p:
     print("Injection:", page.locator(".tag--blocked").inner_text())
     page.screenshot(path=OUT + "/ui-guardrails.png", full_page=True)
 
+    # 3b) Acción con confirmación del cliente: bloqueo de tarjeta (CLI-004; se cancela para dejar la demo intacta)
+    page.get_by_label("Cliente").select_option("CLI-004")
+    page.get_by_label("Mensaje").fill("Bloquea mi tarjeta de débito, me la robaron")
+    page.get_by_role("button", name="Enviar").click()
+    action = page.locator(".approval--action")
+    expect(action).to_be_visible(timeout=20000)
+    print("Confirmación:", action.locator("h3").inner_text(), "| input bloqueado:", page.get_by_label("Mensaje").is_disabled())
+    page.screenshot(path=OUT + "/ui-confirm.png", full_page=True)
+    action.get_by_role("button", name="Cancelar").click()
+    expect(page.locator(".system-note").last).to_contain_text("canceló", timeout=20000)
+    print("Tras cancelar:", page.locator(".bubble--assistant").last.inner_text().splitlines()[0])
+
     # 4) Back-office: el reclamo aprobado ya no está en la cola; el dashboard muestra KPIs y gráficos
     page.goto(page.url.split("#")[0] + "#/operador")
     expect(page.locator(".counter")).to_contain_text("pendiente", timeout=15000)

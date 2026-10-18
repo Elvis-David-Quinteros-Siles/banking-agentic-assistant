@@ -8,7 +8,7 @@ const CATEGORIES = ["cobro_indebido", "fraude", "atencion", "transferencia", "pr
 const PRIORITIES: ComplaintDraft["prioridad"][] = ["alta", "media", "baja"];
 
 interface Props {
-  interrupt: InterruptInfo;
+  interrupt: Extract<InterruptInfo, { type: "complaint_review" }>;
   busy: boolean;
   onDecide: (request: ApproveRequest) => void;
 }

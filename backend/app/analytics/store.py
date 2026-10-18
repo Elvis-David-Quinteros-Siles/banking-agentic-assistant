@@ -197,6 +197,7 @@ class AnalyticsStore:
         for intent in (
             "consulta_cuenta",
             "conocimiento_producto",
+            "accion_tarjeta",
             "queja_disputa",
             "fuera_de_alcance",
             "ambiguo",

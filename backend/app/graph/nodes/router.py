@@ -66,11 +66,25 @@ KEYWORDS: dict[str, tuple[tuple[str, float], ...]] = {
         ("pyme", 1),
         ("qr", 0.5),
         ("chequera", 1.5),
-        ("bloquear", 1.5),
         ("bloqueo", 1.5),
         ("transferencias", 0.5),
         ("pago minimo", 2),
         ("que necesito", 1.5),
+    ),
+    # Acción (pedido imperativo): "bloquea mi tarjeta". La pregunta "¿qué hago si la pierdo?" sigue
+    # siendo conocimiento; el bloqueo se ejecuta solo con la confirmación explícita del cliente
+    "accion_tarjeta": (
+        ("bloquea", 3),
+        ("bloqueala", 3),
+        ("bloquealo", 3),
+        ("bloqueen", 3),
+        ("bloqueame", 3),
+        ("bloquear mi tarjeta", 3),
+        ("quiero bloquear", 3),
+        ("necesito bloquear", 3),
+        ("desactiva mi tarjeta", 3),
+        ("desactivar mi tarjeta", 3),
+        ("cancelen mi tarjeta", 3),
     ),
     "queja_disputa": (
         ("queja", 3),
@@ -206,7 +220,9 @@ def extract_entities(text: str) -> dict:
 # Backend "llm"
 # ---------------------------------------------------------------------------
 class RouterOutput(BaseModel):
-    intent: Literal["consulta_cuenta", "conocimiento_producto", "queja_disputa", "fuera_de_alcance", "ambiguo"]
+    intent: Literal[
+        "consulta_cuenta", "conocimiento_producto", "queja_disputa", "accion_tarjeta", "fuera_de_alcance", "ambiguo"
+    ]
     confidence: float = Field(ge=0, le=1)
     producto: str | None = None
     monto: float | None = None
@@ -217,6 +233,7 @@ ROUTER_PROMPT = """Eres el clasificador de intenciones de un asistente bancario.
 - consulta_cuenta: saldos, movimientos, extractos de SUS cuentas.
 - conocimiento_producto: requisitos, comisiones, tasas, límites, cómo funciona un producto o canal.
 - queja_disputa: reclamos, cobros no reconocidos, doble cobro, fraude, mala atención.
+- accion_tarjeta: pide EJECUTAR un bloqueo de su tarjeta ("bloquea mi tarjeta"), no preguntar cómo.
 - fuera_de_alcance: cualquier tema no bancario.
 - ambiguo: no se puede saber qué quiere (por ejemplo, solo un saludo).
 Extrae producto, monto y moneda (BOB o USD) si aparecen. confidence entre 0 y 1."""
@@ -301,7 +318,7 @@ def _classify(text: str, entities: dict) -> dict:
     return {"intent": intent, "intent_confidence": confidence, "entities": entities}
 
 
-ROUTABLE_INTENTS = ("consulta_cuenta", "conocimiento_producto", "queja_disputa")
+ROUTABLE_INTENTS = ("consulta_cuenta", "conocimiento_producto", "queja_disputa", "accion_tarjeta")
 
 
 @traced("router")
@@ -337,6 +354,7 @@ def route_after_router(state: AgentState) -> str:
         "consulta_cuenta": "query_agent",
         "conocimiento_producto": "knowledge_agent",
         "queja_disputa": "complaint_agent",
+        "accion_tarjeta": "card_action_agent",
     }
     # Una intención desconocida o vacía nunca debe tumbar la conversación: se pide aclaración
     return routes.get(intent or "", "clarify")

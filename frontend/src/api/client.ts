@@ -74,6 +74,9 @@ export const sendChat = (request: ChatRequest) => postJson<ChatResponse>("/chat"
 export const approve = (threadId: string, request: ApproveRequest) =>
   postJson<ChatResponse>(`/approve/${encodeURIComponent(threadId)}`, request);
 
+export const confirmAction = (threadId: string, customerId: string, confirm: boolean) =>
+  postJson<ChatResponse>(`/confirm/${encodeURIComponent(threadId)}`, { customer_id: customerId, confirm });
+
 /** POST /chat/stream: llama a onEvent por cada evento SSE tipado. */
 export async function streamChat(
   request: ChatRequest,

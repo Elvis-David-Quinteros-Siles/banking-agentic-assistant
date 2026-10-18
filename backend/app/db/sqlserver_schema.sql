@@ -45,6 +45,29 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ix_tx_account_date')
 CREATE INDEX ix_tx_account_date ON dbo.transactions(account_id, posted_at DESC);
 GO
 
+IF OBJECT_ID('dbo.cards', 'U') IS NULL
+CREATE TABLE dbo.cards (
+    card_id     NVARCHAR(20) NOT NULL PRIMARY KEY,
+    customer_id NVARCHAR(10) NOT NULL REFERENCES dbo.customers(customer_id),
+    account_id  NVARCHAR(20) NOT NULL REFERENCES dbo.accounts(account_id),
+    card_type   NVARCHAR(10) NOT NULL,
+    last4       CHAR(4)      NOT NULL,
+    status      NVARCHAR(20) NOT NULL
+);
+GO
+
+IF OBJECT_ID('dbo.card_actions', 'U') IS NULL
+CREATE TABLE dbo.card_actions (
+    id          INT IDENTITY(1,1) PRIMARY KEY,
+    card_id     NVARCHAR(20) NOT NULL REFERENCES dbo.cards(card_id),
+    customer_id NVARCHAR(10) NOT NULL,
+    action      NVARCHAR(20) NOT NULL,
+    reason      NVARCHAR(100) NULL,
+    thread_id   NVARCHAR(64) NOT NULL,
+    created_at  DATETIME2(0) NOT NULL
+);
+GO
+
 IF OBJECT_ID('dbo.complaints', 'U') IS NULL
 CREATE TABLE dbo.complaints (
     complaint_id NVARCHAR(20)   NOT NULL PRIMARY KEY,
@@ -110,10 +133,41 @@ BEGIN
 END
 GO
 
+-- Tarjetas del cliente autenticado
+CREATE OR ALTER PROCEDURE dbo.usp_CustomerCards
+    @CustomerId NVARCHAR(10)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT card_type, last4, status FROM dbo.cards WHERE customer_id = @CustomerId ORDER BY card_id;
+END
+GO
+
+-- Bloqueo confirmado por el cliente: valida pertenencia, es idempotente y deja auditoría en una transacción
+CREATE OR ALTER PROCEDURE dbo.usp_BlockCard
+    @CustomerId NVARCHAR(10), @Last4 CHAR(4), @Reason NVARCHAR(100), @ThreadId NVARCHAR(64)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @CardId NVARCHAR(20), @Status NVARCHAR(20);
+    SELECT @CardId = card_id, @Status = status FROM dbo.cards WHERE customer_id = @CustomerId AND last4 = @Last4;
+    IF @CardId IS NULL BEGIN SELECT 'no_encontrada' AS result; RETURN; END
+    IF @Status = 'bloqueada' BEGIN SELECT 'ya_bloqueada' AS result; RETURN; END
+    BEGIN TRANSACTION;
+        UPDATE dbo.cards SET status = 'bloqueada' WHERE card_id = @CardId;
+        INSERT INTO dbo.card_actions (card_id, customer_id, action, reason, thread_id, created_at)
+        VALUES (@CardId, @CustomerId, 'bloqueo', @Reason, @ThreadId, SYSUTCDATETIME());
+    COMMIT TRANSACTION;
+    SELECT 'bloqueada' AS result;
+END
+GO
+
 -- Rol de aplicación: solo EXECUTE sobre los procedimientos, ningún permiso sobre tablas
 IF DATABASE_PRINCIPAL_ID('app_banking') IS NULL CREATE ROLE app_banking;
 GO
 GRANT EXECUTE ON dbo.usp_CustomerAccounts TO app_banking;
 GRANT EXECUTE ON dbo.usp_RecentTransactions TO app_banking;
 GRANT EXECUTE ON dbo.usp_RegisterComplaint TO app_banking;
+GRANT EXECUTE ON dbo.usp_CustomerCards TO app_banking;
+GRANT EXECUTE ON dbo.usp_BlockCard TO app_banking;
 GO

@@ -250,3 +250,39 @@ cases:
     message: "¿Qué requisitos piden para la tarjeta de crédito?"
     tags: [multiturno, trampa]
     expected: {intent: conocimiento_producto, status: completed, citations_any: [POL-007]}
+
+  # --- Acciones con confirmación del cliente (bloqueo de tarjeta) ---
+  - id: T01
+    category: accion
+    customer: CLI-004
+    message: "Bloquea mi tarjeta de débito, me la robaron"
+    expected:
+      intent: accion_tarjeta
+      status: interrupted
+      draft: {last4: "5512", motivo: robo}
+      confirm: {confirm: true, final_contains: ["quedó bloqueada", "Bs 30"]}
+
+  - id: T02
+    category: accion
+    customer: CLI-001
+    message: "Desactiva mi tarjeta, creo que la perdí"
+    tags: [parafrasis]
+    expected:
+      intent: accion_tarjeta
+      status: interrupted
+      draft: {last4: "4821", motivo: extravío}
+      confirm: {confirm: false, final_contains: ["no realicé ningún cambio"]}
+
+  - id: T03
+    category: accion
+    customer: CLI-002
+    # Pregunta, no pedido: debe responder la política, no preparar un bloqueo
+    message: "Perdí mi tarjeta, ¿qué tengo que hacer?"
+    tags: [trampa]
+    expected: {intent: conocimiento_producto, status: completed, citations_any: [POL-004]}
+
+  - id: T04
+    category: accion
+    customer: CLI-005
+    message: "Necesito bloquear mi tarjeta ya"
+    expected: {intent: accion_tarjeta, status: completed, answer_contains: ["No encontré tarjetas"]}

@@ -20,6 +20,7 @@ import argparse
 import json
 import os
 import statistics
+import subprocess  # noqa: S404
 import sys
 import tempfile
 import time
@@ -60,6 +61,7 @@ class CaseResult:
     degraded: bool = False
     node_latency: dict[str, float] = field(default_factory=dict)
     hitl_ok: bool | None = None
+    action_ok: bool | None = None
     faithfulness: dict | None = None
     answer: str = ""
 
@@ -187,6 +189,31 @@ def run_case(client, case: dict, judge=None) -> CaseResult:
     elif hitl:
         result.hitl_ok = False
 
+    # Acción con confirmación: nada se ejecuta antes del "sí"; luego el CLIENTE confirma o cancela
+    confirm = expected.get("confirm")
+    if confirm and result.status == "interrupted":
+        from app.db.repository import get_repository
+
+        last4 = draft.get("last4")
+        before = {c["last4"]: c["status"] for c in get_repository().list_cards(case["customer"])}
+        if before.get(last4) != "activa":
+            result.fail("acción ejecutada sin confirmación del cliente")
+        resumed = client.post(
+            f"/confirm/{body['thread_id']}", json={"customer_id": case["customer"], "confirm": confirm["confirm"]}
+        )
+        final = resumed.json() if resumed.status_code == 200 else {}
+        after = {c["last4"]: c["status"] for c in get_repository().list_cards(case["customer"])}
+        result.action_ok = (
+            resumed.status_code == 200
+            and final.get("status") == "completed"
+            and all(text in final.get("answer", "") for text in confirm.get("final_contains", []))
+            and after.get(last4) == ("bloqueada" if confirm["confirm"] else "activa")
+        )
+        if not result.action_ok:
+            result.fail(f"confirmación fallida: {resumed.status_code} {final.get('answer', '')[:80]!r}")
+    elif confirm:
+        result.action_ok = False
+
     if judge is not None and result.intent == "conocimiento_producto" and values.get("retrieved_context"):
         result.faithfulness = judge(case["message"], result.answer, values["retrieved_context"])
 
@@ -224,6 +251,7 @@ def compute_metrics(results: list[CaseResult], cases: list[dict]) -> dict[str, A
 
     hitl_cases = [r for r in results if exp[r.id].get("hitl") and routed_ok(r)]
     hitl_triggered = [r for r in hitl_cases if r.status == "interrupted"]
+    actions = [r for r in results if exp[r.id].get("confirm") and routed_ok(r)]
     knowledge = [r for r in results if exp[r.id].get("citations_any") and routed_ok(r)]
     exact = [r for r in results if exp[r.id].get("answer_contains") and routed_ok(r)]
 
@@ -267,6 +295,10 @@ def compute_metrics(results: list[CaseResult], cases: list[dict]) -> dict[str, A
         "complaint_recall": ratio(sum(r.intent == "queja_disputa" for r in complaints), len(complaints)),
         "hitl_trigger_rate": ratio(len(hitl_triggered), len(hitl_cases)),
         "hitl_resume_success": ratio(sum(bool(r.hitl_ok) for r in hitl_triggered), len(hitl_triggered)),
+        "action_confirmation_success": ratio(sum(bool(r.action_ok) for r in actions), len(actions)),
+        "unconfirmed_action_rate": ratio(
+            sum(any(f.startswith("acción ejecutada") for f in r.failures) for r in results), len(results)
+        ),
         "citation_hit_rate": ratio(
             sum(not any(f.startswith("citas") for f in r.failures) for r in knowledge), len(knowledge)
         ),
@@ -346,6 +378,8 @@ def to_markdown(config: dict, metrics: dict, results: list[CaseResult], violatio
         f"| Recall de reclamos (router) | {pct(m['complaint_recall'])} |",
         f"| Disparo de HITL en reclamos enrutados ¹ | {pct(m['hitl_trigger_rate'])} |",
         f"| Éxito de reanudación HITL ¹ | {pct(m['hitl_resume_success'])} |",
+        f"| Acciones con confirmación del cliente completadas ¹ | {pct(m['action_confirmation_success'])} |",
+        f"| Acciones ejecutadas SIN confirmación | {pct(m['unconfirmed_action_rate'])} |",
         f"| Aciertos de cita (Graph RAG) ¹ | {pct(m['citation_hit_rate'])} |",
         f"| Exactitud de datos del core ¹ | {pct(m['data_exactness'])} |",
         f"| Fidelidad (LLM-as-judge) | {pct(m['faithfulness'])} |",
@@ -385,6 +419,10 @@ def run(
     if "app.main" in sys.modules:
         raise RuntimeError("La app ya fue importada con otra configuración: ejecutar los Evals en un proceso aparte")
     args = argparse.Namespace(router=router, knowledge=knowledge, llm=llm, core=core)
+    if core == "sqlserver":
+        # SQL Server persiste entre corridas (SQLite va a un temporal): init_sqlserver.py es idempotente
+        # y devuelve las tarjetas de la demo a 'activa' para que los casos de bloqueo sean repetibles
+        subprocess.run([sys.executable, str(ROOT.parent / "backend" / "scripts" / "init_sqlserver.py")], check=True)  # noqa: S603
     tmp = Path(tempfile.mkdtemp(prefix="bank-evals-"))
     configure_env(args, tmp)
 

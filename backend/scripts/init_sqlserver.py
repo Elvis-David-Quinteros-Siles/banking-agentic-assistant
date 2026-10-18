@@ -84,20 +84,21 @@ def main() -> int:
     cur.execute(f"IF DATABASE_PRINCIPAL_ID('{app_user}') IS NULL CREATE USER [{app_user}] FOR LOGIN [{app_user}]")
     cur.execute(f"IF IS_ROLEMEMBER('app_banking', '{app_user}') = 0 ALTER ROLE app_banking ADD MEMBER [{app_user}]")
 
-    cur.execute("SELECT COUNT(*) FROM dbo.customers")
-    if cur.fetchone()[0] == 0:
-        seed = json.loads((settings.seed_dir / "customers.json").read_text(encoding="utf-8"))
-        for table in ("customers", "accounts", "transactions"):
-            rows = seed[table]
-            columns = list(rows[0].keys())
-            cur.executemany(
-                f"INSERT INTO dbo.{table} ({', '.join(columns)}) VALUES ({', '.join('%s' for _ in columns)})",
-                [tuple(r[c] for c in columns) for r in rows],
-            )
-        print(
-            f"Datos cargados: {len(seed['customers'])} clientes, {len(seed['accounts'])} cuentas, "
-            f"{len(seed['transactions'])} movimientos"
+    # Carga por tabla vacía: idempotente y agrega tablas nuevas (p. ej. cards) a una base existente
+    seed = json.loads((settings.seed_dir / "customers.json").read_text(encoding="utf-8"))
+    for table in ("customers", "accounts", "transactions", "cards"):
+        cur.execute(f"SELECT COUNT(*) FROM dbo.{table}")
+        rows = seed.get(table, [])
+        if cur.fetchone()[0] or not rows:
+            continue
+        columns = list(rows[0].keys())
+        cur.executemany(
+            f"INSERT INTO dbo.{table} ({', '.join(columns)}) VALUES ({', '.join('%s' for _ in columns)})",
+            [tuple(r[c] for c in columns) for r in rows],
         )
+        print(f"Datos cargados: {len(rows)} filas en {table}")
+    # Estado mutable de la demo: las tarjetas vuelven a 'activa' (Evals y demo repetibles)
+    cur.execute("UPDATE dbo.cards SET status = 'activa' WHERE status <> 'activa'")
     conn.close()
     print(f"Listo en {time.perf_counter() - started:.1f} s")
     return 0

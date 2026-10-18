@@ -30,6 +30,14 @@ class CoreBankingRepository(Protocol):
         """Registra un reclamo aprobado por el operador (sistema de registro)."""
         ...
 
+    def list_cards(self, customer_id: str) -> list[dict]:
+        """Tarjetas del cliente: card_type, last4, status."""
+        ...
+
+    def block_card(self, customer_id: str, last4: str, reason: str, thread_id: str) -> str:
+        """Bloquea una tarjeta del cliente (con auditoría): bloqueada | ya_bloqueada | no_encontrada."""
+        ...
+
     def ping(self) -> bool: ...
 
 

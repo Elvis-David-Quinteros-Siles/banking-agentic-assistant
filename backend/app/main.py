@@ -15,7 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.api import routes_chat, routes_health, routes_hitl, routes_operator
+from app.api import routes_chat, routes_confirm, routes_health, routes_hitl, routes_operator
 from app.api.rate_limit import RateLimitMiddleware, SlidingWindowLimiter
 from app.config import get_settings
 from app.db.sqlite import init_db
@@ -89,7 +89,13 @@ app = FastAPI(
 if settings.rate_limit_per_minute > 0:
     app.add_middleware(RateLimitMiddleware, limiter=SlidingWindowLimiter(settings.rate_limit_per_minute))
 
-for api_router in (routes_chat.router, routes_hitl.router, routes_health.router, routes_operator.router):
+for api_router in (
+    routes_chat.router,
+    routes_hitl.router,
+    routes_confirm.router,
+    routes_health.router,
+    routes_operator.router,
+):
     app.include_router(api_router)
     # Mismo prefijo que usa el frontend (/api): permite servir todo desde un solo puerto
     app.include_router(api_router, prefix="/api", include_in_schema=False)

@@ -79,6 +79,20 @@ class SqlServerRepository:
                 ),
             )
 
+    def list_cards(self, customer_id: str) -> list[dict]:
+        with self._cursor() as cur:
+            cur.execute("EXEC dbo.usp_CustomerCards @CustomerId = %s", (customer_id,))
+            return [dict(r) for r in cur.fetchall()]
+
+    def block_card(self, customer_id: str, last4: str, reason: str, thread_id: str) -> str:
+        with self._cursor() as cur:
+            cur.execute(
+                "EXEC dbo.usp_BlockCard @CustomerId = %s, @Last4 = %s, @Reason = %s, @ThreadId = %s",
+                (customer_id, last4, reason, thread_id),
+            )
+            row = cur.fetchone()
+        return str(row["result"]) if row else "no_encontrada"
+
     def ping(self) -> bool:
         try:
             with self._cursor() as cur:

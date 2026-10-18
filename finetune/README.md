@@ -10,7 +10,9 @@ y extraer entidades en JSON estricto**. Reemplaza al router en el grafo (`ROUTER
 **Por qué esta tarea**: el router se ejecuta en *cada* turno. Es donde un modelo pequeño, local y
 especializado da el mayor ahorro frente a un LLM grande, y donde la salida es medible sin ambigüedad.
 
-## Resultados (split de test: 120 ejemplos de plantillas nunca vistas en entrenamiento)
+## Resultados (split de test: plantillas nunca vistas en entrenamiento)
+
+v1 y v2: 5 intenciones, 120 ejemplos de test.
 
 | Backend | Accuracy | Macro-F1 | JSON válido | Producto EM | Monto EM | Moneda EM | p50 (ms) | p95 (ms) |
 |---|---|---|---|---|---|---|---|---|
@@ -19,7 +21,7 @@ especializado da el mayor ahorro frente a un LLM grande, y donde la salida es me
 | Qwen2.5-0.5B + LoRA v1 | 0.958 | 0.958 | 1.00 | 0.86 | 1.00 | 1.00 | 747 | 896 |
 | **Qwen2.5-0.5B + LoRA v2** | **1.000** | **1.000** | **1.00** | **0.88** | **1.00** | **1.00** | 773 | 912 |
 
-Recall por intención:
+Recall por intención (v1/v2):
 
 | Backend | consulta_cuenta | conocimiento_producto | queja_disputa | fuera_de_alcance | ambiguo |
 |---|---|---|---|---|---|
@@ -28,7 +30,37 @@ Recall por intención:
 | LoRA v1 | 0.79 | 1.00 | 1.00 | 1.00 | 1.00 |
 | **LoRA v2** | **1.00** | 1.00 | **1.00** | 1.00 | 1.00 |
 
-Lectura:
+### v3: intención nueva `accion_tarjeta` (bloqueo de tarjeta con confirmación del cliente)
+
+El test v3 son los **mismos 120 ejemplos** más 23 de la intención nueva (143). El generador agrega
+filas al test conservado solo para intenciones que no tenía, así la comparación con v2 sigue siendo válida.
+
+| Backend | Accuracy (143) | Macro-F1 | Producto EM | p50 (ms) | p95 (ms) |
+|---|---|---|---|---|---|
+| Reglas | 0.622 | 0.646 | 0.76 | 0.2 | 0.3 |
+| LoRA v2 (no conoce la intención) | 0.811 | 0.746 | 0.87 | 743 | 923 |
+| **LoRA v3** | **0.965** | **0.964** | **0.93** | 721 | 874 |
+
+| Backend | consulta_cuenta | conocimiento_producto | queja_disputa | accion_tarjeta | fuera_de_alcance | ambiguo |
+|---|---|---|---|---|---|---|
+| Reglas | 0.62 | 0.54 | 0.25 | 0.78 | 0.54 | 1.00 |
+| LoRA v2 | 1.00 | 1.00 | 1.00 | 0.00 | 0.83 ¹ | 1.00 |
+| **LoRA v3** | **1.00** | 0.96 | **1.00** | **0.83** | **1.00** | **1.00** |
+
+¹ v2 se entrenó con el prompt de 5 intenciones; con el prompt nuevo, parte de los pedidos de bloqueo
+caen en fuera de alcance.
+
+- **Primer intento de v3 (n=700): rechazado.** Con 6 intenciones quedaban ~93 ejemplos por
+  intención y retrocedía donde v2 era perfecto: consultas 1.00 → 0.88 ("¿cuánta plata me queda?",
+  otra vez), conocimiento 1.00 → 0.83 ("¿cobran mantenimiento…?" como queja). Con n=900 (~120 por
+  intención, como v2) se recupera: sobre los 120 ejemplos originales v3 acierta 119.
+- Plantillas de **contraste** en entrenamiento: "¿cómo bloqueo mi tarjeta si me la roban?"
+  (conocimiento) y "me bloquearon la tarjeta y quiero reclamar" (queja) frente a "bloquea mi tarjeta" (acción).
+- Un error del router en esta intención no ejecuta nada: el bloqueo exige la confirmación explícita
+  del cliente.
+- En los Evals de punta a punta, **LoRA v3 + Neo4j: 39/39**.
+
+Lectura (v1/v2):
 - El modelo base **sin** fine-tuning es peor que las reglas (y 9% de sus salidas no son JSON válido):
   el valor está en el ajuste, no en "usar un LLM".
 - Las reglas pierden el **75% de las quejas** expresadas con otras palabras ("me clavaron un cobro").
@@ -47,9 +79,9 @@ Lectura:
 |---|---|
 | Método | LoRA bf16, r=16, α=32, dropout 0.05, todas las proyecciones (q,k,v,o,gate,up,down) |
 | Parámetros entrenables | 8.8M de 503M (**1.75%**) |
-| Datos | 427 train / 53 val / 120 test (sintéticos, balanceados en 5 intenciones; test fijo entre versiones) |
+| Datos | v2: 427 train / 53 val / 120 test (5 intenciones) · v3: 640 / 80 / 143 (6 intenciones; test fijo + filas de la intención nueva) |
 | Hiperparámetros | 3 épocas, lr 2e-4 coseno, batch efectivo 16 (2 × 8 acumulación), gradient checkpointing |
-| Loss | v1: train 0.063 · val 0.026 — v2: train 0.063 · val 0.008 (solo sobre los tokens del JSON) |
+| Loss | v1: train 0.063 · val 0.026 — v2: train 0.063 · val 0.008 — v3: train 0.056 · val 0.007 (solo sobre los tokens del JSON) |
 | Hardware / tiempo | RTX 3050 Laptop 4 GB · **5.6 min** · pico 1.9 GB VRAM |
 | Adaptador | 35 MB (`adapters/`, no se versiona: se regenera en ~6 min) |
 

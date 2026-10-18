@@ -276,3 +276,4 @@ input:focus, select:focus { outline: 2px solid var(--primary); outline-offset: -
 .kpi-table thead th { color: var(--muted); font-weight: 600; font-size: 12px; }
 /* "hidden" debe ganarle al display del layout (si no, el chat se ve debajo de las otras vistas) */
 .layout[hidden] { display: none; }
+.approval--action .approval__badge { background: var(--warn-bg); color: var(--warn-text); }

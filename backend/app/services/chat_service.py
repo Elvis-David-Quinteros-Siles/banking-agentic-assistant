@@ -43,12 +43,20 @@ async def ensure_not_pending(graph, thread_id: str) -> None:
         raise ThreadError(409, "THREAD_PENDING_APPROVAL", "La conversación tiene un reclamo pendiente de aprobación.")
 
 
-async def ensure_interrupted(graph, thread_id: str) -> None:
+PENDING_MESSAGES = {
+    "hitl_review": "La conversación no tiene un reclamo pendiente de aprobación.",
+    "action_confirmation": "La conversación no tiene una acción pendiente de confirmación.",
+}
+
+
+async def ensure_interrupted(graph, thread_id: str, node: str = "hitl_review") -> dict:
+    """Valida que la conversación exista y esté pausada en `node`. Devuelve su estado."""
     snapshot = await graph.aget_state(_config(thread_id))
     if not snapshot.values:
         raise ThreadError(404, "THREAD_NOT_FOUND", f"No existe la conversación {thread_id}.")
-    if "hitl_review" not in snapshot.next:
-        raise ThreadError(409, "THREAD_NOT_INTERRUPTED", "La conversación no tiene un reclamo pendiente de aprobación.")
+    if node not in snapshot.next:
+        raise ThreadError(409, "THREAD_NOT_INTERRUPTED", PENDING_MESSAGES.get(node, "La conversación no está pausada."))
+    return dict(snapshot.values)
 
 
 def chat_input(customer_id: str, message: str) -> dict:
@@ -108,7 +116,13 @@ def record_analytics(
         safe(store.decide_complaint, response.thread_id, decision)
         customer_id = customer_id or store.customer_for(response.thread_id)
     safe(store.record_turn, response.model_dump(), kind, customer_id, source)
-    if response.status == "interrupted" and response.interrupt and customer_id:
+    # Solo los reclamos van a la cola del operador; las confirmaciones de acciones las decide el cliente
+    if (
+        response.status == "interrupted"
+        and response.interrupt
+        and response.interrupt.type == "complaint_review"
+        and customer_id
+    ):
         safe(store.enqueue_complaint, response.thread_id, customer_id, response.interrupt.payload, source)
 
 

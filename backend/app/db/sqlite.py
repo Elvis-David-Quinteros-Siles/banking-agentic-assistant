@@ -36,6 +36,23 @@ CREATE TABLE IF NOT EXISTS transactions (
     channel     TEXT NOT NULL,
     merchant    TEXT
 );
+CREATE TABLE IF NOT EXISTS cards (
+    card_id     TEXT PRIMARY KEY,
+    customer_id TEXT NOT NULL REFERENCES customers(customer_id),
+    account_id  TEXT NOT NULL REFERENCES accounts(account_id),
+    card_type   TEXT NOT NULL,
+    last4       TEXT NOT NULL,
+    status      TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS card_actions (  -- auditoría de acciones confirmadas por el cliente
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    card_id     TEXT NOT NULL REFERENCES cards(card_id),
+    customer_id TEXT NOT NULL,
+    action      TEXT NOT NULL,
+    reason      TEXT,
+    thread_id   TEXT NOT NULL,
+    created_at  TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS complaints (
     complaint_id TEXT PRIMARY KEY,
     customer_id  TEXT NOT NULL REFERENCES customers(customer_id),
@@ -86,7 +103,10 @@ def init_db(db_path: Path, seed_file: Path, reset: bool = False) -> None:
             ("customers", seed["customers"]),
             ("accounts", seed["accounts"]),
             ("transactions", seed["transactions"]),
+            ("cards", seed.get("cards", [])),
         ):
+            if not rows:
+                continue
             columns = list(rows[0].keys())
             placeholders = ", ".join("?" for _ in columns)
             conn.executemany(
@@ -123,6 +143,31 @@ class SQLiteRepository:
                 (customer_id, account_suffix, limit),
             ).fetchall()
         return [{**dict(r), "amount": float(r["amount"])} for r in rows]
+
+    def list_cards(self, customer_id: str) -> list[dict]:
+        with connect(self.db_path) as conn:
+            rows = conn.execute(
+                "SELECT card_type, last4, status FROM cards WHERE customer_id = ? ORDER BY card_id", (customer_id,)
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def block_card(self, customer_id: str, last4: str, reason: str, thread_id: str) -> str:
+        """Bloquea una tarjeta DEL cliente. Devuelve: bloqueada | ya_bloqueada | no_encontrada."""
+        with connect(self.db_path) as conn:
+            row = conn.execute(
+                "SELECT card_id, status FROM cards WHERE customer_id = ? AND last4 = ?", (customer_id, last4)
+            ).fetchone()
+            if row is None:
+                return "no_encontrada"
+            if row["status"] == "bloqueada":
+                return "ya_bloqueada"
+            conn.execute("UPDATE cards SET status = 'bloqueada' WHERE card_id = ?", (row["card_id"],))
+            conn.execute(
+                "INSERT INTO card_actions (card_id, customer_id, action, reason, thread_id, created_at) "
+                "VALUES (?, ?, 'bloqueo', ?, ?, datetime('now'))",
+                (row["card_id"], customer_id, reason, thread_id),
+            )
+        return "bloqueada"
 
     def insert_complaint(self, complaint: dict) -> None:
         columns = list(complaint.keys())

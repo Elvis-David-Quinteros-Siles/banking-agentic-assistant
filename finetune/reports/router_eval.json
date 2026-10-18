@@ -1,7 +1,7 @@
 [
   {
-    "accuracy": 0.592,
-    "macro_f1": 0.614,
+    "accuracy": 0.622,
+    "macro_f1": 0.646,
     "per_class": {
       "consulta_cuenta": {
         "precision": 1.0,
@@ -9,14 +9,19 @@
         "f1": 0.769
       },
       "conocimiento_producto": {
-        "precision": 1.0,
+        "precision": 0.765,
         "recall": 0.542,
-        "f1": 0.703
+        "f1": 0.634
       },
       "queja_disputa": {
         "precision": 1.0,
         "recall": 0.25,
         "f1": 0.4
+      },
+      "accion_tarjeta": {
+        "precision": 1.0,
+        "recall": 0.783,
+        "f1": 0.878
       },
       "fuera_de_alcance": {
         "precision": 1.0,
@@ -24,22 +29,22 @@
         "f1": 0.703
       },
       "ambiguo": {
-        "precision": 0.329,
+        "precision": 0.324,
         "recall": 1.0,
-        "f1": 0.495
+        "f1": 0.49
       }
     },
     "backend": "rules",
-    "n": 120,
+    "n": 143,
     "json_valid_rate": 1.0,
     "entity_exact_match": {
-      "producto": 0.792,
+      "producto": 0.762,
       "monto": 1.0,
       "moneda": 1.0
     },
     "latency_ms": {
       "p50": 0.2,
-      "p95": 0.2
+      "p95": 0.3
     },
     "errors_sample": [
       {
@@ -95,193 +100,33 @@
     ]
   },
   {
-    "accuracy": 0.367,
-    "macro_f1": 0.286,
+    "accuracy": 0.811,
+    "macro_f1": 0.746,
     "per_class": {
       "consulta_cuenta": {
-        "precision": 0.324,
+        "precision": 1.0,
         "recall": 1.0,
-        "f1": 0.49
+        "f1": 1.0
       },
       "conocimiento_producto": {
+        "precision": 0.706,
+        "recall": 1.0,
+        "f1": 0.828
+      },
+      "queja_disputa": {
+        "precision": 0.585,
+        "recall": 1.0,
+        "f1": 0.738
+      },
+      "accion_tarjeta": {
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0
       },
-      "queja_disputa": {
-        "precision": 1.0,
-        "recall": 0.792,
-        "f1": 0.884
-      },
-      "fuera_de_alcance": {
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0
-      },
-      "ambiguo": {
-        "precision": 0.077,
-        "recall": 0.042,
-        "f1": 0.054
-      }
-    },
-    "backend": "base",
-    "n": 120,
-    "json_valid_rate": 0.908,
-    "entity_exact_match": {
-      "producto": 0.367,
-      "monto": 0.933,
-      "moneda": 0.242
-    },
-    "latency_ms": {
-      "p50": 967.0,
-      "p95": 1254.2
-    },
-    "errors_sample": [
-      {
-        "text": "cobran manteinmiento en la cuenta de ahorro",
-        "gold": "conocimiento_producto",
-        "pred": "consulta_cuenta"
-      },
-      {
-        "text": "porfa NO ENTIEDNO",
-        "gold": "ambiguo",
-        "pred": "consulta_cuenta"
-      },
-      {
-        "text": "¿cobran mantenimiento en la caja de ahorro?",
-        "gold": "conocimiento_producto",
-        "pred": "ambiguo"
-      },
-      {
-        "text": "hola, hola",
-        "gold": "ambiguo",
-        "pred": "consulta_cuenta"
-      },
-      {
-        "text": "¿puedo usar mi tarjeta debito en el extranjero?",
-        "gold": "conocimiento_producto",
-        "pred": "consulta_cuenta"
-      },
-      {
-        "text": "¿cuánto cuesta reponer mi plástico?",
-        "gold": "conocimiento_producto",
-        "pred": "consulta_cuenta"
-      },
-      {
-        "text": "¿cobran manteinmiento en la cuenta corriente empresarial?",
-        "gold": "conocimiento_producto",
-        "pred": "consulta_cuenta"
-      },
-      {
-        "text": "¿cual es la mejor cancion de este ano?",
-        "gold": "fuera_de_alcance",
-        "pred": "invalido"
-      },
-      {
-        "text": "no etniendo",
-        "gold": "ambiguo",
-        "pred": "consulta_cuenta"
-      },
-      {
-        "text": "escrbíeme un poema",
-        "gold": "fuera_de_alcance",
-        "pred": "invalido"
-      }
-    ]
-  },
-  {
-    "accuracy": 0.958,
-    "macro_f1": 0.958,
-    "per_class": {
-      "consulta_cuenta": {
-        "precision": 1.0,
-        "recall": 0.792,
-        "f1": 0.884
-      },
-      "conocimiento_producto": {
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0
-      },
-      "queja_disputa": {
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0
-      },
-      "fuera_de_alcance": {
-        "precision": 0.828,
-        "recall": 1.0,
-        "f1": 0.906
-      },
-      "ambiguo": {
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0
-      }
-    },
-    "backend": "lora_v1",
-    "n": 120,
-    "json_valid_rate": 1.0,
-    "entity_exact_match": {
-      "producto": 0.858,
-      "monto": 1.0,
-      "moneda": 1.0
-    },
-    "latency_ms": {
-      "p50": 746.6,
-      "p95": 896.2
-    },
-    "errors_sample": [
-      {
-        "text": "¿CUÁNTA PLATA ME QUEDA?",
-        "gold": "consulta_cuenta",
-        "pred": "fuera_de_alcance"
-      },
-      {
-        "text": "¿cuánto me desconatron este mes?",
-        "gold": "consulta_cuenta",
-        "pred": "fuera_de_alcance"
-      },
-      {
-        "text": "¿cuanta plata me queda?",
-        "gold": "consulta_cuenta",
-        "pred": "fuera_de_alcance"
-      },
-      {
-        "text": "¿cuánta plata me queda?",
-        "gold": "consulta_cuenta",
-        "pred": "fuera_de_alcance"
-      },
-      {
-        "text": "cuánta plata me queda",
-        "gold": "consulta_cuenta",
-        "pred": "fuera_de_alcance"
-      }
-    ]
-  },
-  {
-    "accuracy": 1.0,
-    "macro_f1": 1.0,
-    "per_class": {
-      "consulta_cuenta": {
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0
-      },
-      "conocimiento_producto": {
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0
-      },
-      "queja_disputa": {
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0
-      },
       "fuera_de_alcance": {
         "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0
+        "recall": 0.833,
+        "f1": 0.909
       },
       "ambiguo": {
         "precision": 1.0,
@@ -290,17 +135,143 @@
       }
     },
     "backend": "lora_v2",
-    "n": 120,
+    "n": 143,
     "json_valid_rate": 1.0,
     "entity_exact_match": {
-      "producto": 0.883,
+      "producto": 0.867,
       "monto": 1.0,
       "moneda": 1.0
     },
     "latency_ms": {
-      "p50": 773.0,
-      "p95": 911.9
+      "p50": 743.3,
+      "p95": 922.8
     },
-    "errors_sample": []
+    "errors_sample": [
+      {
+        "text": "¿que signo del hrooscopo soy?",
+        "gold": "fuera_de_alcance",
+        "pred": "conocimiento_producto"
+      },
+      {
+        "text": "¿qué signo del horósocpo soy?",
+        "gold": "fuera_de_alcance",
+        "pred": "conocimiento_producto"
+      },
+      {
+        "text": "qué signo del hroóscopo soy",
+        "gold": "fuera_de_alcance",
+        "pred": "conocimiento_producto"
+      },
+      {
+        "text": "¿qué signo del horóscpoo soy?",
+        "gold": "fuera_de_alcance",
+        "pred": "conocimiento_producto"
+      },
+      {
+        "text": "bloquéame la tarjeta de crédito clásica, creo que la perdí",
+        "gold": "accion_tarjeta",
+        "pred": "queja_disputa"
+      },
+      {
+        "text": "me robaron la billetera, bloquea mi tarjeta débito",
+        "gold": "accion_tarjeta",
+        "pred": "conocimiento_producto"
+      },
+      {
+        "text": "me robaron la billetera, bloquea mi plástico",
+        "gold": "accion_tarjeta",
+        "pred": "queja_disputa"
+      },
+      {
+        "text": "dejá bloqueada mi tarjeta de crédito",
+        "gold": "accion_tarjeta",
+        "pred": "conocimiento_producto"
+      },
+      {
+        "text": "bloquéame la tarjeta de crédito, creo que la perdí",
+        "gold": "accion_tarjeta",
+        "pred": "queja_disputa"
+      },
+      {
+        "text": "deja bloqueada mi plastico",
+        "gold": "accion_tarjeta",
+        "pred": "queja_disputa"
+      }
+    ]
+  },
+  {
+    "accuracy": 0.965,
+    "macro_f1": 0.964,
+    "per_class": {
+      "consulta_cuenta": {
+        "precision": 0.96,
+        "recall": 1.0,
+        "f1": 0.98
+      },
+      "conocimiento_producto": {
+        "precision": 0.958,
+        "recall": 0.958,
+        "f1": 0.958
+      },
+      "queja_disputa": {
+        "precision": 0.889,
+        "recall": 1.0,
+        "f1": 0.941
+      },
+      "accion_tarjeta": {
+        "precision": 1.0,
+        "recall": 0.826,
+        "f1": 0.905
+      },
+      "fuera_de_alcance": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "ambiguo": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "backend": "lora_v3",
+    "n": 143,
+    "json_valid_rate": 1.0,
+    "entity_exact_match": {
+      "producto": 0.93,
+      "monto": 1.0,
+      "moneda": 1.0
+    },
+    "latency_ms": {
+      "p50": 721.0,
+      "p95": 873.7
+    },
+    "errors_sample": [
+      {
+        "text": "cobran manteinmiento en la cuenta de ahorro",
+        "gold": "conocimiento_producto",
+        "pred": "consulta_cuenta"
+      },
+      {
+        "text": "me robaron la billetera, bloquea mi plástico",
+        "gold": "accion_tarjeta",
+        "pred": "queja_disputa"
+      },
+      {
+        "text": "me robaron la billetera, bloquea mi palstico",
+        "gold": "accion_tarjeta",
+        "pred": "queja_disputa"
+      },
+      {
+        "text": "blouqéame la tarjeta de débito, creo que la perdí",
+        "gold": "accion_tarjeta",
+        "pred": "conocimiento_producto"
+      },
+      {
+        "text": "hola, me robaron la billetera, bloquea mi tarjeta de débito",
+        "gold": "accion_tarjeta",
+        "pred": "queja_disputa"
+      }
+    ]
   }
 ]

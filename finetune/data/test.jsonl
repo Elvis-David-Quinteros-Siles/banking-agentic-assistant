@@ -118,3 +118,26 @@
 {"text": "porfa no entiendo", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:11"}
 {"text": "porfa ¿cuanto cuesta reponer mi plastico?", "label": {"intent": "conocimiento_producto", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:9"}
 {"text": "dame el extracto de mi caja de ahorros", "label": {"intent": "consulta_cuenta", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:5"}
+{"text": "bloquéame la tarjeta de crédito clásica, creo que la perdí", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:8"}
+{"text": "me robaron la billetera, bloquea mi tarjeta débito", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:4"}
+{"text": "me robaron la billetera, bloquea mi plástico", "label": {"intent": "accion_tarjeta", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:4"}
+{"text": "dejá bloqueada mi tarjeta de crédito", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:14"}
+{"text": "bloquéame la tarjeta de crédito, creo que la perdí", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:8"}
+{"text": "deja bloqueada mi plastico", "label": {"intent": "accion_tarjeta", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:14"}
+{"text": "me robaron la billetera, bloquea mi tarjeta de credito", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:4"}
+{"text": "me robaron la billetera, bloquea mi palstico", "label": {"intent": "accion_tarjeta", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:4"}
+{"text": "bloquéame la plástico, creo que la perdí", "label": {"intent": "accion_tarjeta", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:8"}
+{"text": "me robaron la billetera, bloquea mi tarjeta", "label": {"intent": "accion_tarjeta", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:4"}
+{"text": "bloquéame la visa de crédito, creo que la perdí", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:8"}
+{"text": "bloquéame la tarjeta de debito, creo que la perdí", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:8"}
+{"text": "bloqueame la tarjeta, creo que la perdi", "label": {"intent": "accion_tarjeta", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:8"}
+{"text": "blouqéame la tarjeta de débito, creo que la perdí", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:8"}
+{"text": "me robraon la billetera, bloquea mi tarjeta de débito", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:4"}
+{"text": "bloquéame la tarjeta, creo que la perdí", "label": {"intent": "accion_tarjeta", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:8"}
+{"text": "me robaron la billetera, bloquea mi tarjeta de débito", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:4"}
+{"text": "me robaron la billetera, bloquea mi tarjeta de crédito clásica", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:4"}
+{"text": "me robaron la billetera, bloquea mi tarjeta de dbeito", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:4"}
+{"text": "porfa dejá bloqueada mi tarjeta de debito", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:14"}
+{"text": "dejá bloqueada mi tarjeta débtio", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:14"}
+{"text": "me robaron la billetera, bloquea mi tarjeta de deibto", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:4"}
+{"text": "hola, me robaron la billetera, bloquea mi tarjeta de débito", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:4"}

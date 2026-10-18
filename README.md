@@ -30,16 +30,17 @@ es un **Qwen2.5-0.5B ajustado con LoRA** que corre on-premise, y todo el sistema
 
 | | Reglas + BM25 (baseline, CI) | LoRA + Graph RAG | **LoRA + Graph RAG + LLM real** |
 |---|---|---|---|
-| Evals de punta a punta | 28/35 | **35/35** | **31/31** (2 corridas) ¹ |
-| Precisión de enrutamiento · en paráfrasis | 83.3% · 37.5% | 100% · 100% | **100% · 100%** |
+| Evals de punta a punta | 31/39 | **39/39** | **31/31** (2 corridas) ¹ |
+| Precisión de enrutamiento · en paráfrasis | 85.3% · 50.0% | 100% · 100% | **100% · 100%** |
 | Conversaciones multi-turno (seguimientos y cambio de tema) | 100% | **100%** | — ¹ |
+| Acciones con confirmación del cliente · ejecutadas sin confirmación | 100% · 0% | **100% · 0%** | — ¹ |
 | Reclamos detectados (si no se detecta, no pasa por HITL) | 71.4% | 100% | **100%** |
-| Citas a la política correcta | 77.8% | 100% | **100%** |
+| Citas a la política correcta | 70.0% | 100% | **100%** |
 | Fidelidad (LLM-as-judge) · fugas de contexto | — | — | **100% · 0%** |
 | Seguridad: ataques bloqueados · falsos positivos · PII | 100% · 0% · 100% | 100% · 0% · 100% | **100% · 0% · 100%** |
-| Latencia p50 / p95 por turno | 99 / 252 ms | 770 / 1024 ms | 1.8–2.1 / 2.7–3.6 s |
+| Latencia p50 / p95 por turno | 103 / 202 ms | 772 / 1059 ms | 1.8–2.1 / 2.7–3.6 s |
 
-¹ La corrida con LLM real se hizo con los 31 casos previos a los 4 de multi-turno.
+¹ La corrida con LLM real se hizo con los 31 casos previos a los de multi-turno y acciones.
 LLM real = qwen2.5:3b en Ollama (Docker, GPU de 4 GB, 100% on-premise). Las respuestas de los agentes
 las redacta el LLM; la columna del medio usa redacción determinista.
 
@@ -47,7 +48,7 @@ las redacta el LLM; la columna del medio usa redacción determinista.
   frases no vistas: **100%**, frente a 59.2% de las reglas y **36.7% del mismo modelo sin ajustar**.
 - **Costo**: ~US$ 12 por 100 000 turnos con un LLM cloud económico; −29% con el router local. Ver
   [Cost & Latency](docs/COST_LATENCY.md).
-- **Los Evals encontraron 14 problemas reales**, todos corregidos (los de código, con test de regresión):
+- **Los Evals encontraron 15 problemas reales**, todos corregidos (los de código, con test de regresión):
   4 con redacción determinista (entre ellos un bug de fusión RRF) y 6 al pasar a un LLM real (un
   ReAct que pedía el número de cuenta, citas mal atribuidas, extractos parafraseados, el contexto
   interno filtrado al cliente...). Primera medición con LLM: 28/31; final: 31/31.
@@ -64,6 +65,7 @@ Un call center bancario recibe tres tipos de consulta que exigen tratamientos op
 | "¿Cuánto tengo?", "mis movimientos" | Dato incorrecto o de **otro cliente** | Agente ReAct con SQL parametrizado; el `customer_id` sale de la sesión, nunca del LLM | Exactitud de datos 100% |
 | "¿Qué comisión cobran?", "¿qué necesito para un crédito?" | **Alucinar** una tasa o un requisito | Graph RAG con citas obligatorias, abstención y verificación de cifras | Citas correctas 100% |
 | "Me cobraron dos veces", "no reconozco esta compra" | Registrar mal un reclamo (riesgo regulatorio) | El agente arma el borrador; **un operador aprueba, edita o rechaza** | 100% de reclamos pasan por HITL |
+| "Bloquea mi tarjeta, me la robaron" | Ejecutar una acción irreversible que el cliente no pidió, o sobre una tarjeta ajena | Acción preparada por código (sin LLM); **el cliente confirma** (`/confirm`); el procedimiento valida la pertenencia y deja auditoría | 0 acciones sin confirmación |
 | Temas ajenos, ataques, datos sensibles | Fuga de PII, manipulación del asistente | Guardrails deterministas antes y después del LLM | 0 fugas, 0 falsos positivos |
 
 ## Arquitectura
@@ -77,13 +79,18 @@ flowchart TD
     R -- consulta --> QA[query_agent<br/>ReAct + SQL parametrizado]
     R -- conocimiento --> KA[knowledge_agent<br/>Graph RAG Neo4j]
     R -- reclamo --> CA[complaint_agent<br/>borrador estructurado]
+    R -- bloqueo --> CAA[card_action_agent<br/>tarjeta + motivo]
+    CAA --> AC{{action_confirmation<br/>interrupt}}
+    U -- /confirm --> AC
+    AC -- sí --> EX[bloquear<br/>proc + auditoría]
+    AC -- no --> CAN[sin cambios]
     R -- fuera de alcance --> BLK
     R -- ambiguo --> CL[pregunta aclaratoria]
     CA --> H{{hitl_review<br/>interrupt}}
     OP([Operador]) -- /approve --> H
     H -- aprobar / editar --> REG[registrar<br/>SQLite + Neo4j]
     H -- rechazar --> REJ[respuesta al cliente]
-    QA & KA & REG & REJ --> GOUT[output_guardrail<br/>cifras vs contexto · enmascarado]
+    QA & KA & REG & REJ & EX & CAN --> GOUT[output_guardrail<br/>cifras vs contexto · enmascarado]
     GOUT --> U
     QA -.-> SQL[(SQL Server<br/>o SQLite)]
     KA -.-> NEO[(Neo4j o pgvector<br/>vector + full-text + relaciones)]
@@ -96,11 +103,12 @@ flowchart TD
 | Consultas | Loop ReAct escrito a mano (máx. 4 vueltas), tools SQL con el cliente fijado por sesión | `backend/app/graph/nodes/query_agent.py` |
 | Conocimiento | Recuperación híbrida: 2 índices vectoriales + full-text en español + entidad + expansión `(Producto)-[:TIENE_POLITICA]->(Politica)`, fusionados con RRF | `backend/app/rag/neo4j_retriever.py` |
 | HITL | El grafo se pausa; el estado sobrevive entre requests y reinicios; approve / edit / reject. **Back-office** (`#/operador`) con la cola ordenada por prioridad y espera; token de operador opcional | `backend/app/graph/nodes/hitl.py`, `backend/app/api/routes_operator.py` |
+| Acciones | Bloqueo de tarjeta con confirmación del cliente: pausa en `action_confirmation`, `/confirm` valida que quien confirma sea el dueño de la conversación; `usp_BlockCard` valida pertenencia, es idempotente y audita en una transacción | `backend/app/graph/nodes/card_action.py`, `backend/app/api/routes_confirm.py` |
 | Guardrails | PII (tarjeta con Luhn, CI boliviano, celular, email), injection, acceso ajeno, grounding de cifras | `backend/app/guardrails/` |
-| API | `/chat`, `/chat/stream` (SSE), `/approve/{thread_id}`, `/operator/queue`, `/metrics/summary`, `/health` | `backend/app/api/` |
+| API | `/chat`, `/chat/stream` (SSE), `/approve/{thread_id}`, `/confirm/{thread_id}`, `/operator/queue`, `/metrics/summary`, `/health` | `backend/app/api/` |
 | Analítica | Métricas por turno (intención, estado, latencia por nodo, tokens, costo) y cola HITL; el cliente se guarda seudonimizado y nunca el texto | `backend/app/analytics/` |
 | Frontend | React 18 + Vite + TypeScript: streaming, recorrido del grafo en vivo, tarjeta HITL | [frontend/](frontend/README.md) |
-| Evals + CI | 35 casos (incluye multi-turno), umbrales por métrica; CI con calidad (ruff + mypy), cobertura mínima, Neo4j, SQL Server y pgvector como servicios | [evals/](evals/README.md) |
+| Evals + CI | 39 casos (incluye multi-turno y acciones), umbrales por métrica; CI con calidad (ruff + mypy), cobertura mínima, Neo4j, SQL Server y pgvector como servicios | [evals/](evals/README.md) |
 
 **Degradación controlada**: si el LLM, el modelo LoRA o Neo4j fallan, cada nodo usa su ruta
 determinista (reglas, BM25 en memoria, respuesta extractiva) y la respuesta lleva `degraded: true`.
@@ -111,7 +119,7 @@ El sistema empeora en redacción, no en exactitud ni seguridad.
 | Competencia | Dónde se ve |
 |---|---|
 | Traducir necesidades de negocio en flujos agénticos | Tabla de negocio de arriba → nodos del grafo, cada uno con su KPI |
-| Flujos agénticos complejos | Grafo de 11 nodos con aristas condicionales, ReAct, HITL con pausa y reanudación |
+| Flujos agénticos complejos | Grafo de 15 nodos con aristas condicionales, ReAct, dos pausas `interrupt()` (HITL del operador y confirmación del cliente), conversación multi-turno |
 | KPIs por caso de uso y monitoreo | **Dashboard en vivo** (`#/kpis`): contención, latencia p50/p95, degradación, bloqueos, costo y, por intención, % resuelto / a HITL / aclaración; HITL: aprobados sin editar y tiempo de decisión del operador. Sin guardar texto de clientes |
 | Optimizar agentes en producción | [Ciclo de mejora](evals/README.md#ciclo-de-mejora-guiado-por-evals): falla detectada → diagnóstico → corrección → re-medición |
 | Evals: precisión/recall, alucinación, KPIs | `evals/`: precision/recall por intención, grounding de cifras, LLM-as-judge opcional, umbrales en CI |
@@ -201,9 +209,9 @@ Neo4j vs pgvector en [evals/README.md](evals/README.md#neo4j-frente-a-pgvector-m
 ### Tests y Evals
 
 ```powershell
-pytest backend -q                                          # 98 tests (los de integración se saltan si falta el servicio)
+pytest backend -q                                          # 121 tests (los de integración se saltan si falta el servicio)
 python evals/run_evals.py --check                          # Evals de punta a punta con umbrales
-python evals/run_evals.py --router lora --knowledge neo4j  # router LoRA + Graph RAG: 35/35
+python evals/run_evals.py --router lora --knowledge neo4j  # router LoRA + Graph RAG: 39/39
 python evals/run_evals.py --router lora --knowledge neo4j --llm ollama --judge   # + LLM real y juez: 31/31
 cd frontend; npm test; npm run build
 python frontend/e2e/smoke_test.py                          # E2E con clics reales (Playwright + Edge/Chrome)
@@ -218,6 +226,10 @@ Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi sa
 |---|---|---|
 | ![kpis](docs/img/ui-kpis.png) | ![aprobado](docs/img/ui-approved.png) | ![guardrails](docs/img/ui-guardrails.png) |
 
+| Bloqueo de tarjeta: confirmación del cliente |
+|---|
+| ![confirmación](docs/img/ui-confirm.png) |
+
 ## Decisiones de diseño
 
 - **Sin text-to-SQL.** Las consultas usan tools con SQL parametrizado y el `customer_id` de la
@@ -229,6 +241,10 @@ Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi sa
   prioridad de un reclamo los produce el código. Una cifra de la respuesta que no está en el contexto
   anula la respuesta generada. Este patrón salió de los Evals con LLM real: el modelo de 3B
   parafraseaba comercios y omitía cuentas.
+- **Las acciones con efecto real no pasan por el LLM.** El router decide que el cliente pide un
+  bloqueo; la tarjeta y el motivo los identifica el código, y nada se ejecuta sin un "sí" explícito.
+  Dos pausas distintas en el mismo grafo: el reclamo lo aprueba un **operador** (`/approve`), el
+  bloqueo lo confirma el **cliente** (`/confirm`), y una no entra en la cola de la otra.
 - **Abstenerse es una respuesta válida**: si ningún documento supera la similitud mínima, el agente
   de conocimiento dice que no tiene esa información en vez de generar.
 - **El router LoRA es on-premise** porque se ejecuta en cada turno y recibe el texto del cliente.
@@ -253,7 +269,7 @@ Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi sa
 - Red teaming periódico con un set de ataques más amplio que los 5 casos actuales.
 
 **Calidad y operación**
-- Evals sobre conversaciones reales anonimizadas y etiquetadas por humanos; los 35 casos sintéticos
+- Evals sobre conversaciones reales anonimizadas y etiquetadas por humanos; los 39 casos sintéticos
   detectan regresiones, pero no estiman la precisión real.
 - Trazas con OpenTelemetry / LangSmith / Langfuse, y los KPIs del dashboard exportados a
   Prometheus/Grafana con alertas de deriva (subida de `degraded`, de aclaraciones, de reclamos
@@ -271,7 +287,7 @@ Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi sa
 
 - **LLM evaluado**: los resultados con LLM real son con qwen2.5:3b local. Otro modelo (más grande o
   cloud) necesita su propia corrida de Evals; el CI corre sin LLM porque no tiene GPU.
-- **Datos sintéticos**: 600 ejemplos de entrenamiento generados con plantillas y 35 casos de Evals.
+- **Datos sintéticos**: 600 ejemplos de entrenamiento generados con plantillas y 39 casos de Evals.
   El 100% en test mide generalización a frases nuevas del mismo dominio, no rendimiento en producción.
 - **Router por reglas** (configuración del CI, sin GPU): no entiende paráfrasis; pide aclaración en
   lugar de responder mal, pero pierde el 29% de los reclamos expresados con otras palabras.
@@ -283,7 +299,7 @@ Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi sa
 backend/        FastAPI + LangGraph: api/, graph/nodes/, guardrails/, rag/, tools/, llm/ · tests/
 frontend/       React + Vite: chat SSE, tarjeta HITL, recorrido del grafo · e2e/
 finetune/       dataset sintético, entrenamiento LoRA/QLoRA, inferencia, evaluación del router
-evals/          35 casos, umbrales, runner de punta a punta, LLM-as-judge, reportes
+evals/          39 casos, umbrales, runner de punta a punta, LLM-as-judge, reportes
 data/seed/      clientes, cuentas, movimientos, productos, políticas y quejas (ficticios)
 docs/           ARCHITECTURE.md (diseño, Fase 0), COST_LATENCY.md, DEPLOY.md, capturas y demo.gif
 Dockerfile      imagen de la demo pública (frontend + API, modo liviano)

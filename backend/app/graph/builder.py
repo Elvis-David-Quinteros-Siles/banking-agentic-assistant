@@ -17,6 +17,14 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 
+from app.graph.nodes.card_action import (
+    action_cancelled_node,
+    action_confirmation_node,
+    card_action_agent_node,
+    execute_card_action_node,
+    route_after_card_action,
+    route_after_confirmation,
+)
 from app.graph.nodes.complaint_agent import complaint_agent_node
 from app.graph.nodes.hitl import (
     complaint_rejected_node,
@@ -45,6 +53,10 @@ def build_graph(checkpointer: BaseCheckpointSaver | None = None):
     builder.add_node("hitl_review", hitl_review_node)
     builder.add_node("register_complaint", register_complaint_node)
     builder.add_node("complaint_rejected", complaint_rejected_node)
+    builder.add_node("card_action_agent", card_action_agent_node)
+    builder.add_node("action_confirmation", action_confirmation_node)
+    builder.add_node("execute_card_action", execute_card_action_node)
+    builder.add_node("action_cancelled", action_cancelled_node)
     builder.add_node("blocked_response", blocked_response_node)
     builder.add_node("clarify", clarify_node)
     builder.add_node("output_guardrail", output_guardrail_node)
@@ -54,12 +66,27 @@ def build_graph(checkpointer: BaseCheckpointSaver | None = None):
     builder.add_conditional_edges(
         "router",
         route_after_router,
-        ["query_agent", "knowledge_agent", "complaint_agent", "blocked_response", "clarify"],
+        ["query_agent", "knowledge_agent", "complaint_agent", "card_action_agent", "blocked_response", "clarify"],
     )
     builder.add_edge("complaint_agent", "hitl_review")
     builder.add_conditional_edges("hitl_review", route_after_hitl, ["register_complaint", "complaint_rejected"])
+    builder.add_conditional_edges(
+        "card_action_agent",
+        route_after_card_action,
+        {"action_confirmation": "action_confirmation", "end": "output_guardrail"},
+    )
+    builder.add_conditional_edges(
+        "action_confirmation", route_after_confirmation, ["execute_card_action", "action_cancelled"]
+    )
 
-    for node in ("query_agent", "knowledge_agent", "register_complaint", "complaint_rejected"):
+    for node in (
+        "query_agent",
+        "knowledge_agent",
+        "register_complaint",
+        "complaint_rejected",
+        "execute_card_action",
+        "action_cancelled",
+    ):
         builder.add_edge(node, "output_guardrail")
     for node in ("output_guardrail", "blocked_response", "clarify"):
         builder.add_edge(node, END)

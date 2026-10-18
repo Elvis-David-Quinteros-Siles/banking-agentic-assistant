@@ -85,6 +85,9 @@ START
 | `complaint_agent` | LLM con salida estructurada | Genera borrador `{categoria, producto, monto, prioridad, resumen}` | El LLM propone, el humano dispone |
 | `hitl_review` | `interrupt()` | Pausa el grafo y expone el borrador al operador | Requisito regulatorio/reputacional: ninguna queja se registra sin revisión |
 | `register_complaint` | Determinista | Inserta en la tabla `complaints` (SQLite, sistema de registro) y, desde la Fase 3, crea `(:Cliente)-[:PRESENTO]->(:Queja)-[:APLICA_A]->(:Producto)` en Neo4j | Cierra el ciclo con el grafo de conocimiento |
+| `card_action_agent` | Determinista | Identifica la tarjeta del cliente (por últimos 4 dígitos, tipo o única) y el motivo (robo, extravío, fraude); si hay varias, pregunta cuál | Una acción irreversible no depende de lo que genere un LLM |
+| `action_confirmation` | `interrupt()` | Pausa hasta que el **cliente** confirme o cancele con `/confirm` | Ningún efecto real sin un "sí" explícito del dueño |
+| `execute_card_action` / `action_cancelled` | Determinista | Bloquea vía repositorio (`usp_BlockCard` en SQL Server: pertenencia + idempotencia + auditoría en `card_actions`) o confirma que no hubo cambios | La validación de pertenencia vive en la base, no solo en la app |
 | `output_guardrail` | Determinista + LLM-judge opcional | Verifica que la respuesta esté soportada por el contexto (RAG), que no filtre PII (cuentas → últimos 4 dígitos) | Última línea de defensa contra alucinación |
 | `blocked_response` | Plantilla | Respuesta fija y cortés | Costo cero, comportamiento predecible |
 
@@ -278,6 +281,15 @@ en el frontend (el `EventSource` nativo solo soporta `GET`).
 
 // Response 200: mismo cuerpo que /chat con status "completed"
 // 404 si el thread no existe · 409 si el thread no está interrumpido
+```
+
+### `POST /confirm/{thread_id}`
+
+```jsonc
+// Request (lo envía el CLIENTE dueño de la conversación)
+{ "customer_id": "CLI-004", "confirm": true }
+// Response 200: mismo cuerpo que /chat con status "completed"
+// 403 si customer_id no es el de la conversación · 404 si no existe · 409 si no hay acción pendiente
 ```
 
 ### `GET /health`

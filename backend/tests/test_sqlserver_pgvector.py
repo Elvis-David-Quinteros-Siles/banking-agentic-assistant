@@ -101,6 +101,17 @@ def test_sqlserver_registers_complaint_through_procedure(sqlserver_repo):
     )
 
 
+@pytest.mark.sqlserver
+def test_sqlserver_block_card_validates_ownership_and_is_idempotent(sqlserver_repo):
+    # ****7730 es de CLI-003: CLI-001 no puede bloquearla (el procedimiento valida la pertenencia)
+    assert sqlserver_repo.block_card("CLI-001", "7730", "test", "test") == "no_encontrada"
+    cards = {c["last4"]: c["status"] for c in sqlserver_repo.list_cards("CLI-003")}
+    assert "7730" in cards
+    first = sqlserver_repo.block_card("CLI-003", "7730", "test", "test")
+    assert first in ("bloqueada", "ya_bloqueada")  # la base de integración se reutiliza entre corridas
+    assert sqlserver_repo.block_card("CLI-003", "7730", "test", "test") == "ya_bloqueada"
+
+
 # ---------------------------------------------------------------------------
 # pgvector
 # ---------------------------------------------------------------------------

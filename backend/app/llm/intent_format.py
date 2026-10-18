@@ -11,7 +11,14 @@ No importa torch: el backend puede cargarlo aunque el router LoRA esté desactiv
 import json
 from typing import Any
 
-INTENT_LABELS = ("consulta_cuenta", "conocimiento_producto", "queja_disputa", "fuera_de_alcance", "ambiguo")
+INTENT_LABELS = (
+    "consulta_cuenta",
+    "conocimiento_producto",
+    "queja_disputa",
+    "accion_tarjeta",
+    "fuera_de_alcance",
+    "ambiguo",
+)
 PRODUCT_TAGS = (
     "tarjeta_credito",
     "tarjeta_debito",

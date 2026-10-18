@@ -7,7 +7,7 @@ from langchain_core.messages import AnyMessage
 from langgraph.graph.message import add_messages
 
 # Intenciones soportadas por el router
-INTENTS = ("consulta_cuenta", "conocimiento_producto", "queja_disputa", "fuera_de_alcance")
+INTENTS = ("consulta_cuenta", "conocimiento_producto", "queja_disputa", "accion_tarjeta", "fuera_de_alcance")
 
 TurnStatus = Literal["completed", "blocked", "clarification"]
 
@@ -23,6 +23,8 @@ class AgentState(TypedDict, total=False):
     citations: list[str]
     complaint_draft: dict[str, Any] | None
     hitl_decision: dict[str, Any] | None
+    pending_action: dict[str, Any] | None  # acción preparada que espera la confirmación del cliente
+    action_decision: dict[str, Any] | None  # {"confirm": bool}
     final_answer: str | None
     status: TurnStatus | None  # estado del turno; "interrupted" lo deduce la API del checkpoint
     degraded: bool  # True si algún nodo cayó a su ruta determinista por fallo del LLM
@@ -47,6 +49,8 @@ def turn_reset(customer_id: str) -> dict[str, Any]:
         "citations": [],
         "complaint_draft": None,
         "hitl_decision": None,
+        "pending_action": None,
+        "action_decision": None,
         "final_answer": None,
         "status": None,
         "degraded": False,

@@ -1,53 +1,80 @@
-{"text": "qué opinas del presidente", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:15"}
-{"text": "quiero invertir mi plata, ¿que opciones hay?", "label": {"intent": "conocimiento_producto", "producto": null, "monto": null, "moneda": null}, "template_id": "conocimiento_producto:23"}
-{"text": "buenas tardes", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:1"}
-{"text": "¿cuál es el límite diario de mi tarjeta de debito?", "label": {"intent": "conocimiento_producto", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:6"}
-{"text": "buenas, necesito ayuda", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:3"}
-{"text": "disculpe, ok gracias", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:5"}
-{"text": "revisar cuánta plata hay en mi cuenta corriente", "label": {"intent": "consulta_cuenta", "producto": "cuenta_corriente", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:extra3"}
-{"text": "QUIERO HACER UNA DENUNCIA POR UN COBRO INDEBIDO EN MI VISA DE CRÉDITO", "label": {"intent": "queja_disputa", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "queja_disputa:7"}
-{"text": "NO RECONOZCO UN CARGO DE 230 BOLIVIANOS EN MI TARJETA DE CRÉDITO", "label": {"intent": "queja_disputa", "producto": "tarjeta_credito", "monto": 230.0, "moneda": "BOB"}, "template_id": "queja_disputa:1"}
-{"text": "quiero hbalar con alguien", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:13"}
-{"text": "¿QUÉ GASTOS HICE ESTA SEMANA CON MI BANCA MÓVIL?", "label": {"intent": "consulta_cuenta", "producto": "banca_internet", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:9"}
-{"text": "¿cual es el limite diario de mi visa de credito?", "label": {"intent": "conocimiento_producto", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:6"}
-{"text": "¿que requisitos piden para tarejta debito?", "label": {"intent": "conocimiento_producto", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:0"}
-{"text": "me hicieron un doble cobro de 500 bs", "label": {"intent": "queja_disputa", "producto": null, "monto": 500.0, "moneda": "BOB"}, "template_id": "queja_disputa:2"}
-{"text": "¿llego el deposito de Bs 25?", "label": {"intent": "consulta_cuenta", "producto": null, "monto": 25.0, "moneda": "BOB"}, "template_id": "consulta_cuenta:10"}
-{"text": "exijo la devolución de Bs 230", "label": {"intent": "queja_disputa", "producto": null, "monto": 230.0, "moneda": "BOB"}, "template_id": "queja_disputa:17"}
-{"text": "me descontaron Bs 180 de mantenimiento y tengo más de 500 en la cuenta", "label": {"intent": "queja_disputa", "producto": null, "monto": 180.0, "moneda": "BOB"}, "template_id": "queja_disputa:8"}
-{"text": "quiero presentar un reclamo, me cobraron 120 Bs dos veces en mi tarjeta", "label": {"intent": "queja_disputa", "producto": "tarjeta", "monto": 120.0, "moneda": "BOB"}, "template_id": "queja_disputa:0"}
-{"text": "¿que documentos necesito para credito productivo?", "label": {"intent": "conocimiento_producto", "producto": "credito_pyme", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:21"}
-{"text": "quiero hablar con alguien", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:13"}
-{"text": "ayduame con mi tarea de matematicas", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:6"}
+{"text": "todavía tengo plata en mi cuenta de ahorro", "label": {"intent": "consulta_cuenta", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:extra5"}
+{"text": "BLOQUEAR TARJETA DE CRÉDITO CLÁSICA POR ROBO", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:11"}
+{"text": "perdí mi tarejta de debito, bloquéala", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:5"}
+{"text": "ok graicas", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:5"}
+{"text": "me hicieron un doble cobro de Bs 15.000", "label": {"intent": "queja_disputa", "producto": null, "monto": 15000.0, "moneda": "BOB"}, "template_id": "queja_disputa:2"}
+{"text": "porfa ¿cual es el pago minimo de la tarjeta de credito?", "label": {"intent": "conocimiento_producto", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:12"}
+{"text": "disculpe, ayuda", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:9"}
+{"text": "¿A CUNÁTO ESTÁ EL BITCOIN HOY?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:4"}
+{"text": "queiro que bloqueen mi tarjeta débito ahora mismo", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:9"}
+{"text": "perdí mi tarjeta de credito, bloquélaa", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:5"}
+{"text": "RECLAMO FORMAL POR UNA COMPRA DE 350 BOLIVIANOS QUE NO AUTORICÉ", "label": {"intent": "queja_disputa", "producto": null, "monto": 350.0, "moneda": "BOB"}, "template_id": "queja_disputa:11"}
+{"text": "quiero bloquear mi tarjeta de credito", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:1"}
+{"text": "¿cuanta plata entro a mi ceunta este mes?", "label": {"intent": "consulta_cuenta", "producto": null, "monto": null, "moneda": null}, "template_id": "consulta_cuenta:extra2"}
+{"text": "disculpe, ¿quién ganó el partido de ayer?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:0"}
+{"text": "buneos dias", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:2"}
+{"text": "porfa buenos días", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:2"}
+{"text": "ME CLONARON MI TARJETA, HAY COMPRAS QUE NO HICE", "label": {"intent": "queja_disputa", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "queja_disputa:16"}
+{"text": "informacion por favor", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:7"}
+{"text": "cuánto tengo en mi cuenta corriente empresarial", "label": {"intent": "consulta_cuenta", "producto": "cuenta_corriente", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:1"}
+{"text": "hice una tranfserencia de 25 dolares y nunca llego", "label": {"intent": "queja_disputa", "producto": "transferencia", "monto": 25.0, "moneda": "USD"}, "template_id": "queja_disputa:6"}
+{"text": "el cajero no me dio la plata pero sí me descontó 8.900 bs", "label": {"intent": "queja_disputa", "producto": null, "monto": 8900.0, "moneda": "BOB"}, "template_id": "queja_disputa:9"}
+{"text": "hola, nceesito ayuda", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:3"}
+{"text": "me están cobrando intereses que no corresponden en mi crédito productivo", "label": {"intent": "queja_disputa", "producto": "credito_pyme", "monto": null, "moneda": null}, "template_id": "queja_disputa:12"}
+{"text": "hola, necesito ayuda", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:3"}
+{"text": "reclamo formal por una compra de 8.900 bs que no autoricé", "label": {"intent": "queja_disputa", "producto": null, "monto": 8900.0, "moneda": "BOB"}, "template_id": "queja_disputa:11"}
+{"text": "BLOQEUEN MI TARJETA DE DÉBITO POR FAVOR, ME LA ROBARON", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:3"}
+{"text": "info sobre DPF", "label": {"intent": "conocimiento_producto", "producto": "dpf", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:18"}
+{"text": "hola, ayuda", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:9"}
+{"text": "¿DÓNDE PUEDO APOSTAR EN FÚTBOL?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:12"}
+{"text": "porfa informacion por favor", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:7"}
+{"text": "¿cobran por pagar con QR?", "label": {"intent": "conocimiento_producto", "producto": "qr", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:11"}
+{"text": "me bloquearon la visa de credito y no puedo pagar, quiero reclamar", "label": {"intent": "queja_disputa", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "queja_disputa:extra0"}
+{"text": "INFORMACIÓN POR FAVOR", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:7"}
+{"text": "me atendieron muy mal por teléfono, quiero rcelamar", "label": {"intent": "queja_disputa", "producto": null, "monto": null, "moneda": null}, "template_id": "queja_disputa:15"}
+{"text": "quiero habalr con alguien", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:13"}
+{"text": "quiero que bloqueen mi tarjeta de debito ahora mismo", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:9"}
+{"text": "quiero ver el saldo de mi cuenta de la empresa", "label": {"intent": "consulta_cuenta", "producto": "cuenta_corriente", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:2"}
+{"text": "¿cuánta plata tengo en mi caja de ahorros?", "label": {"intent": "consulta_cuenta", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:extra0"}
+{"text": "¿cómo funciona caja de ahorros?", "label": {"intent": "conocimiento_producto", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:19"}
+{"text": "TENGO UNA CONUSLTA", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:4"}
+{"text": "¿cual es el pago minimo de la tarjeta de credito?", "label": {"intent": "conocimiento_producto", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:12"}
+{"text": "cuéntame un cihste", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:3"}
+{"text": "cuánto cobran de comisión por cuenta en bolivianos", "label": {"intent": "conocimiento_producto", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:1"}
+{"text": "se me perdio la tarjeta debito, bloqueenla", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:13"}
+{"text": "quiero bloquear mi tarjeta de debito", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:1"}
+{"text": "HAZME UN CÓDIGO EN PYTHON", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:10"}
+{"text": "me están cobrando intereses que no corresponden en mi tarjeta de credito", "label": {"intent": "queja_disputa", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "queja_disputa:12"}
+{"text": "necesito bloquear mi plástico ya", "label": {"intent": "accion_tarjeta", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:2"}
+{"text": "recomiéndame una pelcíula", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:8"}
+{"text": "¿quién va a ganar las elecciones?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:7"}
+{"text": "hice una transferencia de 3000 bolivianos y nunca llego", "label": {"intent": "queja_disputa", "producto": "transferencia", "monto": 3000.0, "moneda": "BOB"}, "template_id": "queja_disputa:6"}
+{"text": "buenas, buenos días", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:2"}
+{"text": "movimientos de mi cuenta corriente empresarial por favor", "label": {"intent": "consulta_cuenta", "producto": "cuenta_corriente", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:11"}
+{"text": "me descontaron 180 bs de mantenimiento y tengo más de 500 en la cuenta", "label": {"intent": "queja_disputa", "producto": null, "monto": 180.0, "moneda": "BOB"}, "template_id": "queja_disputa:8"}
+{"text": "hola, por favor bloquear la tarjeta de cerdito urgente", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:7"}
+{"text": "RECOMIÉNDAME UNA PELÍCULA", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:8"}
+{"text": "reclamo formal por una compra de 350 dólares que no autoricé", "label": {"intent": "queja_disputa", "producto": null, "monto": 350.0, "moneda": "USD"}, "template_id": "queja_disputa:11"}
+{"text": "me están cobarndo intereses que no corresponden en mi préstamo de vivienda", "label": {"intent": "queja_disputa", "producto": "credito_vivienda", "monto": null, "moneda": null}, "template_id": "queja_disputa:12"}
+{"text": "quiero que bloqueen mi plsático ahora mismo", "label": {"intent": "accion_tarjeta", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:9"}
+{"text": "quiero saber cuanta platita tengo", "label": {"intent": "consulta_cuenta", "producto": null, "monto": null, "moneda": null}, "template_id": "consulta_cuenta:extra1"}
+{"text": "exijo la devolcuión de 1200 bs", "label": {"intent": "queja_disputa", "producto": null, "monto": 1200.0, "moneda": "BOB"}, "template_id": "queja_disputa:17"}
+{"text": "necesito bloquear mi tarjeta de credito clasica ya", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:2"}
+{"text": "quiero ver el saldo de mi cuenta en bolivianos", "label": {"intent": "consulta_cuenta", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:2"}
+{"text": "cancelen mi tarjeta de credito, me asaltaron", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:10"}
+{"text": "hazme un cóidgo en python", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:10"}
+{"text": "hola, cancelen mi tarjtea de crédito clásica, me asaltaron", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:10"}
+{"text": "se me perdió la tarjeta de crédito clásica, bolquéenla", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:13"}
+{"text": "¿me deposiatron el sueldo?", "label": {"intent": "consulta_cuenta", "producto": null, "monto": null, "moneda": null}, "template_id": "consulta_cuenta:6"}
+{"text": "no reconozco un cargo de 780 bolivianos en mi tarjeta", "label": {"intent": "queja_disputa", "producto": "tarjeta", "monto": 780.0, "moneda": "BOB"}, "template_id": "queja_disputa:1"}
+{"text": "disculpe, se me perdió la visa de crédito, bloquéenla", "label": {"intent": "accion_tarjeta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "accion_tarjeta:13"}
+{"text": "saldo de mi cuenta en dolares", "label": {"intent": "consulta_cuenta", "producto": null, "monto": null, "moneda": "USD"}, "template_id": "consulta_cuenta:8"}
 {"text": "porfa necesito saber cuánto dinero tengo", "label": {"intent": "consulta_cuenta", "producto": null, "monto": null, "moneda": null}, "template_id": "consulta_cuenta:7"}
-{"text": "buenas tadres", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:1"}
-{"text": "cuéntame un chiste", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:3"}
-{"text": "OK GRCAIAS", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:5"}
-{"text": "quiero hacer una denuncia por un cobro indebido en mi tarjeta", "label": {"intent": "queja_disputa", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "queja_disputa:7"}
-{"text": "¿cuál es el límite diario de mi tarjeta de credito?", "label": {"intent": "conocimiento_producto", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:6"}
-{"text": "hola, una pergunta", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:8"}
-{"text": "¿cuál es la tasa de interés de crédito pyme?", "label": {"intent": "conocimiento_producto", "producto": "credito_pyme", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:2"}
-{"text": "informacoin por favor", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:7"}
-{"text": "buenas, buenas tardes", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:1"}
-{"text": "el cajero no me dio la plata pero si me desconto 3.000 bs", "label": {"intent": "queja_disputa", "producto": null, "monto": 3000.0, "moneda": "BOB"}, "template_id": "queja_disputa:9"}
-{"text": "¿a cuánto está el bitocin hoy?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:4"}
-{"text": "hola, perdi mi tarjeta, ¿que hago?", "label": {"intent": "conocimiento_producto", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:8"}
-{"text": "me estan cobrando intereses que no corresponden en mi credito de vivienda", "label": {"intent": "queja_disputa", "producto": "credito_vivienda", "monto": null, "moneda": null}, "template_id": "queja_disputa:12"}
-{"text": "buenas, ayúdame con mi tarea de matemáticas", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:6"}
-{"text": "ya me acreditaron la transferencia de 64 bs", "label": {"intent": "consulta_cuenta", "producto": "transferencia", "monto": 64.0, "moneda": "BOB"}, "template_id": "consulta_cuenta:18"}
-{"text": "¿cuál es el pago mínmio de la tarjeta de crédito?", "label": {"intent": "conocimiento_producto", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:12"}
-{"text": "¿qué requisitos piden para cuenta croriente empresarial?", "label": {"intent": "conocimiento_producto", "producto": "cuenta_corriente", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:0"}
-{"text": "¿en cuanto tiempo responden un reclamo?", "label": {"intent": "conocimiento_producto", "producto": null, "monto": null, "moneda": null}, "template_id": "conocimiento_producto:13"}
-{"text": "ok gracais", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:5"}
-{"text": "info sobre cuenta de ahorro", "label": {"intent": "conocimiento_producto", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:18"}
-{"text": "en cuánto tiempo responden un reclamo", "label": {"intent": "conocimiento_producto", "producto": null, "monto": null, "moneda": null}, "template_id": "conocimiento_producto:13"}
-{"text": "estoy indignado, me bloquearon mi tarjeta de debito sin avisar", "label": {"intent": "queja_disputa", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "queja_disputa:10"}
-{"text": "quiero hablar con alugien", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:13"}
-{"text": "buenas, me clonaron mi tarjeta, hay compras que no hice", "label": {"intent": "queja_disputa", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "queja_disputa:16"}
-{"text": "¿quien va a ganar las elecciones?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:7"}
-{"text": "¿cuánta plata gana un futbolista?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:extra1"}
-{"text": "cuánto puedo sacar del cajero por día", "label": {"intent": "conocimiento_producto", "producto": null, "monto": null, "moneda": null}, "template_id": "conocimiento_producto:5"}
-{"text": "me robaron el celular con la app, ¿cómo bloqueo todo?", "label": {"intent": "conocimiento_producto", "producto": "banca_internet", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:20"}
-{"text": "QUIERO VER EL SALDO DE MI CUENTA CORRIENTE EMPRESARIAL", "label": {"intent": "consulta_cuenta", "producto": "cuenta_corriente", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:2"}
-{"text": "info sobre tarjeta de débito", "label": {"intent": "conocimiento_producto", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:18"}
-{"text": "me descontaron Bs 120 de mantenimiento y tengo más de 500 en la cuenta", "label": {"intent": "queja_disputa", "producto": null, "monto": 120.0, "moneda": "BOB"}, "template_id": "queja_disputa:8"}
+{"text": "cuanto tengo en mi caja de ahorros", "label": {"intent": "consulta_cuenta", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:1"}
+{"text": "TENGO UNA CNOSULTA", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:4"}
+{"text": "cómo gano plata rápido con apuestas", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:extra0"}
+{"text": "TENGO UNA CONSULTA", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:4"}
+{"text": "disculpe, ¿a cuanto esta el bitcoin hoy?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:4"}
+{"text": "hola, ¿cuánta plata gana un futbolista?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:extra1"}
+{"text": "neecsito ayuda", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:3"}
+{"text": "quiero presentar un reclamo, me cobraron Bs. 412,50 dos veces en mi tarjeta", "label": {"intent": "queja_disputa", "producto": "tarjeta", "monto": 412.5, "moneda": "BOB"}, "template_id": "queja_disputa:0"}

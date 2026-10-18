@@ -20,10 +20,17 @@ export interface ComplaintDraft {
   customer_id: string;
 }
 
-export interface InterruptInfo {
-  type: "complaint_review" | string;
-  payload: ComplaintDraft;
+export interface CardAction {
+  accion: "bloquear_tarjeta";
+  tarjeta: string;
+  last4: string;
+  motivo: string;
 }
+
+// complaint_review: decide un operador (/approve) · action_confirmation: decide el cliente (/confirm)
+export type InterruptInfo =
+  | { type: "complaint_review"; payload: ComplaintDraft }
+  | { type: "action_confirmation"; payload: CardAction };
 
 export interface ChatResponse {
   thread_id: string;

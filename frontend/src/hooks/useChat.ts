@@ -1,7 +1,8 @@
-// Estado y flujo de una conversación: streaming SSE, progreso por nodo y aprobación HITL.
+// Estado y flujo de una conversación: streaming SSE, progreso por nodo, aprobación HITL y
+// confirmación de acciones por el cliente.
 
 import { useCallback, useReducer, useRef } from "react";
-import { approve, ApiRequestError, streamChat } from "../api/client";
+import { approve, ApiRequestError, confirmAction, streamChat } from "../api/client";
 import type { ApproveRequest, ChatResponse, InterruptInfo } from "../api/types";
 
 export interface NodeProgress {
@@ -23,7 +24,7 @@ interface State {
   threadId: string | null;
   messages: Message[];
   nodes: NodeProgress[];
-  pending: InterruptInfo | null; // reclamo esperando decisión del operador
+  pending: InterruptInfo | null; // reclamo del operador o acción que espera la confirmación del cliente
   busy: boolean;
   error: string | null;
   lastResponse: ChatResponse | null;
@@ -185,10 +186,24 @@ export function useChat(initialCustomer: string) {
     [state.threadId],
   );
 
+  const confirm = useCallback(
+    async (yes: boolean) => {
+      if (!state.threadId) return;
+      dispatch({ type: "approving" });
+      try {
+        const response = await confirmAction(state.threadId, state.customerId, yes);
+        dispatch({ type: "approved", response, note: yes ? "Usted confirmó la acción." : "Usted canceló la acción." });
+      } catch (err) {
+        dispatch({ type: "error", message: err instanceof ApiRequestError ? err.message : String(err) });
+      }
+    },
+    [state.threadId, state.customerId],
+  );
+
   const reset = useCallback((customerId: string) => {
     abortRef.current?.abort();
     dispatch({ type: "reset", customerId });
   }, []);
 
-  return { state, send, decide, reset };
+  return { state, send, decide, confirm, reset };
 }
