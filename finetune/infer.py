@@ -38,8 +38,11 @@ def main() -> None:
     def run(text: str) -> None:
         try:
             pred = classifier.classify(text)
-            print(json.dumps({**pred.output, "confidence": pred.confidence, "latency_ms": pred.latency_ms},
-                             ensure_ascii=False))
+            print(
+                json.dumps(
+                    {**pred.output, "confidence": pred.confidence, "latency_ms": pred.latency_ms}, ensure_ascii=False
+                )
+            )
         except ValueError as error:
             print(f"Salida inválida: {error}")
 

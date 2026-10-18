@@ -61,7 +61,7 @@ def seed_graph(driver: Driver, embedder: Embedder, seed_dir: Path, reset: bool =
                p.tags = row.tags, p.embedding = row.embedding""",
         rows=[
             {**p, "tags": PRODUCT_TAGS.get(p["producto_id"], []), "embedding": v}
-            for p, v in zip(products, product_vectors)
+            for p, v in zip(products, product_vectors, strict=True)
         ],
     )
 
@@ -76,7 +76,7 @@ def seed_graph(driver: Driver, embedder: Embedder, seed_dir: Path, reset: bool =
            UNWIND row.productos AS producto_id
            MATCH (p:Producto {producto_id: producto_id})
            MERGE (p)-[:TIENE_POLITICA]->(pol)""",
-        rows=[{**p, "embedding": v} for p, v in zip(policies, policy_vectors)],
+        rows=[{**p, "embedding": v} for p, v in zip(policies, policy_vectors, strict=True)],
     )
 
     driver.execute_query(
@@ -95,9 +95,7 @@ def seed_graph(driver: Driver, embedder: Embedder, seed_dir: Path, reset: bool =
     for complaint in graph["complaints"]:
         upsert_complaint(driver, complaint)
 
-    counts, _, _ = driver.execute_query(
-        "MATCH (n) RETURN labels(n)[0] AS label, count(*) AS n ORDER BY label"
-    )
+    counts, _, _ = driver.execute_query("MATCH (n) RETURN labels(n)[0] AS label, count(*) AS n ORDER BY label")
     summary = {r["label"]: r["n"] for r in counts}
     logger.info("Grafo cargado: %s", summary)
     return summary

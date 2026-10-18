@@ -21,8 +21,27 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r backend/requirements.txt
-      # Los tests de integración con Neo4j se saltan solos aquí; corren en el job graph-rag
-      - run: pytest backend -q
+      # Los tests de integración (Neo4j, SQL Server, pgvector) se saltan solos aquí; corren en sus jobs.
+      # Cobertura mínima exigida: 80% (medida sin servicios externos, como en este job)
+      - run: pytest backend -q --cov --cov-report=term --cov-fail-under=80
+
+  quality:
+    name: Calidad · ruff + mypy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r backend/requirements.txt ruff mypy
+      - name: Lint (estilo, bugs probables, seguridad)
+        run: ruff check backend evals finetune
+      - name: Formato
+        run: ruff format --check backend evals finetune
+      - name: Tipos
+        run: mypy
 
   evals:
     name: Evals · rules + BM25 (sin LLM)

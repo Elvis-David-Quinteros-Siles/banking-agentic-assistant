@@ -31,7 +31,8 @@ def hitl_review_node(state: AgentState) -> dict:
 
 
 def route_after_hitl(state: AgentState) -> str:
-    return "complaint_rejected" if state["hitl_decision"]["decision"] == "reject" else "register_complaint"
+    decision = state.get("hitl_decision") or {}
+    return "complaint_rejected" if decision.get("decision") == "reject" else "register_complaint"
 
 
 def mirror_complaint_to_graph(complaint_id: str, customer_id: str, draft: dict, reviewer_id: str) -> None:
@@ -47,44 +48,49 @@ def mirror_complaint_to_graph(complaint_id: str, customer_id: str, draft: dict, 
         from app.rag.neo4j_client import get_driver
         from app.tools.knowledge_base import product_id_for_tag
 
-        upsert_complaint(get_driver(), {
-            "queja_id": complaint_id,
-            "customer_id": customer_id,
-            "producto_id": product_id_for_tag(draft.get("producto")),
-            "categoria": draft["categoria"],
-            "descripcion": draft["resumen"],
-            "monto": draft.get("monto"),
-            "moneda": draft.get("moneda"),
-            "prioridad": draft["prioridad"],
-            "estado": "registrada",
-            "fecha": date.today().isoformat(),
-            "aprobada_por": reviewer_id,
-        })
+        upsert_complaint(
+            get_driver(),
+            {
+                "queja_id": complaint_id,
+                "customer_id": customer_id,
+                "producto_id": product_id_for_tag(draft.get("producto")),
+                "categoria": draft["categoria"],
+                "descripcion": draft["resumen"],
+                "monto": draft.get("monto"),
+                "moneda": draft.get("moneda"),
+                "prioridad": draft["prioridad"],
+                "estado": "registrada",
+                "fecha": date.today().isoformat(),
+                "aprobada_por": reviewer_id,
+            },
+        )
     except Exception as error:  # noqa: BLE001
         logger.warning("No se pudo replicar el reclamo %s en Neo4j: %s", complaint_id, error)
 
 
 @traced("register_complaint")
 def register_complaint_node(state: AgentState, config) -> dict:
-    decision = state["hitl_decision"]
-    draft = {**state["complaint_draft"], **(decision.get("edited_draft") or {})}
+    decision = state.get("hitl_decision") or {}
+    draft = {**(state.get("complaint_draft") or {}), **(decision.get("edited_draft") or {})}
     complaint_id = f"QJ-{uuid.uuid4().hex[:6].upper()}"
 
     # Sistema de registro: SQLite o SQL Server (procedimiento usp_RegisterComplaint), según CORE_BACKEND
-    get_repository().insert_complaint({
-        "complaint_id": complaint_id,
-        "customer_id": state["customer_id"],
-        "thread_id": config["configurable"]["thread_id"],
-        "category": draft["categoria"],
-        "product": draft.get("producto"),
-        "amount": draft.get("monto"),
-        "currency": draft.get("moneda"),
-        "priority": draft["prioridad"],
-        "summary": draft["resumen"],
-        "status": "registrada",
-        "reviewer_id": decision["reviewer_id"],
-        "created_at": datetime.now().isoformat(timespec="seconds"),
-    })
+    get_repository().insert_complaint(
+        {
+            "complaint_id": complaint_id,
+            "customer_id": state["customer_id"],
+            "thread_id": config["configurable"]["thread_id"],
+            "category": draft["categoria"],
+            "product": draft.get("producto"),
+            "amount": draft.get("monto"),
+            "currency": draft.get("moneda"),
+            "priority": draft["prioridad"],
+            "summary": draft["resumen"],
+            "status": "registrada",
+            "reviewer_id": decision["reviewer_id"],
+            "created_at": datetime.now().isoformat(timespec="seconds"),
+        }
+    )
 
     mirror_complaint_to_graph(complaint_id, state["customer_id"], draft, decision["reviewer_id"])
 
@@ -103,7 +109,7 @@ def register_complaint_node(state: AgentState, config) -> dict:
 
 @traced("complaint_rejected")
 def complaint_rejected_node(state: AgentState) -> dict:
-    comment = (state["hitl_decision"].get("comment") or "").strip()
+    comment = ((state.get("hitl_decision") or {}).get("comment") or "").strip()
     answer = "Un ejecutivo revisó su solicitud y no corresponde registrarla como reclamo."
     if comment:
         answer += f" Observación: {comment}"

@@ -9,12 +9,12 @@ Responsabilidades:
 import json
 import time
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, cast
 
 from langchain_core.messages import AIMessageChunk, HumanMessage
 from langgraph.types import Command
 
-from app.api.schemas import ChatResponse, GuardrailInfo, InterruptInfo, Metrics, NodeMetric
+from app.api.schemas import ChatResponse, GuardrailInfo, InterruptInfo, Metrics, NodeMetric, ResponseStatus
 from app.graph.state import turn_reset
 
 # Nodos cuyos tokens de LLM se reenvían al cliente por SSE (el router y el borrador de queja no)
@@ -66,7 +66,7 @@ async def build_response(graph, thread_id: str, previous_len: int, started: floa
     interrupts = [i for task in snapshot.tasks for i in task.interrupts]
 
     nodes = [NodeMetric(**entry) for entry in values.get("trace", [])[previous_len:]]
-    status = "interrupted" if interrupts else (values.get("status") or "completed")
+    status = cast(ResponseStatus, "interrupted" if interrupts else (values.get("status") or "completed"))
     interrupt = None
     if interrupts:
         value: dict[str, Any] = interrupts[0].value
@@ -97,8 +97,9 @@ async def build_response(graph, thread_id: str, previous_len: int, started: floa
     )
 
 
-def record_analytics(response: ChatResponse, kind: str, customer_id: str | None,
-                     decision: dict | None = None, source: str = "live") -> None:
+def record_analytics(
+    response: ChatResponse, kind: str, customer_id: str | None, decision: dict | None = None, source: str = "live"
+) -> None:
     """KPIs por turno y cola del back-office. Nunca interrumpe la conversación si falla."""
     from app.analytics.store import get_analytics, safe
 
@@ -111,8 +112,16 @@ def record_analytics(response: ChatResponse, kind: str, customer_id: str | None,
         safe(store.enqueue_complaint, response.thread_id, customer_id, response.interrupt.payload, source)
 
 
-async def run_turn(graph, thread_id: str, graph_input: Any, *, kind: str = "chat", customer_id: str | None = None,
-                   decision: dict | None = None, source: str = "live") -> ChatResponse:
+async def run_turn(
+    graph,
+    thread_id: str,
+    graph_input: Any,
+    *,
+    kind: str = "chat",
+    customer_id: str | None = None,
+    decision: dict | None = None,
+    source: str = "live",
+) -> ChatResponse:
     previous_len = await _trace_len(graph, thread_id)
     started = time.perf_counter()
     await graph.ainvoke(graph_input, config=_config(thread_id))
@@ -143,7 +152,9 @@ async def stream_turn(graph, thread_id: str, graph_input: Any, customer_id: str 
                     yield sse("node", {"node": chunk["name"], "status": "start"})
                 else:  # fin de nodo (el resultado trae el trace con la latencia)
                     trace = (chunk.get("result") or {}).get("trace") or [{}]
-                    yield sse("node", {"node": chunk["name"], "status": "end", "latency_ms": trace[0].get("latency_ms")})
+                    yield sse(
+                        "node", {"node": chunk["name"], "status": "end", "latency_ms": trace[0].get("latency_ms")}
+                    )
             elif mode == "messages":
                 message, metadata = chunk
                 if (

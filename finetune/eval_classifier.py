@@ -39,15 +39,15 @@ def percentile(values: list[float], q: float) -> float:
 def classification_report(gold: list[str], pred: list[str]) -> dict:
     per_class = {}
     for label in INTENT_LABELS:
-        tp = sum(g == label and p == label for g, p in zip(gold, pred))
-        fp = sum(g != label and p == label for g, p in zip(gold, pred))
-        fn = sum(g == label and p != label for g, p in zip(gold, pred))
+        tp = sum(g == label and p == label for g, p in zip(gold, pred, strict=True))
+        fp = sum(g != label and p == label for g, p in zip(gold, pred, strict=True))
+        fn = sum(g == label and p != label for g, p in zip(gold, pred, strict=True))
         precision = tp / (tp + fp) if tp + fp else 0.0
         recall = tp / (tp + fn) if tp + fn else 0.0
         f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
         per_class[label] = {"precision": round(precision, 3), "recall": round(recall, 3), "f1": round(f1, 3)}
     return {
-        "accuracy": round(sum(g == p for g, p in zip(gold, pred)) / len(gold), 3),
+        "accuracy": round(sum(g == p for g, p in zip(gold, pred, strict=True)) / len(gold), 3),
         "macro_f1": round(statistics.mean(c["f1"] for c in per_class.values()), 3),
         "per_class": per_class,
     }
@@ -81,16 +81,22 @@ def evaluate(name: str, rows: list[dict], predict) -> dict:
             errors.append({"text": row["text"], "gold": row["label"]["intent"], "pred": output["intent"]})
 
     report = classification_report(gold, pred)
-    report.update({
-        "backend": name,
-        "n": len(rows),
-        "json_valid_rate": round(valid / len(rows), 3),
-        "entity_exact_match": {k: round(sum(m[k] for m in matches) / len(matches), 3) for k in ("producto", "monto", "moneda")},
-        "latency_ms": {"p50": percentile(latencies, 0.5), "p95": percentile(latencies, 0.95)},
-        "errors_sample": errors[:10],
-    })
-    print(f"{name:8} acc={report['accuracy']:.3f} macroF1={report['macro_f1']:.3f} "
-          f"json={report['json_valid_rate']:.2f} p95={report['latency_ms']['p95']}ms")
+    report.update(
+        {
+            "backend": name,
+            "n": len(rows),
+            "json_valid_rate": round(valid / len(rows), 3),
+            "entity_exact_match": {
+                k: round(sum(m[k] for m in matches) / len(matches), 3) for k in ("producto", "monto", "moneda")
+            },
+            "latency_ms": {"p50": percentile(latencies, 0.5), "p95": percentile(latencies, 0.95)},
+            "errors_sample": errors[:10],
+        }
+    )
+    print(
+        f"{name:8} acc={report['accuracy']:.3f} macroF1={report['macro_f1']:.3f} "
+        f"json={report['json_valid_rate']:.2f} p95={report['latency_ms']['p95']}ms"
+    )
     return report
 
 
@@ -105,10 +111,19 @@ def to_markdown(results: list[dict]) -> str:
             f"| {r['backend']} | {r['accuracy']:.3f} | {r['macro_f1']:.3f} | {r['json_valid_rate']:.2f} | "
             f"{e['producto']:.2f} | {e['monto']:.2f} | {e['moneda']:.2f} | {r['latency_ms']['p50']} | {r['latency_ms']['p95']} |"
         )
-    lines += ["", "Recall por intención:", "", "| Backend | " + " | ".join(INTENT_LABELS) + " |",
-              "|---|" + "---|" * len(INTENT_LABELS)]
+    lines += [
+        "",
+        "Recall por intención:",
+        "",
+        "| Backend | " + " | ".join(INTENT_LABELS) + " |",
+        "|---|" + "---|" * len(INTENT_LABELS),
+    ]
     for r in results:
-        lines.append(f"| {r['backend']} | " + " | ".join(f"{r['per_class'][l]['recall']:.2f}" for l in INTENT_LABELS) + " |")
+        lines.append(
+            f"| {r['backend']} | "
+            + " | ".join(f"{r['per_class'][label]['recall']:.2f}" for label in INTENT_LABELS)
+            + " |"
+        )
     return "\n".join(lines) + "\n"
 
 
@@ -117,13 +132,21 @@ def main() -> None:
     parser.add_argument("--split", default="test")
     parser.add_argument("--device", default="auto", choices=["auto", "cuda", "cpu"])
     parser.add_argument("--base-model", default="Qwen/Qwen2.5-0.5B-Instruct")
-    parser.add_argument("--adapter", nargs="+", default=[f"lora={DEFAULT_ADAPTER}"],
-                        help="Uno o más adaptadores como nombre=ruta (se evalúan todos sobre el mismo test)")
+    parser.add_argument(
+        "--adapter",
+        nargs="+",
+        default=[f"lora={DEFAULT_ADAPTER}"],
+        help="Uno o más adaptadores como nombre=ruta (se evalúan todos sobre el mismo test)",
+    )
     parser.add_argument("--skip-base", action="store_true", help="No evaluar el modelo base zero-shot")
     args = parser.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
 
-    rows = [json.loads(l) for l in (ROOT / "data" / f"{args.split}.jsonl").read_text(encoding="utf-8").splitlines() if l]
+    rows = [
+        json.loads(line)
+        for line in (ROOT / "data" / f"{args.split}.jsonl").read_text(encoding="utf-8").splitlines()
+        if line
+    ]
 
     def rules_predict(text: str) -> dict:
         intent, _ = classify_rules(text)
@@ -148,7 +171,9 @@ def main() -> None:
 
     REPORTS.mkdir(exist_ok=True)
     suffix = "" if args.device in ("auto", "cuda") else f"_{args.device}"
-    (REPORTS / f"router_eval{suffix}.json").write_text(json.dumps(results, indent=2, ensure_ascii=False), encoding="utf-8")
+    (REPORTS / f"router_eval{suffix}.json").write_text(
+        json.dumps(results, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
     (REPORTS / f"router_eval{suffix}.md").write_text(to_markdown(results), encoding="utf-8")
     print(to_markdown(results))
 

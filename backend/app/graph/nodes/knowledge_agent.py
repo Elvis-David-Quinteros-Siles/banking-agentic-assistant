@@ -11,9 +11,9 @@ import re
 from langchain_core.messages import AIMessage, SystemMessage
 
 from app.config import get_settings
-from app.guardrails.grounding import numbers_in
 from app.graph.nodes.common import last_user_text, log_fallback
 from app.graph.state import AgentState
+from app.guardrails.grounding import numbers_in
 from app.llm.pricing import usage_from_message
 from app.llm.provider import get_chat_model, model_name
 from app.observability.tracing import traced
@@ -64,8 +64,10 @@ def attribute_citations(answer: str, docs: list[dict]) -> list[str]:
         by_llm += [d_id for d_id in retrieved_ids if d_id in token and d_id not in by_llm]
     answer_numbers = numbers_in(answer)
     by_evidence = [
-        d["id"] for d in docs
-        if answer_numbers and len(answer_numbers & numbers_in(f"{d['title']} {d['text']}")) >= max(1, len(answer_numbers) // 2)
+        d["id"]
+        for d in docs
+        if answer_numbers
+        and len(answer_numbers & numbers_in(f"{d['title']} {d['text']}")) >= max(1, len(answer_numbers) // 2)
     ]
     return list(dict.fromkeys(by_evidence + by_llm))
 
@@ -92,16 +94,21 @@ def knowledge_agent_node(state: AgentState) -> dict:
 
     update["retrieved_context"] = docs
     if not docs:
-        update.update({"final_answer": ABSTAIN_MESSAGE, "citations": [], "messages": [AIMessage(content=ABSTAIN_MESSAGE)]})
+        update.update(
+            {"final_answer": ABSTAIN_MESSAGE, "citations": [], "messages": [AIMessage(content=ABSTAIN_MESSAGE)]}
+        )
         return update
 
     answer: str
-    if get_chat_model() is not None:
+    llm = get_chat_model()
+    if llm is not None:
         try:
-            response = get_chat_model().invoke([
-                SystemMessage(content=SYSTEM_PROMPT),
-                ("human", f"CONTEXTO:\n{format_context(docs)}\n\nPREGUNTA: {question}"),
-            ])
+            response = llm.invoke(
+                [
+                    SystemMessage(content=SYSTEM_PROMPT),
+                    ("human", f"CONTEXTO:\n{format_context(docs)}\n\nPREGUNTA: {question}"),
+                ]
+            )
             answer = str(response.content)
             update["_usage"] = usage_from_message(response, model_name())
         except Exception as error:  # noqa: BLE001

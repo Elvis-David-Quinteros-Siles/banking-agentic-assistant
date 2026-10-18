@@ -46,7 +46,7 @@ class LoraIntentClassifier:
 
             # merge_and_unload: fusiona LoRA en los pesos base → misma latencia que el modelo base
             model = PeftModel.from_pretrained(model, str(adapter_path)).merge_and_unload()
-        self.model = model.to(self.device).eval()
+        self.model = model.to(self.device).eval()  # type: ignore[arg-type]  # stubs de transformers: .to(str) es válido
         self.max_new_tokens = max_new_tokens
         self.adapter_path = adapter_path
         logger.info("Router LoRA cargado (%s, adapter=%s, device=%s)", base_model, adapter_path, self.device)
@@ -57,7 +57,7 @@ class LoraIntentClassifier:
         text, spans = "", []
         for token_id in token_ids:
             start = len(text)
-            text += self.tokenizer.decode([token_id])
+            text += str(self.tokenizer.decode([token_id]))
             spans.append((start, len(text)))
         value_start = text.find(marker)
         if value_start == -1:
@@ -66,7 +66,7 @@ class LoraIntentClassifier:
         value_end = text.find('"', value_start)
         logprob = sum(
             math.log(max(p, 1e-9))
-            for (start, end), p in zip(spans, probs)
+            for (start, end), p in zip(spans, probs, strict=True)
             if start < value_end and end > value_start
         )
         return round(math.exp(logprob), 3)
@@ -89,9 +89,9 @@ class LoraIntentClassifier:
         new_ids = generated.sequences[0, inputs["input_ids"].shape[1] :].tolist()
         probs = [
             torch.softmax(score[0].float(), dim=-1)[token_id].item()
-            for score, token_id in zip(generated.scores, new_ids)
+            for score, token_id in zip(generated.scores, new_ids, strict=True)
         ]
-        raw = self.tokenizer.decode(new_ids, skip_special_tokens=True)
+        raw = str(self.tokenizer.decode(new_ids, skip_special_tokens=True))
         output = parse_output(raw)  # lanza ValueError si el JSON no es válido → el router cae a reglas
         return LoraPrediction(
             output=output,

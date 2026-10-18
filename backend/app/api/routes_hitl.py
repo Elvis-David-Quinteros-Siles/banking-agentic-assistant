@@ -21,4 +21,6 @@ async def approve(
     graph = request.app.state.graph
     await chat_service.ensure_interrupted(graph, thread_id)
     decision = body.model_dump()
-    return await chat_service.run_turn(graph, thread_id, chat_service.resume_input(decision), kind="approve", decision=decision)
+    return await chat_service.run_turn(
+        graph, thread_id, chat_service.resume_input(decision), kind="approve", decision=decision
+    )

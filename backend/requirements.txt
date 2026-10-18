@@ -23,4 +23,5 @@ langchain-anthropic>=1.7,<2.0
 
 # Tests y Evals
 pytest>=9.1,<10.0
+pytest-cov>=7.0,<8.0
 pyyaml>=6.0,<7.0

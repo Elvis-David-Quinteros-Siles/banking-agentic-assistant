@@ -70,17 +70,19 @@ class CaseResult:
 
 def configure_env(args: argparse.Namespace, tmp: Path) -> None:
     """Fija la configuración ANTES de importar la app (la configuración se cachea)."""
-    os.environ.update({
-        "APP_ENV": "test",
-        "LOG_LEVEL": "WARNING",
-        "LLM_PROVIDER": args.llm,
-        "ROUTER_BACKEND": args.router,
-        "KNOWLEDGE_BACKEND": args.knowledge,
-        "CORE_BACKEND": args.core,
-        "SQLITE_PATH": str(tmp / "bank.db"),
-        "CHECKPOINTS_PATH": str(tmp / "checkpoints.db"),
-        "ANALYTICS_PATH": str(tmp / "analytics.db"),
-    })
+    os.environ.update(
+        {
+            "APP_ENV": "test",
+            "LOG_LEVEL": "WARNING",
+            "LLM_PROVIDER": args.llm,
+            "ROUTER_BACKEND": args.router,
+            "KNOWLEDGE_BACKEND": args.knowledge,
+            "CORE_BACKEND": args.core,
+            "SQLITE_PATH": str(tmp / "bank.db"),
+            "CHECKPOINTS_PATH": str(tmp / "checkpoints.db"),
+            "ANALYTICS_PATH": str(tmp / "analytics.db"),
+        }
+    )
     if args.router == "lora":
         # El modelo LoRA ya está en caché local: evita consultas a Hugging Face en cada corrida
         os.environ.setdefault("HF_HUB_OFFLINE", "1")
@@ -92,8 +94,11 @@ def configure_env(args: argparse.Namespace, tmp: Path) -> None:
 def run_case(client, case: dict, judge=None) -> CaseResult:
     expected = case.get("expected", {})
     result = CaseResult(
-        id=case["id"], category=case["category"], message=case["message"],
-        tags=case.get("tags", []), expected_intent=expected.get("intent"),
+        id=case["id"],
+        category=case["category"],
+        message=case["message"],
+        tags=case.get("tags", []),
+        expected_intent=expected.get("intent"),
     )
 
     started = time.perf_counter()
@@ -155,13 +160,17 @@ def run_case(client, case: dict, judge=None) -> CaseResult:
     hitl = expected.get("hitl")
     if hitl and result.status == "interrupted":
         decision = {
-            "decision": hitl["decision"], "reviewer_id": "EVAL-OP",
-            "comment": hitl.get("comment"), "edited_draft": hitl.get("edited_draft"),
+            "decision": hitl["decision"],
+            "reviewer_id": "EVAL-OP",
+            "comment": hitl.get("comment"),
+            "edited_draft": hitl.get("edited_draft"),
         }
         resumed = client.post(f"/approve/{body['thread_id']}", json=decision)
         final = resumed.json() if resumed.status_code == 200 else {}
-        result.hitl_ok = resumed.status_code == 200 and final.get("status") == "completed" and all(
-            text in final.get("answer", "") for text in hitl.get("final_contains", [])
+        result.hitl_ok = (
+            resumed.status_code == 200
+            and final.get("status") == "completed"
+            and all(text in final.get("answer", "") for text in hitl.get("final_contains", []))
         )
         if not result.hitl_ok:
             result.fail(f"reanudación HITL fallida: {resumed.status_code} {final.get('answer', '')[:80]!r}")
@@ -215,8 +224,11 @@ def compute_metrics(results: list[CaseResult], cases: list[dict]) -> dict[str, A
         fn = sum(r.intent != label and r.expected_intent == label for r in routed)
         precision = tp / (tp + fp) if tp + fp else None
         recall = tp / (tp + fn) if tp + fn else None
-        per_intent[label] = {"precision": None if precision is None else round(precision, 3),
-                             "recall": None if recall is None else round(recall, 3), "support": tp + fn}
+        per_intent[label] = {
+            "precision": None if precision is None else round(precision, 3),
+            "recall": None if recall is None else round(recall, 3),
+            "support": tp + fn,
+        }
 
     def pii_ok(r: CaseResult) -> bool:
         return not any(f.startswith(("PII", "fuga")) for f in r.failures)
@@ -235,22 +247,32 @@ def compute_metrics(results: list[CaseResult], cases: list[dict]) -> dict[str, A
         "per_intent": per_intent,
         "guardrail_interception_rate": ratio(sum(r.status == "blocked" for r in attacks), len(attacks)),
         "guardrail_reason_accuracy": ratio(
-            sum(not any(f.startswith("motivo") for f in r.failures) and r.status == "blocked" for r in attacks), len(attacks)),
+            sum(not any(f.startswith("motivo") for f in r.failures) and r.status == "blocked" for r in attacks),
+            len(attacks),
+        ),
         "guardrail_false_positive_rate": ratio(sum(r.status == "blocked" for r in legit), len(legit)),
         "pii_redaction_recall": ratio(sum(pii_ok(r) for r in pii_cases), len(pii_cases)),
         "complaint_recall": ratio(sum(r.intent == "queja_disputa" for r in complaints), len(complaints)),
         "hitl_trigger_rate": ratio(len(hitl_triggered), len(hitl_cases)),
         "hitl_resume_success": ratio(sum(bool(r.hitl_ok) for r in hitl_triggered), len(hitl_triggered)),
-        "citation_hit_rate": ratio(sum(not any(f.startswith("citas") for f in r.failures) for r in knowledge), len(knowledge)),
+        "citation_hit_rate": ratio(
+            sum(not any(f.startswith("citas") for f in r.failures) for r in knowledge), len(knowledge)
+        ),
         "data_exactness": ratio(sum(not any(f.startswith("falta") for f in r.failures) for r in exact), len(exact)),
         "faithfulness": ratio(sum(j["faithful"] for j in judged), len(judged)) if judged else None,
         "degraded_rate": ratio(sum(r.degraded for r in results), len(results)),
-        "context_leak_rate": ratio(sum(any(f.startswith("fuga de contexto") for f in r.failures) for r in results), len(results)),
+        "context_leak_rate": ratio(
+            sum(any(f.startswith("fuga de contexto") for f in r.failures) for r in results), len(results)
+        ),
         "latency_ms": {"p50": percentile(latencies, 0.5), "p95": percentile(latencies, 0.95), "max": max(latencies)},
-        "node_latency_p95_ms": {n: percentile([r.node_latency[n] for r in results if n in r.node_latency], 0.95) for n in node_names},
+        "node_latency_p95_ms": {
+            n: percentile([r.node_latency[n] for r in results if n in r.node_latency], 0.95) for n in node_names
+        },
         "tokens": {"in": sum(r.tokens_in for r in results), "out": sum(r.tokens_out for r in results)},
-        "cost_usd": {"total": round(sum(r.cost_usd for r in results), 6),
-                     "per_turn": round(sum(r.cost_usd for r in results) / len(results), 6)},
+        "cost_usd": {
+            "total": round(sum(r.cost_usd for r in results), 6),
+            "per_turn": round(sum(r.cost_usd for r in results) / len(results), 6),
+        },
         "confidence_correct_vs_wrong": {
             "correct_mean": _mean([r.confidence for r in routed if r.intent == r.expected_intent]),
             "wrong_mean": _mean([r.confidence for r in routed if r.intent != r.expected_intent]),
@@ -264,7 +286,11 @@ def _mean(values: list[float | None]) -> float | None:
 
 
 def check_thresholds(metrics: dict, thresholds: dict, router: str, knowledge: str, llm: str = "fake") -> list[str]:
-    rules = {**thresholds["common"], **thresholds["router"].get(router, {}), **thresholds["knowledge"].get(knowledge, {})}
+    rules = {
+        **thresholds["common"],
+        **thresholds["router"].get(router, {}),
+        **thresholds["knowledge"].get(knowledge, {}),
+    }
     violations = []
     for name, limit in rules.items():
         value = metrics.get(name)
@@ -274,7 +300,9 @@ def check_thresholds(metrics: dict, thresholds: dict, router: str, knowledge: st
             violations.append(f"{name} = {value} < {limit['min']}")
         if "max" in limit and value > limit["max"]:
             violations.append(f"{name} = {value} > {limit['max']}")
-    latency_table = thresholds["latency"] if llm == "fake" else thresholds.get("latency_with_llm", thresholds["latency"])
+    latency_table = (
+        thresholds["latency"] if llm == "fake" else thresholds.get("latency_with_llm", thresholds["latency"])
+    )
     budget = latency_table.get(router, {}).get("p95_ms_max")
     if budget and metrics["latency_ms"]["p95"] > budget:
         violations.append(f"latency p95 = {metrics['latency_ms']['p95']} ms > {budget} ms")
@@ -332,8 +360,15 @@ def to_markdown(config: dict, metrics: dict, results: list[CaseResult], violatio
     return "\n".join(lines) + "\n"
 
 
-def run(router: str = "rules", knowledge: str = "keyword", llm: str = "fake", judge: bool = False,
-        cases_path: Path = ROOT / "cases.yaml", verbose: bool = True, core: str = "sqlite") -> dict:
+def run(
+    router: str = "rules",
+    knowledge: str = "keyword",
+    llm: str = "fake",
+    judge: bool = False,
+    cases_path: Path = ROOT / "cases.yaml",
+    verbose: bool = True,
+    core: str = "sqlite",
+) -> dict:
     if "app.main" in sys.modules:
         raise RuntimeError("La app ya fue importada con otra configuración: ejecutar los Evals en un proceso aparte")
     args = argparse.Namespace(router=router, knowledge=knowledge, llm=llm, core=core)
@@ -360,8 +395,10 @@ def run(router: str = "rules", knowledge: str = "keyword", llm: str = "fake", ju
             results.append(result)
             if verbose:
                 mark = "OK  " if result.passed else "FAIL"
-                print(f"  {mark} {result.id:4} {result.intent or '-':22} {result.status or '-':13} "
-                      f"{result.latency_ms:7.1f} ms  {'; '.join(result.failures)}")
+                print(
+                    f"  {mark} {result.id:4} {result.intent or '-':22} {result.status or '-':13} "
+                    f"{result.latency_ms:7.1f} ms  {'; '.join(result.failures)}"
+                )
 
     _cleanup_graph_complaints(knowledge, results)
 
@@ -406,7 +443,9 @@ def main() -> None:
     parser.add_argument("--knowledge", choices=["keyword", "neo4j", "pgvector"], default="keyword")
     parser.add_argument("--core", choices=["sqlite", "sqlserver"], default="sqlite", help="Motor del core bancario")
     parser.add_argument("--llm", choices=["fake", "ollama", "openai", "anthropic"], default="fake")
-    parser.add_argument("--judge", action="store_true", help="LLM-as-judge de fidelidad (requiere --llm distinto de fake)")
+    parser.add_argument(
+        "--judge", action="store_true", help="LLM-as-judge de fidelidad (requiere --llm distinto de fake)"
+    )
     parser.add_argument("--check", action="store_true", help="Exit 1 si algún umbral no se cumple")
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args()

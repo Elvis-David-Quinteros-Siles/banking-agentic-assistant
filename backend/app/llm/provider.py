@@ -8,6 +8,7 @@ degrada en calidad de redacción, pero sigue respondiendo con datos correctos.
 from functools import lru_cache
 
 from langchain_core.language_models.chat_models import BaseChatModel
+from pydantic import SecretStr
 
 from app.config import get_settings
 
@@ -34,9 +35,9 @@ def get_chat_model() -> BaseChatModel | None:
     if provider == "openai":
         from langchain_openai import ChatOpenAI
 
-        return ChatOpenAI(
+        return ChatOpenAI(  # type: ignore[call-arg]  # max_tokens es alias de pydantic: válido en runtime
             model=settings.openai_model,
-            api_key=settings.openai_api_key,
+            api_key=SecretStr(settings.openai_api_key) if settings.openai_api_key else None,
             temperature=settings.llm_temperature,
             max_tokens=settings.llm_max_tokens,
             timeout=30,
@@ -45,15 +46,23 @@ def get_chat_model() -> BaseChatModel | None:
     if provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
 
-        return ChatAnthropic(
+        return ChatAnthropic(  # type: ignore[call-arg]  # model/max_tokens son alias de pydantic
             model=settings.anthropic_model,
-            api_key=settings.anthropic_api_key,
+            api_key=SecretStr(settings.anthropic_api_key or ""),
             temperature=settings.llm_temperature,
             max_tokens=settings.llm_max_tokens,
             timeout=30,
         )
 
     raise ValueError(f"LLM_PROVIDER no soportado: {provider}")
+
+
+def require_llm() -> BaseChatModel:
+    """El LLM configurado, o un error claro si no hay (los nodos lo capturan y usan su ruta determinista)."""
+    llm = get_chat_model()
+    if llm is None:
+        raise RuntimeError("No hay LLM configurado (LLM_PROVIDER=fake)")
+    return llm
 
 
 def model_name() -> str:

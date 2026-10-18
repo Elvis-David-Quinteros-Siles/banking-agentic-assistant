@@ -27,8 +27,13 @@ def test_tsquery_or_is_safe_and_uses_or():
 def sqlserver_repo(settings):
     from app.db.sqlserver import SqlServerRepository
 
-    repo = SqlServerRepository(settings.sqlserver_host, settings.sqlserver_port, settings.sqlserver_database,
-                               settings.sqlserver_user, settings.sqlserver_password)
+    repo = SqlServerRepository(
+        settings.sqlserver_host,
+        settings.sqlserver_port,
+        settings.sqlserver_database,
+        settings.sqlserver_user,
+        settings.sqlserver_password,
+    )
     if not repo.ping():
         pytest.skip("SQL Server no disponible (docker compose up -d sqlserver + init_sqlserver.py)")
     return repo
@@ -57,11 +62,20 @@ def test_sqlserver_foreign_account_is_filtered_inside_the_database(sqlserver_rep
 def test_sqlserver_app_login_has_no_direct_table_access(settings, sqlserver_repo):
     import pymssql
 
-    conn = pymssql.connect(server=settings.sqlserver_host, port=settings.sqlserver_port, database=settings.sqlserver_database,
-                           user=settings.sqlserver_user, password=settings.sqlserver_password)
+    conn = pymssql.connect(
+        server=settings.sqlserver_host,
+        port=settings.sqlserver_port,
+        database=settings.sqlserver_database,
+        user=settings.sqlserver_user,
+        password=settings.sqlserver_password,
+    )
     try:
         cursor = conn.cursor()
-        for sql in ("SELECT TOP 1 * FROM dbo.accounts", "DELETE FROM dbo.transactions", "UPDATE dbo.accounts SET balance = 0"):
+        for sql in (
+            "SELECT TOP 1 * FROM dbo.accounts",
+            "DELETE FROM dbo.transactions",
+            "UPDATE dbo.accounts SET balance = 0",
+        ):
             with pytest.raises(pymssql.Error, match="permission was denied"):
                 cursor.execute(sql)
     finally:
@@ -70,11 +84,21 @@ def test_sqlserver_app_login_has_no_direct_table_access(settings, sqlserver_repo
 
 @pytest.mark.sqlserver
 def test_sqlserver_registers_complaint_through_procedure(sqlserver_repo):
-    sqlserver_repo.insert_complaint({
-        "complaint_id": f"QJ-T{uuid.uuid4().hex[:5].upper()}", "customer_id": "CLI-001", "thread_id": "test",
-        "category": "cobro_indebido", "product": "tarjeta_debito", "amount": 350.0, "currency": "BOB",
-        "priority": "media", "summary": "test de integración", "status": "registrada", "reviewer_id": "TEST",
-    })
+    sqlserver_repo.insert_complaint(
+        {
+            "complaint_id": f"QJ-T{uuid.uuid4().hex[:5].upper()}",
+            "customer_id": "CLI-001",
+            "thread_id": "test",
+            "category": "cobro_indebido",
+            "product": "tarjeta_debito",
+            "amount": 350.0,
+            "currency": "BOB",
+            "priority": "media",
+            "summary": "test de integración",
+            "status": "registrada",
+            "reviewer_id": "TEST",
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -87,8 +111,12 @@ def pg_retriever(settings):
 
     if not pgvector_available():
         pytest.skip("pgvector no disponible (docker compose up -d pgvector + seed_pgvector.py)")
-    return PgVectorHybridRetriever(settings.pgvector_dsn, FastEmbedEmbedder(settings.embeddings_model),
-                                   settings.neo4j_min_similarity, settings.rrf_k)
+    return PgVectorHybridRetriever(
+        settings.pgvector_dsn,
+        FastEmbedEmbedder(settings.embeddings_model),
+        settings.neo4j_min_similarity,
+        settings.rrf_k,
+    )
 
 
 @pytest.mark.pgvector

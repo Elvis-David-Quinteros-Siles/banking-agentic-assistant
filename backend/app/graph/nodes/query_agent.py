@@ -17,13 +17,13 @@ import re
 from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
 
 from app.config import get_settings
+from app.db.repository import get_repository
 from app.graph.nodes.common import last_user_text, log_fallback, recent_history
 from app.graph.state import AgentState
 from app.llm.pricing import add_usage, usage_from_message
 from app.llm.provider import get_chat_model, model_name
 from app.observability.tracing import traced
 from app.text import normalize
-from app.db.repository import get_repository
 from app.tools.sql_tools import BankingTools, format_money
 
 SYSTEM_PROMPT = """Eres el agente de consultas de un banco boliviano. Respondes en español, de forma breve y cordial.
@@ -101,7 +101,7 @@ def deterministic_answer(tools: BankingTools, text: str) -> str:
 
     normalized = normalize(text)
     if any(w in normalized for w in ("movimiento", "extracto", "transaccion", "gaste", "depositaron")):
-        account = pick_account(accounts, text)
+        account = pick_account(accounts, text) or accounts[0]
         return format_movements(account, tools.get_transactions(account["cuenta"], limit=5))
 
     lines = [
@@ -116,7 +116,10 @@ def react_answer(tools: BankingTools, state: AgentState) -> tuple[str, dict]:
     """Loop ReAct con tope de iteraciones. Devuelve (respuesta, uso de tokens)."""
     settings = get_settings()
     lc_tools = {t.name: t for t in tools.as_langchain_tools() if t.name == "get_transactions"}
-    llm = get_chat_model().bind_tools(list(lc_tools.values()))
+    base_llm = get_chat_model()
+    if base_llm is None:
+        raise RuntimeError("No hay LLM configurado")
+    llm = base_llm.bind_tools(list(lc_tools.values()))
 
     accounts = tools.get_accounts()
     system = SystemMessage(content=f"{SYSTEM_PROMPT}\n\nCUENTAS: {json.dumps(accounts, ensure_ascii=False)}")
@@ -130,7 +133,7 @@ def react_answer(tools: BankingTools, state: AgentState) -> tuple[str, dict]:
             # Falla observada con qwen2.5:3b vía Ollama: con tools disponibles emite una tool call
             # malformada que el parser descarta y la respuesta llega vacía. Se reintenta UNA vez
             # sin tools (el contexto ya trae las cuentas); si vuelve vacía, ruta determinista.
-            response = get_chat_model().invoke(messages)
+            response = base_llm.invoke(messages)
             usages.append(usage_from_message(response, model_name()))
             if not str(response.content).strip():
                 raise ValueError("respuesta vacía del LLM")

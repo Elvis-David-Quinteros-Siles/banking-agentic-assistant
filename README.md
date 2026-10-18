@@ -1,6 +1,9 @@
 # Asistente bancario agéntico
 
 [![CI](https://github.com/Elvis-David-Quinteros-Siles/banking-agentic-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/Elvis-David-Quinteros-Siles/banking-agentic-assistant/actions/workflows/ci.yml)
+![Cobertura](https://img.shields.io/badge/cobertura-82%25%20(m%C3%ADn.%2080%25%20en%20CI)-brightgreen)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+![mypy](https://img.shields.io/badge/tipos-mypy-blue)
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
 ![LangGraph](https://img.shields.io/badge/LangGraph-1.2-purple)
 ![Neo4j](https://img.shields.io/badge/Neo4j-5.26-green)

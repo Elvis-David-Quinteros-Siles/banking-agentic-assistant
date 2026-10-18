@@ -23,8 +23,48 @@ from app.text import normalize
 logger = logging.getLogger("knowledge")
 
 STOPWORDS = set(
-    "de la el en y a los las del un una que por para con se su sus al lo como mas o es cual cuales "
-    "mi me tengo hay son esta este cuanto cuanta puedo quiero saber sobre tiene".split()
+    [
+        "de",
+        "la",
+        "el",
+        "en",
+        "y",
+        "a",
+        "los",
+        "las",
+        "del",
+        "un",
+        "una",
+        "que",
+        "por",
+        "para",
+        "con",
+        "se",
+        "su",
+        "sus",
+        "al",
+        "lo",
+        "como",
+        "mas",
+        "o",
+        "es",
+        "cual",
+        "cuales",
+        "mi",
+        "me",
+        "tengo",
+        "hay",
+        "son",
+        "esta",
+        "este",
+        "cuanto",
+        "cuanta",
+        "puedo",
+        "quiero",
+        "saber",
+        "sobre",
+        "tiene",
+    ]
 )
 
 
@@ -59,7 +99,9 @@ class KeywordRetriever:
             if t not in freqs:
                 continue
             tf = freqs[t]
-            score += self.idf[t] * tf * (self.k1 + 1) / (tf + self.k1 * (1 - self.b + self.b * len(tokens) / self.avg_len))
+            score += (
+                self.idf[t] * tf * (self.k1 + 1) / (tf + self.k1 * (1 - self.b + self.b * len(tokens) / self.avg_len))
+            )
         return score
 
     def search(self, query: str, k: int = 4, product_hint: str | None = None) -> list[dict]:
@@ -80,9 +122,15 @@ class KeywordRetriever:
 
 # Mapeo de entidades del router a productos del catálogo
 PRODUCT_TAGS = {
-    "PRD-AHO-BOB": ["caja_ahorro"], "PRD-AHO-USD": ["caja_ahorro"], "PRD-CTE": ["cuenta_corriente"],
-    "PRD-TDB": ["tarjeta", "tarjeta_debito"], "PRD-TCR": ["tarjeta", "tarjeta_credito"], "PRD-DPF": ["dpf"],
-    "PRD-VIV": ["credito_vivienda"], "PRD-PYME": ["credito_pyme"], "PRD-BXI": ["banca_internet", "qr", "transferencia"],
+    "PRD-AHO-BOB": ["caja_ahorro"],
+    "PRD-AHO-USD": ["caja_ahorro"],
+    "PRD-CTE": ["cuenta_corriente"],
+    "PRD-TDB": ["tarjeta", "tarjeta_debito"],
+    "PRD-TCR": ["tarjeta", "tarjeta_credito"],
+    "PRD-DPF": ["dpf"],
+    "PRD-VIV": ["credito_vivienda"],
+    "PRD-PYME": ["credito_pyme"],
+    "PRD-BXI": ["banca_internet", "qr", "transferencia"],
 }
 
 
@@ -91,23 +139,35 @@ def load_documents(seed_file: Path) -> list[dict]:
     data = json.loads(seed_file.read_text(encoding="utf-8"))
     documents = []
     for p in data["products"]:
-        documents.append({
-            "id": p["producto_id"], "type": "producto", "title": p["nombre"], "text": p["descripcion"],
-            "product_tags": PRODUCT_TAGS.get(p["producto_id"], []),
-        })
+        documents.append(
+            {
+                "id": p["producto_id"],
+                "type": "producto",
+                "title": p["nombre"],
+                "text": p["descripcion"],
+                "product_tags": PRODUCT_TAGS.get(p["producto_id"], []),
+            }
+        )
     for pol in data["policies"]:
         tags = sorted({tag for pid in pol["productos"] for tag in PRODUCT_TAGS.get(pid, [])})
-        documents.append({
-            "id": pol["politica_id"], "type": "politica", "title": pol["titulo"], "text": pol["texto"],
-            "product_tags": tags,
-        })
+        documents.append(
+            {
+                "id": pol["politica_id"],
+                "type": "politica",
+                "title": pol["titulo"],
+                "text": pol["texto"],
+                "product_tags": tags,
+            }
+        )
     return documents
 
 
 @lru_cache
 def get_keyword_retriever() -> KeywordRetriever:
     settings = get_settings()
-    return KeywordRetriever(load_documents(settings.seed_dir / "knowledge.json"), min_score=settings.knowledge_min_score)
+    return KeywordRetriever(
+        load_documents(settings.seed_dir / "knowledge.json"), min_score=settings.knowledge_min_score
+    )
 
 
 def product_id_for_tag(tag: str | None) -> str | None:

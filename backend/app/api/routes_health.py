@@ -1,5 +1,7 @@
 """Endpoint GET /health: estado de cada componente."""
 
+from typing import Literal
+
 import httpx
 from fastapi import APIRouter, Request
 
@@ -71,6 +73,7 @@ async def health(request: Request) -> HealthResponse:
         "knowledge_store": _check_knowledge_store(),
         "lora_router": _check_lora(),
     }
+    status: Literal["ok", "degraded", "down"]
     if components["graph"] != "ok" or components["core"] != "ok":
         status = "down"
     elif components["llm"] not in ("ok", "disabled") or components["knowledge_store"] not in ("ok", "disabled"):

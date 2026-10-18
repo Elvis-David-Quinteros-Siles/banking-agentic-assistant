@@ -1,0 +1,42 @@
+# Configuración de herramientas de calidad (el proyecto no se empaqueta: cada carpeta tiene su requirements.txt)
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["frontend", ".venv", "finetune/adapters", "finetune/outputs"]
+
+[tool.ruff.lint]
+# E/W estilo, F errores, I orden de imports, B bugs probables, UP sintaxis moderna, S seguridad (bandit)
+select = ["E", "W", "F", "I", "B", "UP", "S", "SIM"]
+ignore = [
+    "S101",   # assert en tests
+    "S608",   # SQL armado con f-strings de NOMBRES de tabla/columna fijos (los valores van parametrizados)
+    "B008",   # Header()/Query() en defaults: patrón estándar de FastAPI
+    "SIM108", # ternarios forzados restan legibilidad
+    "E501",   # el largo del código lo controla `ruff format`; las líneas largas restantes son prompts, regex y SQL
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S105", "S106"]        # contraseñas de prueba
+"evals/**" = ["S105"]
+"backend/scripts/**" = ["E402"]         # sys.path antes de los imports de app
+"finetune/**" = ["E402"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+check_untyped_defs = true
+warn_unused_ignores = true
+no_implicit_optional = true
+files = ["backend/app"]
+
+[tool.coverage.run]
+source = ["backend/app"]
+omit = ["backend/app/llm/lora_router.py"]  # requiere torch + GPU: se prueba en finetune/, no en CI
+
+[tool.coverage.report]
+skip_empty = true
+show_missing = false

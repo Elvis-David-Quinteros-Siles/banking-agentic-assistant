@@ -4,9 +4,9 @@ El LLM propone; un operador decide (nodo hitl_review). Ningún reclamo se regist
 aprobación: es un caso con riesgo regulatorio y reputacional.
 """
 
-from typing import Literal
+from typing import Any, Literal, cast
 
-from langchain_core.messages import AIMessage, SystemMessage
+from langchain_core.messages import SystemMessage
 from pydantic import BaseModel, Field
 
 from app.config import get_settings
@@ -67,7 +67,7 @@ def compute_priority(category: str, amount: float | None, currency: str | None) 
 
 
 def rules_draft(text: str, entities: dict) -> dict:
-    category = rules_category(text)
+    category = cast(Category, rules_category(text))
     return ComplaintDraft(
         categoria=category,
         producto=entities.get("producto"),
@@ -84,10 +84,14 @@ def complaint_agent_node(state: AgentState) -> dict:
     update: dict = {}
 
     draft: dict
-    if get_chat_model() is not None:
+    llm = get_chat_model()
+    if llm is not None:
         try:
-            structured = get_chat_model().with_structured_output(ComplaintDraft, include_raw=True)
-            result = structured.invoke([SystemMessage(content=SYSTEM_PROMPT), *recent_history(state["messages"])])
+            structured = llm.with_structured_output(ComplaintDraft, include_raw=True)
+            result = cast(
+                dict[str, Any],
+                structured.invoke([SystemMessage(content=SYSTEM_PROMPT), *recent_history(state["messages"])]),
+            )
             if result.get("parsed") is None:
                 raise ValueError(f"salida no parseable: {result.get('parsing_error')}")
             draft = result["parsed"].model_dump()

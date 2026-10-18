@@ -18,7 +18,7 @@ import sqlite3
 import statistics
 import threading
 from contextlib import contextmanager
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from functools import lru_cache
 from pathlib import Path
 
@@ -65,7 +65,7 @@ DECISION_STATUS = {"approve": "aprobado", "edit": "editado", "reject": "rechazad
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 def pseudonymize(customer_id: str | None) -> str | None:
@@ -107,13 +107,23 @@ class AnalyticsStore:
                 "pii_types, degraded, citations, latency_ms, tokens_in, tokens_out, cost_usd, nodes, source) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
-                    now_iso(), kind, response["thread_id"], pseudonymize(customer_id), response.get("intent"),
-                    response.get("intent_confidence"), response["status"],
+                    now_iso(),
+                    kind,
+                    response["thread_id"],
+                    pseudonymize(customer_id),
+                    response.get("intent"),
+                    response.get("intent_confidence"),
+                    response["status"],
                     guardrail.get("reason") if guardrail.get("blocked") else None,
-                    ",".join(guardrail.get("pii_found", [])) or None, int(bool(response.get("degraded"))),
-                    len(response.get("citations", [])), metrics.get("latency_ms", 0), metrics.get("tokens_in", 0),
-                    metrics.get("tokens_out", 0), metrics.get("cost_usd", 0.0),
-                    json.dumps({n["node"]: n["latency_ms"] for n in metrics.get("nodes", [])}), source,
+                    ",".join(guardrail.get("pii_found", [])) or None,
+                    int(bool(response.get("degraded"))),
+                    len(response.get("citations", [])),
+                    metrics.get("latency_ms", 0),
+                    metrics.get("tokens_in", 0),
+                    metrics.get("tokens_out", 0),
+                    metrics.get("cost_usd", 0.0),
+                    json.dumps({n["node"]: n["latency_ms"] for n in metrics.get("nodes", [])}),
+                    source,
                 ),
             )
 
@@ -122,15 +132,27 @@ class AnalyticsStore:
             conn.execute(
                 "INSERT OR REPLACE INTO hitl_queue (thread_id, customer_id, created_at, draft, priority, status, source) "
                 "VALUES (?, ?, ?, ?, ?, 'pendiente', ?)",
-                (thread_id, customer_id, now_iso(), json.dumps(draft, ensure_ascii=False), draft.get("prioridad", "media"), source),
+                (
+                    thread_id,
+                    customer_id,
+                    now_iso(),
+                    json.dumps(draft, ensure_ascii=False),
+                    draft.get("prioridad", "media"),
+                    source,
+                ),
             )
 
     def decide_complaint(self, thread_id: str, decision: dict) -> None:
         with self._lock, self._conn() as conn:
             conn.execute(
                 "UPDATE hitl_queue SET status = ?, decided_at = ?, reviewer_id = ?, comment = ? WHERE thread_id = ?",
-                (DECISION_STATUS.get(decision["decision"], decision["decision"]), now_iso(), decision.get("reviewer_id"),
-                 decision.get("comment"), thread_id),
+                (
+                    DECISION_STATUS.get(decision["decision"], decision["decision"]),
+                    now_iso(),
+                    decision.get("reviewer_id"),
+                    decision.get("comment"),
+                    thread_id,
+                ),
             )
 
     def customer_for(self, thread_id: str) -> str | None:
@@ -142,7 +164,7 @@ class AnalyticsStore:
     def pending_queue(self) -> list[dict]:
         with self._conn() as conn:
             rows = conn.execute("SELECT * FROM hitl_queue WHERE status = 'pendiente'").fetchall()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         items = [
             {
                 "thread_id": r["thread_id"],
@@ -158,7 +180,7 @@ class AnalyticsStore:
         return sorted(items, key=lambda i: (PRIORITY_ORDER.get(i["priority"], 9), -i["age_minutes"]))
 
     def summary(self, hours: int = 24) -> dict:
-        since = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+        since = (datetime.now(UTC) - timedelta(hours=hours)).isoformat(timespec="seconds")
         with self._conn() as conn:
             turns = [dict(r) for r in conn.execute("SELECT * FROM turns WHERE ts >= ? AND kind = 'chat'", (since,))]
             queue = [dict(r) for r in conn.execute("SELECT * FROM hitl_queue WHERE created_at >= ?", (since,))]
@@ -172,21 +194,30 @@ class AnalyticsStore:
         resolved_by_agent = [t for t in legit if t["status"] == "completed"]
 
         by_intent = []
-        for intent in ("consulta_cuenta", "conocimiento_producto", "queja_disputa", "fuera_de_alcance", "ambiguo", None):
+        for intent in (
+            "consulta_cuenta",
+            "conocimiento_producto",
+            "queja_disputa",
+            "fuera_de_alcance",
+            "ambiguo",
+            None,
+        ):
             group = [t for t in turns if t["intent"] == intent]
             if not group:
                 continue
-            by_intent.append({
-                "intent": intent or "bloqueado_antes_del_router",
-                "turns": len(group),
-                "completed_rate": rate(sum(t["status"] == "completed" for t in group), len(group)),
-                "hitl_rate": rate(sum(t["status"] == "interrupted" for t in group), len(group)),
-                "clarification_rate": rate(sum(t["status"] == "clarification" for t in group), len(group)),
-                "blocked_rate": rate(sum(t["status"] == "blocked" for t in group), len(group)),
-                "degraded_rate": rate(sum(t["degraded"] for t in group), len(group)),
-                "latency_p95_ms": percentile([t["latency_ms"] for t in group], 0.95),
-                "avg_cost_usd": round(statistics.mean(t["cost_usd"] for t in group), 6),
-            })
+            by_intent.append(
+                {
+                    "intent": intent or "bloqueado_antes_del_router",
+                    "turns": len(group),
+                    "completed_rate": rate(sum(t["status"] == "completed" for t in group), len(group)),
+                    "hitl_rate": rate(sum(t["status"] == "interrupted" for t in group), len(group)),
+                    "clarification_rate": rate(sum(t["status"] == "clarification" for t in group), len(group)),
+                    "blocked_rate": rate(sum(t["status"] == "blocked" for t in group), len(group)),
+                    "degraded_rate": rate(sum(t["degraded"] for t in group), len(group)),
+                    "latency_p95_ms": percentile([t["latency_ms"] for t in group], 0.95),
+                    "avg_cost_usd": round(statistics.mean(t["cost_usd"] for t in group), 6),
+                }
+            )
 
         hourly: dict[str, dict] = {}
         for t in turns:
@@ -203,9 +234,10 @@ class AnalyticsStore:
         pending = [q for q in queue if q["status"] == "pendiente"]
         decision_minutes = [
             (datetime.fromisoformat(q["decided_at"]) - datetime.fromisoformat(q["created_at"])).total_seconds() / 60
-            for q in decided if q["decided_at"]
+            for q in decided
+            if q["decided_at"]
         ]
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         blocked_reasons: dict[str, int] = {}
         pii_counts: dict[str, int] = {}
         for t in turns:
@@ -239,8 +271,11 @@ class AnalyticsStore:
                 # Calidad del borrador del agente: aprobado tal cual, sin que el operador lo corrija
                 "approved_without_edit_rate": rate(sum(q["status"] == "aprobado" for q in decided), len(decided)),
                 "avg_decision_minutes": round(statistics.mean(decision_minutes), 1) if decision_minutes else None,
-                "oldest_pending_minutes": round(max(
-                    (now - datetime.fromisoformat(q["created_at"])).total_seconds() / 60 for q in pending), 1) if pending else None,
+                "oldest_pending_minutes": round(
+                    max((now - datetime.fromisoformat(q["created_at"])).total_seconds() / 60 for q in pending), 1
+                )
+                if pending
+                else None,
             },
             "by_intent": by_intent,
             "hourly": series,

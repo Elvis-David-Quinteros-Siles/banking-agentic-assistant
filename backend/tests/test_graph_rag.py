@@ -100,11 +100,22 @@ def test_complaint_is_mirrored_in_graph(neo4j_retriever):
     from app.rag.neo4j_client import get_driver
 
     driver = get_driver()
-    upsert_complaint(driver, {
-        "queja_id": "QJ-TEST01", "customer_id": "CLI-001", "producto_id": "PRD-TDB", "categoria": "cobro_indebido",
-        "descripcion": "test", "monto": 350.0, "moneda": "BOB", "prioridad": "media", "estado": "registrada",
-        "fecha": "2026-10-17", "aprobada_por": "OP-TEST",
-    })
+    upsert_complaint(
+        driver,
+        {
+            "queja_id": "QJ-TEST01",
+            "customer_id": "CLI-001",
+            "producto_id": "PRD-TDB",
+            "categoria": "cobro_indebido",
+            "descripcion": "test",
+            "monto": 350.0,
+            "moneda": "BOB",
+            "prioridad": "media",
+            "estado": "registrada",
+            "fecha": "2026-10-17",
+            "aprobada_por": "OP-TEST",
+        },
+    )
     try:
         records, _, _ = driver.execute_query(
             """MATCH (c:Cliente)-[:PRESENTO]->(q:Queja {queja_id: 'QJ-TEST01'})-[:APLICA_A]->(p:Producto),

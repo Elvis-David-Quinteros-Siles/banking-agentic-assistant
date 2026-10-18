@@ -16,6 +16,7 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api import routes_chat, routes_health, routes_hitl, routes_operator
+from app.api.rate_limit import RateLimitMiddleware, SlidingWindowLimiter
 from app.config import get_settings
 from app.db.sqlite import init_db
 from app.graph.builder import build_graph
@@ -43,9 +44,9 @@ async def lifespan(app: FastAPI):
         # Con Ollama, la primera llamada carga el modelo en la GPU (medido: ~90 s desde el volumen
         # de Docker). Se paga al arrancar, no en la primera consulta de un cliente.
         try:
-            from app.llm.provider import get_chat_model
+            from app.llm.provider import require_llm
 
-            get_chat_model().invoke("Responde solo: ok")
+            require_llm().invoke("Responde solo: ok")
         except Exception as error:  # noqa: BLE001
             logger.warning("No se pudo precalentar el LLM (%s): los nodos usarán su ruta determinista", error)
     if settings.router_backend == "lora":
@@ -66,7 +67,10 @@ async def lifespan(app: FastAPI):
             app.state.seed_task = asyncio.create_task(seed_demo_traffic(app.state.graph))
         logger.info(
             "Grafo compilado (llm=%s, router=%s, knowledge=%s, core=%s)",
-            settings.llm_provider, settings.router_backend, settings.knowledge_backend, settings.core_backend,
+            settings.llm_provider,
+            settings.router_backend,
+            settings.knowledge_backend,
+            settings.core_backend,
         )
         yield
 
@@ -82,6 +86,9 @@ app = FastAPI(
     lifespan=lifespan,
     default_response_class=UTF8JSONResponse,
 )
+if settings.rate_limit_per_minute > 0:
+    app.add_middleware(RateLimitMiddleware, limiter=SlidingWindowLimiter(settings.rate_limit_per_minute))
+
 for api_router in (routes_chat.router, routes_hitl.router, routes_health.router, routes_operator.router):
     app.include_router(api_router)
     # Mismo prefijo que usa el frontend (/api): permite servir todo desde un solo puerto

@@ -40,7 +40,15 @@ SLOT_GROUPS = {
     "p": list(PRODUCTS),
     "p_card": ["tarjeta_credito", "tarjeta_debito", "tarjeta"],
     "p_account": ["caja_ahorro", "cuenta_corriente"],
-    "p_product": ["caja_ahorro", "cuenta_corriente", "dpf", "credito_vivienda", "credito_pyme", "tarjeta_credito", "tarjeta_debito"],
+    "p_product": [
+        "caja_ahorro",
+        "cuenta_corriente",
+        "dpf",
+        "credito_vivienda",
+        "credito_pyme",
+        "tarjeta_credito",
+        "tarjeta_debito",
+    ],
     "p_credit": ["credito_vivienda", "credito_pyme", "tarjeta_credito"],
     "p_spend": ["tarjeta_credito", "tarjeta_debito", "tarjeta", "caja_ahorro", "qr", "banca_internet"],
 }
@@ -69,51 +77,105 @@ def random_amount(rng: random.Random) -> tuple[str, float, str]:
 # Las etiquetas de producto/monto se derivan de los slots realmente usados.
 TEMPLATES: dict[str, list[str]] = {
     "consulta_cuenta": [
-        "¿Cuál es mi saldo?", "cuánto tengo en mi {p_account}", "quiero ver el saldo de mi {p_account}",
-        "muéstrame mis últimos movimientos", "¿cuánta plata me queda?", "dame el extracto de mi {p_account}",
-        "¿me depositaron el sueldo?", "necesito saber cuánto dinero tengo", "saldo de mi cuenta en dólares",
-        "¿qué gastos hice esta semana con mi {p_spend}?", "¿llegó el depósito de {m}?", "movimientos de mi {p_account} por favor",
-        "cuanto tengo disponible", "ver mis transacciones recientes", "¿cuánto me descontaron este mes?",
-        "quiero revisar mis cuentas", "¿cuál fue mi último retiro?", "consultar saldo",
-        "¿ya me acreditaron la transferencia de {m}?", "dime cuánto gasté con mi {p_card}",
+        "¿Cuál es mi saldo?",
+        "cuánto tengo en mi {p_account}",
+        "quiero ver el saldo de mi {p_account}",
+        "muéstrame mis últimos movimientos",
+        "¿cuánta plata me queda?",
+        "dame el extracto de mi {p_account}",
+        "¿me depositaron el sueldo?",
+        "necesito saber cuánto dinero tengo",
+        "saldo de mi cuenta en dólares",
+        "¿qué gastos hice esta semana con mi {p_spend}?",
+        "¿llegó el depósito de {m}?",
+        "movimientos de mi {p_account} por favor",
+        "cuanto tengo disponible",
+        "ver mis transacciones recientes",
+        "¿cuánto me descontaron este mes?",
+        "quiero revisar mis cuentas",
+        "¿cuál fue mi último retiro?",
+        "consultar saldo",
+        "¿ya me acreditaron la transferencia de {m}?",
+        "dime cuánto gasté con mi {p_card}",
     ],
     "conocimiento_producto": [
-        "¿qué requisitos piden para {p_product}?", "¿cuánto cobran de comisión por {p_product}?",
-        "¿cuál es la tasa de interés de {p_credit}?", "¿cómo abro una {p_account}?", "¿qué necesito para sacar {p_credit}?",
-        "¿cuánto puedo sacar del cajero por día?", "¿cuál es el límite diario de mi {p_card}?",
-        "quiero comprar una casa, ¿me pueden prestar?", "perdí mi tarjeta, ¿qué hago?",
-        "¿cuánto cuesta reponer mi {p_card}?", "¿puedo usar mi {p_card} en el extranjero?",
-        "¿cobran por pagar con QR?", "¿cuál es el pago mínimo de la tarjeta de crédito?",
-        "¿en cuánto tiempo responden un reclamo?", "¿qué plazos tiene el DPF?",
-        "¿cuál es el monto mínimo para abrir {p_product}?", "¿cobran mantenimiento en la {p_account}?",
-        "¿hasta cuánto puedo transferir desde la app?", "info sobre {p_product}", "¿cómo funciona {p_product}?",
-        "me robaron el celular con la app, ¿cómo bloqueo todo?", "¿qué documentos necesito para {p_credit}?",
-        "¿cuánto cuesta la chequera?", "quiero invertir mi plata, ¿qué opciones hay?",
+        "¿qué requisitos piden para {p_product}?",
+        "¿cuánto cobran de comisión por {p_product}?",
+        "¿cuál es la tasa de interés de {p_credit}?",
+        "¿cómo abro una {p_account}?",
+        "¿qué necesito para sacar {p_credit}?",
+        "¿cuánto puedo sacar del cajero por día?",
+        "¿cuál es el límite diario de mi {p_card}?",
+        "quiero comprar una casa, ¿me pueden prestar?",
+        "perdí mi tarjeta, ¿qué hago?",
+        "¿cuánto cuesta reponer mi {p_card}?",
+        "¿puedo usar mi {p_card} en el extranjero?",
+        "¿cobran por pagar con QR?",
+        "¿cuál es el pago mínimo de la tarjeta de crédito?",
+        "¿en cuánto tiempo responden un reclamo?",
+        "¿qué plazos tiene el DPF?",
+        "¿cuál es el monto mínimo para abrir {p_product}?",
+        "¿cobran mantenimiento en la {p_account}?",
+        "¿hasta cuánto puedo transferir desde la app?",
+        "info sobre {p_product}",
+        "¿cómo funciona {p_product}?",
+        "me robaron el celular con la app, ¿cómo bloqueo todo?",
+        "¿qué documentos necesito para {p_credit}?",
+        "¿cuánto cuesta la chequera?",
+        "quiero invertir mi plata, ¿qué opciones hay?",
     ],
     "queja_disputa": [
         "quiero presentar un reclamo, me cobraron {m} dos veces en mi {p_card}",
-        "no reconozco un cargo de {m} en mi {p_spend}", "me hicieron un doble cobro de {m}",
-        "esto es un fraude, alguien usó mi {p_card}", "pésima atención en la agencia, quiero quejarme",
-        "me clavaron un cobro de {m} que no hice", "hice una transferencia de {m} y nunca llegó",
+        "no reconozco un cargo de {m} en mi {p_spend}",
+        "me hicieron un doble cobro de {m}",
+        "esto es un fraude, alguien usó mi {p_card}",
+        "pésima atención en la agencia, quiero quejarme",
+        "me clavaron un cobro de {m} que no hice",
+        "hice una transferencia de {m} y nunca llegó",
         "quiero hacer una denuncia por un cobro indebido en mi {p_spend}",
         "me descontaron {m} de mantenimiento y tengo más de 500 en la cuenta",
         "el cajero no me dio la plata pero sí me descontó {m}",
-        "estoy indignado, me bloquearon mi {p_card} sin avisar", "reclamo formal por una compra de {m} que no autoricé",
-        "me están cobrando intereses que no corresponden en mi {p_credit}", "la app me cobró {m} y la operación falló",
-        "quiero disputar un cargo de {m}", "me atendieron muy mal por teléfono, quiero reclamar",
-        "me clonaron mi {p_card}, hay compras que no hice", "exijo la devolución de {m}",
+        "estoy indignado, me bloquearon mi {p_card} sin avisar",
+        "reclamo formal por una compra de {m} que no autoricé",
+        "me están cobrando intereses que no corresponden en mi {p_credit}",
+        "la app me cobró {m} y la operación falló",
+        "quiero disputar un cargo de {m}",
+        "me atendieron muy mal por teléfono, quiero reclamar",
+        "me clonaron mi {p_card}, hay compras que no hice",
+        "exijo la devolución de {m}",
     ],
     "fuera_de_alcance": [
-        "¿quién ganó el partido de ayer?", "dame una receta de majadito", "¿cómo va a estar el clima mañana?",
-        "cuéntame un chiste", "¿a cuánto está el bitcoin hoy?", "escríbeme un poema",
-        "ayúdame con mi tarea de matemáticas", "¿quién va a ganar las elecciones?", "recomiéndame una película",
-        "¿cuál es la capital de Francia?", "hazme un código en python", "¿qué signo del horóscopo soy?",
-        "¿dónde puedo apostar en fútbol?", "traduce esto al inglés", "¿cuál es la mejor canción de este año?",
+        "¿quién ganó el partido de ayer?",
+        "dame una receta de majadito",
+        "¿cómo va a estar el clima mañana?",
+        "cuéntame un chiste",
+        "¿a cuánto está el bitcoin hoy?",
+        "escríbeme un poema",
+        "ayúdame con mi tarea de matemáticas",
+        "¿quién va a ganar las elecciones?",
+        "recomiéndame una película",
+        "¿cuál es la capital de Francia?",
+        "hazme un código en python",
+        "¿qué signo del horóscopo soy?",
+        "¿dónde puedo apostar en fútbol?",
+        "traduce esto al inglés",
+        "¿cuál es la mejor canción de este año?",
         "¿qué opinas del presidente?",
     ],
     "ambiguo": [
-        "hola", "buenas tardes", "buenos días", "necesito ayuda", "tengo una consulta", "ok gracias",
-        "?", "información por favor", "hola, una pregunta", "ayuda", "sí", "no entiendo", "qué tal",
+        "hola",
+        "buenas tardes",
+        "buenos días",
+        "necesito ayuda",
+        "tengo una consulta",
+        "ok gracias",
+        "?",
+        "información por favor",
+        "hola, una pregunta",
+        "ayuda",
+        "sí",
+        "no entiendo",
+        "qué tal",
         "quiero hablar con alguien",
     ],
 }
@@ -125,12 +187,16 @@ TEMPLATES: dict[str, list[str]] = {
 # frases distintas de las de test: se corrige la cobertura de vocabulario, no se memoriza el test.
 EXTRA_TRAIN_TEMPLATES: dict[str, list[str]] = {
     "consulta_cuenta": [
-        "¿cuánta plata tengo en mi {p_account}?", "quiero saber cuánta platita tengo",
-        "¿cuánta plata entró a mi cuenta este mes?", "revisar cuánta plata hay en mi {p_account}",
-        "¿cuántos bolivianos tengo en la cuenta?", "¿todavía tengo plata en mi {p_account}?",
+        "¿cuánta plata tengo en mi {p_account}?",
+        "quiero saber cuánta platita tengo",
+        "¿cuánta plata entró a mi cuenta este mes?",
+        "revisar cuánta plata hay en mi {p_account}",
+        "¿cuántos bolivianos tengo en la cuenta?",
+        "¿todavía tengo plata en mi {p_account}?",
     ],
     "fuera_de_alcance": [
-        "¿cómo gano plata rápido con apuestas?", "¿cuánta plata gana un futbolista?",
+        "¿cómo gano plata rápido con apuestas?",
+        "¿cuánta plata gana un futbolista?",
     ],
 }
 
@@ -173,9 +239,16 @@ def fill(template: str, rng: random.Random) -> tuple[str, dict]:
     else:
         # Productos implícitos en la frase fija (la etiqueta debe reflejar lo que dice el texto)
         lowered = strip_accents(text.lower())
-        for tag, hint in (("tarjeta_credito", "tarjeta de credito"), ("tarjeta", "tarjeta"), ("dpf", "dpf"),
-                          ("qr", "qr"), ("transferencia", "transferencia"), ("banca_internet", "app"),
-                          ("credito_vivienda", "casa"), ("cuenta_corriente", "chequera")):
+        for tag, hint in (
+            ("tarjeta_credito", "tarjeta de credito"),
+            ("tarjeta", "tarjeta"),
+            ("dpf", "dpf"),
+            ("qr", "qr"),
+            ("transferencia", "transferencia"),
+            ("banca_internet", "app"),
+            ("credito_vivienda", "casa"),
+            ("cuenta_corriente", "chequera"),
+        ):
             if re.search(rf"\b{hint}\b", lowered):
                 label["producto"] = tag
                 break
@@ -193,10 +266,13 @@ def main() -> None:
     parser.add_argument("--n", type=int, default=600, help="Ejemplos totales aproximados")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--test-template-ratio", type=float, default=0.2)
-    parser.add_argument("--regenerate-test", action="store_true",
-                        help="Sobrescribe test.jsonl (por defecto se conserva para comparar modelos sobre el MISMO test)")
+    parser.add_argument(
+        "--regenerate-test",
+        action="store_true",
+        help="Sobrescribe test.jsonl (por defecto se conserva para comparar modelos sobre el MISMO test)",
+    )
     args = parser.parse_args()
-    rng = random.Random(args.seed)
+    rng = random.Random(args.seed)  # noqa: S311 - dataset sintético reproducible
 
     # 1. Split por plantilla
     train_templates, test_templates = [], []
@@ -227,7 +303,9 @@ def main() -> None:
                 if text in seen:
                     continue
                 seen.add(text)
-                rows.append({"text": text, "label": {"intent": intent, **label}, "template_id": f"{intent}:{template_id}"})
+                rows.append(
+                    {"text": text, "label": {"intent": intent, **label}, "template_id": f"{intent}:{template_id}"}
+                )
                 count += 1
         rng.shuffle(rows)
         return rows

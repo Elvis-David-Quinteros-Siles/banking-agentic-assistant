@@ -26,6 +26,7 @@ ENV PYTHONUNBUFFERED=1 \
     ROUTER_BACKEND=rules \
     KNOWLEDGE_BACKEND=keyword \
     DEMO_SEED_TRAFFIC=true \
+    RATE_LIMIT_PER_MINUTE=20 \
     PORT=7860
 
 # Hugging Face Spaces ejecuta el contenedor con el usuario 1000

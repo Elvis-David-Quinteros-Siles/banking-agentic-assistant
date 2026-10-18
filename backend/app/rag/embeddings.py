@@ -42,7 +42,7 @@ class HashEmbedder:
         for text in texts:
             vector = [0.0] * self.dim
             for token in tokenize(text):
-                index = int(hashlib.md5(token.encode()).hexdigest(), 16) % self.dim
+                index = int(hashlib.md5(token.encode(), usedforsecurity=False).hexdigest(), 16) % self.dim
                 vector[index] += 1.0
             norm = math.sqrt(sum(v * v for v in vector)) or 1.0
             vectors.append([v / norm for v in vector])

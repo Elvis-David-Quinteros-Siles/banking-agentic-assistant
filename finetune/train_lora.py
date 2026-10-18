@@ -175,7 +175,9 @@ def main() -> None:
         "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu",
         "adapter_size_mb": round(sum(f.stat().st_size for f in args.output.glob("*.safetensors")) / 1e6, 1),
     }
-    (args.output / "training_metrics.json").write_text(json.dumps(metrics, indent=2, ensure_ascii=False), encoding="utf-8")
+    (args.output / "training_metrics.json").write_text(
+        json.dumps(metrics, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
     print(json.dumps(metrics, indent=2, ensure_ascii=False))
 
 

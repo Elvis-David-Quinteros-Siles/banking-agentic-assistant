@@ -13,8 +13,7 @@ from app.text import normalize
 
 BLOCKED_MESSAGES = {
     "prompt_injection": (
-        "No puedo procesar esa solicitud. Estoy aquí para ayudarle con sus cuentas, "
-        "productos del banco o reclamos."
+        "No puedo procesar esa solicitud. Estoy aquí para ayudarle con sus cuentas, productos del banco o reclamos."
     ),
     "acceso_no_autorizado": (
         "Por seguridad solo puedo brindar información de las cuentas de la sesión actual. "
@@ -39,7 +38,12 @@ def blocked_response_node(state: AgentState) -> dict:
     reason = state.get("guardrail", {}).get("reason") or "fuera_de_alcance"
     answer = BLOCKED_MESSAGES.get(reason, BLOCKED_MESSAGES["fuera_de_alcance"])
     guardrail = {**state.get("guardrail", {}), "blocked": True, "reason": reason}
-    return {"final_answer": answer, "status": "blocked", "guardrail": guardrail, "messages": [AIMessage(content=answer)]}
+    return {
+        "final_answer": answer,
+        "status": "blocked",
+        "guardrail": guardrail,
+        "messages": [AIMessage(content=answer)],
+    }
 
 
 @traced("clarify")

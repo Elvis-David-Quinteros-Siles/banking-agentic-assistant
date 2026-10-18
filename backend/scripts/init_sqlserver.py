@@ -28,10 +28,13 @@ def connect(database: str, autocommit: bool = True):
 
     settings = get_settings()
     return pymssql.connect(
-        server=settings.sqlserver_host, port=settings.sqlserver_port, database=database,
+        server=settings.sqlserver_host,
+        port=settings.sqlserver_port,
+        database=database,
         user=os.environ.get("SQLSERVER_ADMIN_USER", "sa"),
         password=os.environ.get("MSSQL_SA_PASSWORD", "BankDemo#2026"),
-        autocommit=autocommit, login_timeout=5,
+        autocommit=autocommit,
+        login_timeout=5,
     )
 
 
@@ -54,13 +57,17 @@ def main() -> int:
     db, app_user, app_password = settings.sqlserver_database, settings.sqlserver_user, settings.sqlserver_password
     started = time.perf_counter()
 
-    print(f"SQL Server {settings.sqlserver_host}:{settings.sqlserver_port} · base {db} · login de aplicación {app_user}")
+    print(
+        f"SQL Server {settings.sqlserver_host}:{settings.sqlserver_port} · base {db} · login de aplicación {app_user}"
+    )
     wait_for_server()
 
     master = connect("master")
     cur = master.cursor()
     if args.reset:
-        cur.execute(f"IF DB_ID('{db}') IS NOT NULL BEGIN ALTER DATABASE [{db}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{db}]; END")
+        cur.execute(
+            f"IF DB_ID('{db}') IS NOT NULL BEGIN ALTER DATABASE [{db}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{db}]; END"
+        )
     cur.execute(f"IF DB_ID('{db}') IS NULL CREATE DATABASE [{db}]")
     # Login de aplicación a nivel servidor (la contraseña viene de la configuración, nunca del código)
     cur.execute(
@@ -87,8 +94,10 @@ def main() -> int:
                 f"INSERT INTO dbo.{table} ({', '.join(columns)}) VALUES ({', '.join('%s' for _ in columns)})",
                 [tuple(r[c] for c in columns) for r in rows],
             )
-        print(f"Datos cargados: {len(seed['customers'])} clientes, {len(seed['accounts'])} cuentas, "
-              f"{len(seed['transactions'])} movimientos")
+        print(
+            f"Datos cargados: {len(seed['customers'])} clientes, {len(seed['accounts'])} cuentas, "
+            f"{len(seed['transactions'])} movimientos"
+        )
     conn.close()
     print(f"Listo en {time.perf_counter() - started:.1f} s")
     return 0

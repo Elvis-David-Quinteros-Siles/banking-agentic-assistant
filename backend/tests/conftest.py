@@ -10,14 +10,16 @@ from pathlib import Path
 import pytest
 
 _TMP = Path(tempfile.mkdtemp(prefix="bank-tests-"))
-os.environ.update({
-    "APP_ENV": "test",
-    "LLM_PROVIDER": "fake",
-    "ROUTER_BACKEND": "rules",
-    "SQLITE_PATH": str(_TMP / "bank.db"),
-    "CHECKPOINTS_PATH": str(_TMP / "checkpoints.db"),
-    "ANALYTICS_PATH": str(_TMP / "analytics.db"),
-})
+os.environ.update(
+    {
+        "APP_ENV": "test",
+        "LLM_PROVIDER": "fake",
+        "ROUTER_BACKEND": "rules",
+        "SQLITE_PATH": str(_TMP / "bank.db"),
+        "CHECKPOINTS_PATH": str(_TMP / "checkpoints.db"),
+        "ANALYTICS_PATH": str(_TMP / "analytics.db"),
+    }
+)
 
 from fastapi.testclient import TestClient  # noqa: E402
 

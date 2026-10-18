@@ -13,8 +13,17 @@ from typing import Any
 
 INTENT_LABELS = ("consulta_cuenta", "conocimiento_producto", "queja_disputa", "fuera_de_alcance", "ambiguo")
 PRODUCT_TAGS = (
-    "tarjeta_credito", "tarjeta_debito", "tarjeta", "caja_ahorro", "cuenta_corriente", "dpf",
-    "credito_vivienda", "credito_pyme", "qr", "banca_internet", "transferencia",
+    "tarjeta_credito",
+    "tarjeta_debito",
+    "tarjeta",
+    "caja_ahorro",
+    "cuenta_corriente",
+    "dpf",
+    "credito_vivienda",
+    "credito_pyme",
+    "qr",
+    "banca_internet",
+    "transferencia",
 )
 CURRENCIES = ("BOB", "USD")
 OUTPUT_KEYS = ("intent", "producto", "monto", "moneda")

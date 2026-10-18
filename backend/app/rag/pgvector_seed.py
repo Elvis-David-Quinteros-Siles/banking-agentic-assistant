@@ -57,18 +57,32 @@ def seed_pgvector(dsn: str, embedder: Embedder, seed_dir: Path, reset: bool = Fa
             ON CONFLICT (id) DO UPDATE SET type = EXCLUDED.type, title = EXCLUDED.title, text = EXCLUDED.text,
                 product_tags = EXCLUDED.product_tags, embedding = EXCLUDED.embedding
         """
-        for p, v in zip(products, product_vectors):
-            cur.execute(upsert, (p["producto_id"], "producto", p["nombre"], p["descripcion"],
-                                 PRODUCT_TAGS.get(p["producto_id"], []), to_vector_literal(v)))
-        for pol, v in zip(policies, policy_vectors):
+        for p, v in zip(products, product_vectors, strict=True):
+            cur.execute(
+                upsert,
+                (
+                    p["producto_id"],
+                    "producto",
+                    p["nombre"],
+                    p["descripcion"],
+                    PRODUCT_TAGS.get(p["producto_id"], []),
+                    to_vector_literal(v),
+                ),
+            )
+        for pol, v in zip(policies, policy_vectors, strict=True):
             tags = sorted({t for pid in pol["productos"] for t in PRODUCT_TAGS.get(pid, [])})
-            cur.execute(upsert, (pol["politica_id"], "politica", pol["titulo"], pol["texto"], tags, to_vector_literal(v)))
+            cur.execute(
+                upsert, (pol["politica_id"], "politica", pol["titulo"], pol["texto"], tags, to_vector_literal(v))
+            )
             for product_id in pol["productos"]:
-                cur.execute("INSERT INTO kb_product_policy VALUES (%s, %s) ON CONFLICT DO NOTHING",
-                            (product_id, pol["politica_id"]))
+                cur.execute(
+                    "INSERT INTO kb_product_policy VALUES (%s, %s) ON CONFLICT DO NOTHING",
+                    (product_id, pol["politica_id"]),
+                )
         cur.execute("SELECT type, count(*) FROM kb_documents GROUP BY type ORDER BY type")
         summary = dict(cur.fetchall())
         cur.execute("SELECT count(*) FROM kb_product_policy")
-        summary["relaciones"] = cur.fetchone()[0]
+        row = cur.fetchone()
+        summary["relaciones"] = row[0] if row else 0
     logger.info("pgvector cargado: %s", summary)
     return summary

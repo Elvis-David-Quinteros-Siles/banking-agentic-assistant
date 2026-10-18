@@ -88,9 +88,7 @@ class Neo4jHybridRetriever:
             rankings["fulltext"] = self._ids(FULLTEXT_QUERY, text=text, n=8)
         if product_hint:
             records, _, _ = self.driver.execute_query(ENTITY_QUERY, tag=product_hint, embedding=embedding)
-            rankings["entidad"] = [r["product_id"] for r in records] + [
-                pid for r in records for pid in r["policy_ids"]
-            ]
+            rankings["entidad"] = [r["product_id"] for r in records] + [pid for r in records for pid in r["policy_ids"]]
 
         # Expansión: productos entre las 5 primeras semillas → sus políticas
         seeds = sorted(rrf(rankings, self.rrf_k).items(), key=lambda kv: kv[1], reverse=True)[:5]
@@ -119,15 +117,17 @@ class Neo4jHybridRetriever:
             if r is None or r["similarity"] < self.min_similarity - 0.1:
                 continue
             owner_tags = sorted({tag for tags in r["owner_tags"] for tag in tags})
-            results.append({
-                "id": doc_id,
-                "type": r["type"],
-                "title": r["title"],
-                "text": r["text"],
-                "score": round(r["similarity"], 3),
-                "rrf": round(fused[doc_id], 5),
-                "channels": [name for name, ids in rankings.items() if doc_id in ids],
-                "related": r["applies_to"] if r["type"] == "politica" else r["policies"],
-                "product_tags": r["own_tags"] or owner_tags,
-            })
+            results.append(
+                {
+                    "id": doc_id,
+                    "type": r["type"],
+                    "title": r["title"],
+                    "text": r["text"],
+                    "score": round(r["similarity"], 3),
+                    "rrf": round(fused[doc_id], 5),
+                    "channels": [name for name, ids in rankings.items() if doc_id in ids],
+                    "related": r["applies_to"] if r["type"] == "politica" else r["policies"],
+                    "product_tags": r["own_tags"] or owner_tags,
+                }
+            )
         return results[:k]

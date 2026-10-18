@@ -30,7 +30,13 @@ def test_all_thresholds_met(report):
 
 @pytest.mark.parametrize(
     "metric",
-    ["guardrail_interception_rate", "pii_redaction_recall", "hitl_trigger_rate", "hitl_resume_success", "data_exactness"],
+    [
+        "guardrail_interception_rate",
+        "pii_redaction_recall",
+        "hitl_trigger_rate",
+        "hitl_resume_success",
+        "data_exactness",
+    ],
 )
 def test_safety_and_mechanism_metrics_are_perfect(report, metric):
     # Seguridad y mecanismos: no dependen del modelo, deben ser 100% en cualquier configuración

@@ -10,6 +10,7 @@ usaría pyodbc + "ODBC Driver 18 for SQL Server" con TLS obligatorio y pool de c
 
 import logging
 from contextlib import contextmanager
+from typing import Any
 
 logger = logging.getLogger("sqlserver")
 
@@ -18,9 +19,14 @@ class SqlServerRepository:
     backend = "sqlserver"
 
     def __init__(self, host: str, port: int, database: str, user: str, password: str):
-        self._params = {
-            "server": host, "port": port, "database": database,
-            "user": user, "password": password, "login_timeout": 5, "timeout": 10,
+        self._params: dict[str, Any] = {
+            "server": host,
+            "port": port,
+            "database": database,
+            "user": user,
+            "password": password,
+            "login_timeout": 5,
+            "timeout": 10,
         }
 
     @contextmanager
@@ -59,10 +65,17 @@ class SqlServerRepository:
                 "EXEC dbo.usp_RegisterComplaint @ComplaintId=%s, @CustomerId=%s, @ThreadId=%s, @Category=%s, "
                 "@Product=%s, @Amount=%s, @Currency=%s, @Priority=%s, @Summary=%s, @Status=%s, @ReviewerId=%s",
                 (
-                    complaint["complaint_id"], complaint["customer_id"], complaint["thread_id"],
-                    complaint["category"], complaint.get("product"), complaint.get("amount"),
-                    complaint.get("currency"), complaint["priority"], complaint["summary"],
-                    complaint["status"], complaint["reviewer_id"],
+                    complaint["complaint_id"],
+                    complaint["customer_id"],
+                    complaint["thread_id"],
+                    complaint["category"],
+                    complaint.get("product"),
+                    complaint.get("amount"),
+                    complaint.get("currency"),
+                    complaint["priority"],
+                    complaint["summary"],
+                    complaint["status"],
+                    complaint["reviewer_id"],
                 ),
             )
 

@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     # --- Graph RAG (Neo4j) -----------------------------------------------
     neo4j_uri: str = "bolt://localhost:7687"
     neo4j_user: str = "neo4j"
-    neo4j_password: str = "bankdemo123"
+    neo4j_password: str = "bankdemo123"  # noqa: S105 - solo desarrollo; en producción viene de .env o de un gestor de secretos
     embeddings_backend: Literal["fastembed", "hash"] = "fastembed"
     embeddings_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     neo4j_min_similarity: float = 0.65  # coseno mínimo del mejor documento para no abstenerse
@@ -68,7 +68,7 @@ class Settings(BaseSettings):
     sqlserver_database: str = "CoreBancario"
     # Login de APLICACIÓN (solo EXECUTE sobre procedimientos), no el administrador
     sqlserver_user: str = "bank_app"
-    sqlserver_password: str = "BankApp#2026"
+    sqlserver_password: str = "BankApp#2026"  # noqa: S105 - solo desarrollo (login de aplicación)
 
     # --- Persistencia -----------------------------------------------------
     sqlite_path: Path = BACKEND_DIR / "data" / "bank.db"
@@ -79,6 +79,8 @@ class Settings(BaseSettings):
     operator_token: str | None = None
     # Demo pública: al arrancar con analítica vacía, genera tráfico de ejemplo para el dashboard
     demo_seed_traffic: bool = False
+    # Turnos por minuto por cliente en /chat, /chat/stream y /approve (0 = sin límite)
+    rate_limit_per_minute: int = 0
     seed_dir: Path = REPO_DIR / "data" / "seed"
     # Build del frontend (npm run build). Si existe, FastAPI lo sirve en "/" (imagen de demo pública)
     frontend_dist: Path = REPO_DIR / "frontend" / "dist"

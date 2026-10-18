@@ -7,7 +7,7 @@ Backends (ROUTER_BACKEND):
 """
 
 import re
-from typing import Literal
+from typing import Any, Literal, cast
 
 from langchain_core.messages import SystemMessage
 from pydantic import BaseModel, Field
@@ -27,30 +27,93 @@ from app.text import normalize
 # "pregunta sobre tarjeta" y "reclamo sobre tarjeta", conviene no perder un reclamo.
 KEYWORDS: dict[str, tuple[tuple[str, float], ...]] = {
     "consulta_cuenta": (
-        ("saldo", 2), ("saldos", 2), ("movimiento", 2), ("movimientos", 2), ("extracto", 2),
-        ("cuanto tengo", 2), ("mis cuentas", 1.5), ("mi cuenta", 1), ("ultimas transacciones", 2),
-        ("transacciones", 1.5), ("cuanto dinero", 2), ("depositaron", 1.5), ("gaste", 1.5),
+        ("saldo", 2),
+        ("saldos", 2),
+        ("movimiento", 2),
+        ("movimientos", 2),
+        ("extracto", 2),
+        ("cuanto tengo", 2),
+        ("mis cuentas", 1.5),
+        ("mi cuenta", 1),
+        ("ultimas transacciones", 2),
+        ("transacciones", 1.5),
+        ("cuanto dinero", 2),
+        ("depositaron", 1.5),
+        ("gaste", 1.5),
     ),
     "conocimiento_producto": (
-        ("requisito", 2), ("requisitos", 2), ("comision", 1.5), ("comisiones", 1.5), ("tasa", 1.5),
-        ("interes", 1.5), ("tarjeta", 0.5), ("credito", 0.5), ("prestamo", 1), ("dpf", 2),
-        ("plazo fijo", 2), ("abrir", 1.5), ("abro", 1.5), ("limite", 1.5), ("limites", 1.5),
-        ("politica", 1.5), ("producto", 1), ("productos", 1), ("cuanto cuesta", 1.5), ("como funciona", 1),
-        ("vivienda", 1), ("pyme", 1), ("qr", 0.5), ("chequera", 1.5), ("bloquear", 1.5), ("bloqueo", 1.5),
-        ("transferencias", 0.5), ("pago minimo", 2), ("que necesito", 1.5),
+        ("requisito", 2),
+        ("requisitos", 2),
+        ("comision", 1.5),
+        ("comisiones", 1.5),
+        ("tasa", 1.5),
+        ("interes", 1.5),
+        ("tarjeta", 0.5),
+        ("credito", 0.5),
+        ("prestamo", 1),
+        ("dpf", 2),
+        ("plazo fijo", 2),
+        ("abrir", 1.5),
+        ("abro", 1.5),
+        ("limite", 1.5),
+        ("limites", 1.5),
+        ("politica", 1.5),
+        ("producto", 1),
+        ("productos", 1),
+        ("cuanto cuesta", 1.5),
+        ("como funciona", 1),
+        ("vivienda", 1),
+        ("pyme", 1),
+        ("qr", 0.5),
+        ("chequera", 1.5),
+        ("bloquear", 1.5),
+        ("bloqueo", 1.5),
+        ("transferencias", 0.5),
+        ("pago minimo", 2),
+        ("que necesito", 1.5),
     ),
     "queja_disputa": (
-        ("queja", 3), ("reclamo", 3), ("reclamar", 3), ("disputa", 3), ("no reconozco", 3),
-        ("cobro indebido", 3), ("doble cobro", 3), ("cobraron dos veces", 3), ("me cobraron", 2),
-        ("fraude", 3), ("mal atendido", 3), ("pesimo", 2), ("molesto", 1.5), ("indignado", 2),
-        ("no autorice", 3), ("estafa", 3), ("denunciar", 2),
+        ("queja", 3),
+        ("reclamo", 3),
+        ("reclamar", 3),
+        ("disputa", 3),
+        ("no reconozco", 3),
+        ("cobro indebido", 3),
+        ("doble cobro", 3),
+        ("cobraron dos veces", 3),
+        ("me cobraron", 2),
+        ("fraude", 3),
+        ("mal atendido", 3),
+        ("pesimo", 2),
+        ("molesto", 1.5),
+        ("indignado", 2),
+        ("no autorice", 3),
+        ("estafa", 3),
+        ("denunciar", 2),
     ),
 }
 # Señales explícitas de fuera de alcance (sin estas, un texto sin palabras clave es "ambiguo")
 OUT_OF_SCOPE = (
-    "futbol", "partido", "receta", "clima", "pelicula", "chiste", "elecciones", "presidente",
-    "tarea", "poema", "codigo python", "programar", "horoscopo", "bitcoin", "cripto", "apuesta",
-    "capital de", "quien gano", "musica", "cancion",
+    "futbol",
+    "partido",
+    "receta",
+    "clima",
+    "pelicula",
+    "chiste",
+    "elecciones",
+    "presidente",
+    "tarea",
+    "poema",
+    "codigo python",
+    "programar",
+    "horoscopo",
+    "bitcoin",
+    "cripto",
+    "apuesta",
+    "capital de",
+    "quien gano",
+    "musica",
+    "cancion",
 )
 
 
@@ -70,7 +133,7 @@ def classify_rules(text: str) -> tuple[str, float]:
         if any(_matches(normalized, p) for p in OUT_OF_SCOPE):
             return "fuera_de_alcance", 0.8
         return "ambiguo", 0.3
-    best = max(scores, key=scores.get)
+    best = max(scores, key=lambda intent: scores[intent])
     return best, round(scores[best] / total, 2)
 
 
@@ -83,10 +146,19 @@ AMOUNT_RE = re.compile(
     r"|(?P<num2>\d[\d.,]*\d|\d)\s*(?P<suf>bs\b|bolivianos|bob|usd|dolares|\$us)"
 )
 PRODUCT_HINTS = {
-    "tarjeta de credito": "tarjeta_credito", "tarjeta de debito": "tarjeta_debito", "tarjeta": "tarjeta",
-    "caja de ahorro": "caja_ahorro", "cuenta corriente": "cuenta_corriente", "dpf": "dpf",
-    "plazo fijo": "dpf", "vivienda": "credito_vivienda", "pyme": "credito_pyme", "qr": "qr",
-    "banca por internet": "banca_internet", "app": "banca_internet", "transferencia": "transferencia",
+    "tarjeta de credito": "tarjeta_credito",
+    "tarjeta de debito": "tarjeta_debito",
+    "tarjeta": "tarjeta",
+    "caja de ahorro": "caja_ahorro",
+    "cuenta corriente": "cuenta_corriente",
+    "dpf": "dpf",
+    "plazo fijo": "dpf",
+    "vivienda": "credito_vivienda",
+    "pyme": "credito_pyme",
+    "qr": "qr",
+    "banca por internet": "banca_internet",
+    "app": "banca_internet",
+    "transferencia": "transferencia",
 }
 
 
@@ -146,8 +218,10 @@ Extrae producto, monto y moneda (BOB o USD) si aparecen. confidence entre 0 y 1.
 
 def classify_llm(text: str) -> tuple[RouterOutput, dict]:
     llm = get_chat_model()
+    if llm is None:
+        raise RuntimeError("No hay LLM configurado")
     structured = llm.with_structured_output(RouterOutput, include_raw=True)
-    result = structured.invoke([SystemMessage(content=ROUTER_PROMPT), ("human", text)])
+    result = cast(dict[str, Any], structured.invoke([SystemMessage(content=ROUTER_PROMPT), ("human", text)]))
     if result.get("parsing_error") or result.get("parsed") is None:
         raise ValueError(f"salida no parseable: {result.get('parsing_error')}")
     return result["parsed"], usage_from_message(result["raw"], model_name())
@@ -185,12 +259,12 @@ def router_node(state: AgentState) -> dict:
 
     if settings.router_backend == "llm" and get_chat_model() is not None:
         try:
-            output, usage = classify_llm(text)
-            llm_entities = {k: v for k, v in output.model_dump(include={"producto", "monto", "moneda"}).items() if v}
+            routed, usage = classify_llm(text)
+            llm_entities = {k: v for k, v in routed.model_dump(include={"producto", "monto", "moneda"}).items() if v}
             # Las entidades deterministas (regex) prevalecen: son más fiables que un modelo pequeño
             return {
-                "intent": output.intent,
-                "intent_confidence": round(output.confidence, 2),
+                "intent": routed.intent,
+                "intent_confidence": round(routed.confidence, 2),
                 "entities": {**llm_entities, **entities},
                 "_usage": usage,
             }
@@ -209,8 +283,10 @@ def route_after_router(state: AgentState) -> str:
         return "blocked_response"
     if intent == "ambiguo" or (state.get("intent_confidence") or 0) < get_settings().router_min_confidence:
         return "clarify"
-    return {
+    routes = {
         "consulta_cuenta": "query_agent",
         "conocimiento_producto": "knowledge_agent",
         "queja_disputa": "complaint_agent",
-    }[intent]
+    }
+    # Una intención desconocida o vacía nunca debe tumbar la conversación: se pide aclaración
+    return routes.get(intent or "", "clarify")

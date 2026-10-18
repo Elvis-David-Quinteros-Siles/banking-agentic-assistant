@@ -29,8 +29,13 @@ def test_complaint_flows_through_operator_queue(client):
     assert item["draft"]["categoria"] == "cobro_indebido"
 
     before = client.get("/metrics/summary").json()["hitl"]
-    assert client.post(f"/approve/{thread_id}", json={"decision": "edit", "reviewer_id": "OP-9",
-                                                       "edited_draft": {"prioridad": "alta"}}).status_code == 200
+    assert (
+        client.post(
+            f"/approve/{thread_id}",
+            json={"decision": "edit", "reviewer_id": "OP-9", "edited_draft": {"prioridad": "alta"}},
+        ).status_code
+        == 200
+    )
     after = client.get("/metrics/summary").json()["hitl"]
     assert after["edited"] == before["edited"] + 1
     assert after["avg_decision_minutes"] is not None
@@ -65,9 +70,9 @@ def test_demo_traffic_seed_uses_the_real_graph(client, tmp_path, monkeypatch):
 
     summary = isolated.summary(24)
     assert summary["kpis"]["turns"] == len(demo_seed.SCRIPT)
-    assert summary["hitl"]["pending"] >= 2           # quedan reclamos para el back-office
+    assert summary["hitl"]["pending"] >= 2  # quedan reclamos para el back-office
     assert summary["hitl"]["approved"] >= 1 and summary["hitl"]["rejected"] == 1
-    assert len(summary["hourly"]) > 3                # repartido en varias horas
+    assert len(summary["hourly"]) > 3  # repartido en varias horas
 
 
 def test_pseudonymize_is_stable_and_not_reversible_trivially():

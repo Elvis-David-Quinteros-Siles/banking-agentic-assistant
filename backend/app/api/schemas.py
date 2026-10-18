@@ -51,9 +51,12 @@ class InterruptInfo(BaseModel):
     payload: dict[str, Any]
 
 
+ResponseStatus = Literal["completed", "interrupted", "blocked", "clarification"]
+
+
 class ChatResponse(BaseModel):
     thread_id: str
-    status: Literal["completed", "interrupted", "blocked", "clarification"]
+    status: ResponseStatus
     answer: str
     intent: str | None = None
     intent_confidence: float | None = None

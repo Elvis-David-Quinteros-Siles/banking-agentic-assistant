@@ -133,7 +133,9 @@ def test_approve_errors(client):
 
 
 def test_chat_stream_events(client):
-    with client.stream("POST", "/chat/stream", json={"customer_id": "CLI-001", "message": "¿Cuál es mi saldo?"}) as response:
+    with client.stream(
+        "POST", "/chat/stream", json={"customer_id": "CLI-001", "message": "¿Cuál es mi saldo?"}
+    ) as response:
         assert response.status_code == 200
         assert response.headers["content-type"].startswith("text/event-stream")
         raw = "".join(response.iter_text())
@@ -152,7 +154,9 @@ def test_chat_stream_events(client):
 
 def test_chat_stream_interrupt_event(client):
     with client.stream(
-        "POST", "/chat/stream", json={"customer_id": "CLI-001", "message": "reclamo por fraude, no reconozco una compra"}
+        "POST",
+        "/chat/stream",
+        json={"customer_id": "CLI-001", "message": "reclamo por fraude, no reconozco una compra"},
     ) as response:
         raw = "".join(response.iter_text())
     assert "event: interrupt" in raw
@@ -163,3 +167,38 @@ def test_validation_error_format(client):
     response = client.post("/chat", json={"customer_id": "bad-id", "message": "hola"})
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+def test_rate_limiter_blocks_after_limit_and_recovers():
+    from app.api.rate_limit import SlidingWindowLimiter
+
+    limiter = SlidingWindowLimiter(max_requests=2, window_seconds=0.2)
+    assert limiter.check("ip-1") is None
+    assert limiter.check("ip-1") is None
+    assert limiter.check("ip-1") is not None  # tercera dentro de la ventana: bloqueada
+    assert limiter.check("ip-2") is None  # otro cliente no se ve afectado
+    import time
+
+    time.sleep(0.25)
+    assert limiter.check("ip-1") is None  # la ventana se desliza
+
+
+def test_rate_limit_middleware_returns_429():
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient as TC
+
+    from app.api.rate_limit import RateLimitMiddleware, SlidingWindowLimiter
+
+    mini = FastAPI()
+    mini.add_middleware(RateLimitMiddleware, limiter=SlidingWindowLimiter(max_requests=1))
+
+    @mini.post("/chat")
+    def _chat():
+        return {"ok": True}
+
+    with TC(mini) as c:
+        assert c.post("/chat").status_code == 200
+        blocked = c.post("/chat")
+        assert blocked.status_code == 429
+        assert blocked.json()["error"]["code"] == "RATE_LIMITED"
+        assert int(blocked.headers["Retry-After"]) >= 1

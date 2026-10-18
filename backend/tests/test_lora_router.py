@@ -10,7 +10,9 @@ from app.llm.lora_router import LoraPrediction
 
 def test_serialize_label_is_canonical():
     label = {"intent": "queja_disputa", "monto": 350.0, "moneda": "BOB", "producto": "tarjeta_debito"}
-    assert serialize_label(label) == '{"intent":"queja_disputa","producto":"tarjeta_debito","monto":350.0,"moneda":"BOB"}'
+    assert (
+        serialize_label(label) == '{"intent":"queja_disputa","producto":"tarjeta_debito","monto":350.0,"moneda":"BOB"}'
+    )
     assert serialize_label({"intent": "ambiguo"}).endswith('"monto":null,"moneda":null}')
 
 
@@ -18,7 +20,9 @@ def test_parse_output_roundtrip_and_validation():
     label = {"intent": "consulta_cuenta", "producto": "caja_ahorro", "monto": None, "moneda": None}
     assert parse_output(serialize_label(label)) == label
     # Producto desconocido se descarta; texto alrededor del JSON se ignora
-    parsed = parse_output('Respuesta: {"intent":"conocimiento_producto","producto":"cohete","monto":"12","moneda":"EUR"}')
+    parsed = parse_output(
+        'Respuesta: {"intent":"conocimiento_producto","producto":"cohete","monto":"12","moneda":"EUR"}'
+    )
     assert parsed == {"intent": "conocimiento_producto", "producto": None, "monto": 12.0, "moneda": None}
     with pytest.raises(ValueError):
         parse_output('{"intent":"saludo"}')
@@ -61,7 +65,9 @@ def test_router_uses_lora_and_keeps_regex_amount(monkeypatch):
 
 def test_router_lora_failure_degrades_to_rules(monkeypatch):
     monkeypatch.setattr(router.get_settings(), "router_backend", "lora")
-    monkeypatch.setattr("app.llm.lora_router.get_lora_classifier", lambda: FakeClassifier(error=ValueError("JSON roto")))
+    monkeypatch.setattr(
+        "app.llm.lora_router.get_lora_classifier", lambda: FakeClassifier(error=ValueError("JSON roto"))
+    )
 
     update = router.router_node(_state("¿cuál es mi saldo?"))
     assert update["degraded"] is True

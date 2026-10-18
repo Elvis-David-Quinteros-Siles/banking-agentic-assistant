@@ -51,10 +51,15 @@ def state(text: str, **extra) -> dict:
 
 def test_llm_chooses_tool_args_and_code_renders_statement(monkeypatch, seeded_db):
     # El LLM decide cuenta y cantidad; el extracto (comercios y montos) lo redacta el código
-    model = ScriptedModel(script=[
-        AIMessage(content="", tool_calls=[{"name": "get_transactions", "args": {"account": "****2101", "limit": 3}, "id": "c1"}],
-                  usage_metadata=usage(300, 20)),
-    ])
+    model = ScriptedModel(
+        script=[
+            AIMessage(
+                content="",
+                tool_calls=[{"name": "get_transactions", "args": {"account": "****2101", "limit": 3}, "id": "c1"}],
+                usage_metadata=usage(300, 20),
+            ),
+        ]
+    )
     use_model(monkeypatch, model, query_agent)
     update = query_agent.query_agent_node(state("muéstrame mis movimientos"))
     assert model.calls == 1  # sin segunda llamada para redactar
@@ -87,7 +92,7 @@ def test_balance_answered_from_prefetched_accounts(monkeypatch, seeded_db):
 
     model = CapturingModel(script=[AIMessage(content="Su caja de ahorro ****2101 tiene Bs 12.450,30.")])
     use_model(monkeypatch, model, query_agent)
-    update = query_agent.query_agent_node(state("¿cuál es mi saldo?"))
+    query_agent.query_agent_node(state("¿cuál es mi saldo?"))
     assert model.calls == 1
     assert '"saldo_texto": "Bs 12.450,30"' in seen["system"]
     assert "1000452101" not in seen["system"]  # el LLM nunca ve el número completo
@@ -95,7 +100,9 @@ def test_balance_answered_from_prefetched_accounts(monkeypatch, seeded_db):
 
 def test_evasive_answer_falls_back_to_deterministic(monkeypatch, seeded_db):
     # Falla real observada con qwen2.5:3b: pedía al cliente el número de cuenta en vez de responder
-    model = ScriptedModel(script=[AIMessage(content="Para darle su saldo necesito el número de cuenta. ¿Podría proporcionarlo?")])
+    model = ScriptedModel(
+        script=[AIMessage(content="Para darle su saldo necesito el número de cuenta. ¿Podría proporcionarlo?")]
+    )
     use_model(monkeypatch, model, query_agent)
     update = query_agent.query_agent_node(state("¿cuál es mi saldo?"))
     assert update["degraded"] is True
@@ -111,11 +118,17 @@ def test_react_loop_falls_back_when_llm_fails(monkeypatch, seeded_db):
 
 def test_router_llm_structured_output(monkeypatch):
     monkeypatch.setattr(router.get_settings(), "router_backend", "llm")
-    model = ScriptedModel(script=[AIMessage(
-        content="",
-        tool_calls=[{"name": "RouterOutput", "args": {"intent": "queja_disputa", "confidence": 0.91}, "id": "r1"}],
-        usage_metadata=usage(200, 15),
-    )])
+    model = ScriptedModel(
+        script=[
+            AIMessage(
+                content="",
+                tool_calls=[
+                    {"name": "RouterOutput", "args": {"intent": "queja_disputa", "confidence": 0.91}, "id": "r1"}
+                ],
+                usage_metadata=usage(200, 15),
+            )
+        ]
+    )
     use_model(monkeypatch, model, router)
     update = router.router_node(state("me cobraron Bs 350 dos veces"))
     assert update["intent"] == "queja_disputa"
@@ -133,12 +146,24 @@ def test_router_llm_invalid_output_degrades_to_rules(monkeypatch):
 
 def test_complaint_priority_is_deterministic(monkeypatch):
     # Aunque el LLM diga "baja", un fraude siempre es prioridad alta
-    model = ScriptedModel(script=[AIMessage(
-        content="",
-        tool_calls=[{"name": "ComplaintDraft", "args": {
-            "categoria": "fraude", "prioridad": "baja", "resumen": "El cliente no reconoce una compra.",
-        }, "id": "q1"}],
-    )])
+    model = ScriptedModel(
+        script=[
+            AIMessage(
+                content="",
+                tool_calls=[
+                    {
+                        "name": "ComplaintDraft",
+                        "args": {
+                            "categoria": "fraude",
+                            "prioridad": "baja",
+                            "resumen": "El cliente no reconoce una compra.",
+                        },
+                        "id": "q1",
+                    }
+                ],
+            )
+        ]
+    )
     use_model(monkeypatch, model, complaint_agent)
     update = complaint_agent.complaint_agent_node(state("no reconozco una compra"))
     assert update["complaint_draft"]["prioridad"] == "alta"
@@ -161,7 +186,9 @@ def test_hallucinated_number_is_replaced_by_extractive_answer(monkeypatch):
 
 @pytest.mark.parametrize("question", ["¿Qué tasa tiene el DPF a 360 días?"])
 def test_grounded_llm_answer_is_kept(monkeypatch, question):
-    model = ScriptedModel(script=[AIMessage(content="El DPF tiene una tasa referencial de 5,5% anual a 360 días [POL-008].")])
+    model = ScriptedModel(
+        script=[AIMessage(content="El DPF tiene una tasa referencial de 5,5% anual a 360 días [POL-008].")]
+    )
     use_model(monkeypatch, model, knowledge_agent)
     s = state(question)
     s.update(knowledge_agent.knowledge_agent_node(s))
@@ -175,10 +202,12 @@ def test_grounded_llm_answer_is_kept(monkeypatch, question):
 
 def test_empty_tool_response_retries_without_tools(monkeypatch, seeded_db):
     # Falla real con qwen2.5:3b + Ollama: tool call malformada descartada -> contenido vacío
-    model = ScriptedModel(script=[
-        AIMessage(content=""),
-        AIMessage(content="Caja de ahorro ****2101: Bs 12.450,30\nCaja de ahorro ****2102: USD 860,00"),
-    ])
+    model = ScriptedModel(
+        script=[
+            AIMessage(content=""),
+            AIMessage(content="Caja de ahorro ****2101: Bs 12.450,30\nCaja de ahorro ****2102: USD 860,00"),
+        ]
+    )
     use_model(monkeypatch, model, query_agent)
     update = query_agent.query_agent_node(state("¿cuál es mi saldo?"))
     assert model.calls == 2
@@ -204,7 +233,11 @@ def test_account_mention_is_not_evasive():
 def test_citations_attributed_by_evidence():
     docs = [
         {"id": "PRD-DPF", "title": "Depósito a Plazo Fijo", "text": "Inversión a plazo fijo de 30 a 1080 días."},
-        {"id": "POL-008", "title": "Plazos y tasas del DPF", "text": "Plazos de 30 a 1080 días. Tasa 5,5% anual a 360 días."},
+        {
+            "id": "POL-008",
+            "title": "Plazos y tasas del DPF",
+            "text": "Plazos de 30 a 1080 días. Tasa 5,5% anual a 360 días.",
+        },
     ]
     # Respuesta real de qwen2.5:3b: datos de POL-008 pero citando la ficha del producto
     answer = "[PRD-DPF] indica plazos de 30 a 1080 días con una tasa del 5,5% a 360 días."

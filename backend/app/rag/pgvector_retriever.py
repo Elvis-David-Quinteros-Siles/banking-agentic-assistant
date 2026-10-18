@@ -79,6 +79,7 @@ class PgVectorHybridRetriever:
     def search(self, query: str, k: int = 4, product_hint: str | None = None) -> list[dict]:
         embedding = to_vector_literal(self.embedder.embed([query])[0])
         with self._connect() as conn, conn.cursor() as cur:
+
             def ids(sql: str, **params) -> list[str]:
                 cur.execute(sql, {"embedding": embedding, **params})
                 return [row[0] for row in cur.fetchall()]
@@ -104,7 +105,7 @@ class PgVectorHybridRetriever:
                 return []
             cur.execute(HYDRATE_SQL, {"embedding": embedding, "ids": top_ids})
             columns = [c.name for c in cur.description]
-            docs = {row[0]: dict(zip(columns, row)) for row in cur.fetchall()}
+            docs = {row[0]: dict(zip(columns, row, strict=True)) for row in cur.fetchall()}
 
         best_similarity = max((d["similarity"] for d in docs.values()), default=0.0)
         if best_similarity < self.min_similarity:
@@ -115,17 +116,19 @@ class PgVectorHybridRetriever:
             d = docs.get(doc_id)
             if d is None or d["similarity"] < self.min_similarity - 0.1:
                 continue
-            results.append({
-                "id": doc_id,
-                "type": d["type"],
-                "title": d["title"],
-                "text": d["text"],
-                "score": round(float(d["similarity"]), 3),
-                "rrf": round(fused[doc_id], 5),
-                "channels": [name for name, ranked in rankings.items() if doc_id in ranked],
-                "related": list(d["related"] or []),
-                "product_tags": list(d["product_tags"] or []),
-            })
+            results.append(
+                {
+                    "id": doc_id,
+                    "type": d["type"],
+                    "title": d["title"],
+                    "text": d["text"],
+                    "score": round(float(d["similarity"]), 3),
+                    "rrf": round(fused[doc_id], 5),
+                    "channels": [name for name, ranked in rankings.items() if doc_id in ranked],
+                    "related": list(d["related"] or []),
+                    "product_tags": list(d["product_tags"] or []),
+                }
+            )
         return results[:k]
 
 
@@ -138,7 +141,8 @@ def pgvector_available() -> bool:
         import psycopg
 
         with psycopg.connect(get_settings().pgvector_dsn, connect_timeout=3) as conn:
-            return conn.execute("SELECT count(*) FROM kb_documents").fetchone()[0] > 0
+            row = conn.execute("SELECT count(*) FROM kb_documents").fetchone()
+            return bool(row and row[0] > 0)
     except Exception as error:  # noqa: BLE001
         logger.warning("pgvector no disponible: %s", error)
         return False

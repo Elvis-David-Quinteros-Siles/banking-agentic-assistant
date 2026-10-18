@@ -40,10 +40,12 @@ def make_judge(model: BaseChatModel | None = None) -> Callable[[str, str, list[d
     def judge(question: str, answer: str, context: list[dict]) -> dict:
         context_text = "\n".join(f"[{d['id']}] {d['title']}: {d['text']}" for d in context)
         try:
-            verdict = structured.invoke([
-                SystemMessage(content=JUDGE_PROMPT),
-                ("human", f"CONTEXTO:\n{context_text}\n\nPREGUNTA: {question}\n\nRESPUESTA: {answer}"),
-            ])
+            verdict = structured.invoke(
+                [
+                    SystemMessage(content=JUDGE_PROMPT),
+                    ("human", f"CONTEXTO:\n{context_text}\n\nPREGUNTA: {question}\n\nRESPUESTA: {answer}"),
+                ]
+            )
             return verdict.model_dump()
         except Exception as error:  # noqa: BLE001 - un fallo del juez no debe tumbar los Evals
             return {"faithful": False, "unsupported_claims": [f"error del juez: {error}"]}

@@ -27,7 +27,10 @@ def test_classify_rules(text: str, expected: str) -> None:
 @pytest.mark.parametrize(
     ("text", "expected"),
     [
-        ("me cobraron Bs 350 dos veces en la tarjeta de débito", {"producto": "tarjeta_debito", "monto": 350.0, "moneda": "BOB"}),
+        (
+            "me cobraron Bs 350 dos veces en la tarjeta de débito",
+            {"producto": "tarjeta_debito", "monto": 350.0, "moneda": "BOB"},
+        ),
         ("un cargo de 1.250,50 bolivianos", {"monto": 1250.5, "moneda": "BOB"}),
         ("compra de $us 64 que no hice", {"monto": 64.0, "moneda": "USD"}),
         ("requisitos del crédito de vivienda", {"producto": "credito_vivienda"}),
