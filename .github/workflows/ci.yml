@@ -24,6 +24,8 @@ jobs:
       # Los tests de integración (Neo4j, SQL Server, pgvector) se saltan solos aquí; corren en sus jobs.
       # Cobertura mínima exigida: 80% (medida sin servicios externos, como en este job)
       - run: pytest backend -q --cov --cov-report=term --cov-fail-under=80
+      - name: Informe de reclamos (CrewAI) · partes deterministas
+        run: pytest crew/tests -q
 
   quality:
     name: Calidad · ruff + mypy
@@ -37,9 +39,9 @@ jobs:
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r backend/requirements.txt -r backend/requirements-frameworks.txt ruff mypy
       - name: Lint (estilo, bugs probables, seguridad)
-        run: ruff check backend evals finetune
+        run: ruff check backend evals finetune crew
       - name: Formato
-        run: ruff format --check backend evals finetune
+        run: ruff format --check backend evals finetune crew
       - name: Tipos
         run: mypy
 
