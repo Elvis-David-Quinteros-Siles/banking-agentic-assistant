@@ -10,7 +10,7 @@ DAGS = Path(__file__).resolve().parents[1] / "dags"
 def test_dag_imports_and_gate_order():
     bag = DagBag(dag_folder=str(DAGS), include_examples=False)
     assert bag.import_errors == {}
-    dag = bag.get_dag("banking_assistant_weekly")
+    dag = bag.dags.get("banking_assistant_weekly")  # get_dag() consulta la base de metadatos; CI no la tiene
     assert dag is not None
     tasks = {t.task_id: t for t in dag.tasks}
     assert set(tasks) == {"reindex_knowledge", "evals_gate", "complaints_report", "run_summary"}
