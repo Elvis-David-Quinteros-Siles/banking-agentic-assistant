@@ -114,6 +114,17 @@ El sistema empeora en redacción, no en exactitud ni seguridad.
 
 Requisitos: Python 3.11+, Node 20+. Opcional: Docker (Neo4j), GPU NVIDIA (router LoRA), Ollama.
 
+**Atajo en Windows**: con el entorno ya instalado, un solo comando levanta todo, verifica cada pieza
+(descarga el modelo de Ollama o carga el grafo si faltan) y abre el navegador:
+
+```powershell
+.\start-demo.ps1            # completo: Neo4j + Ollama + router LoRA + frontend
+.\start-demo.ps1 -Lite      # sin Docker ni GPU
+.\start-demo.ps1 -Stop      # detiene servidores, ventanas y contenedores de la demo
+```
+
+Los pasos manuales equivalentes son los siguientes.
+
 ### 1. Mínimo: sin Docker, sin GPU, sin API keys (unos 2 minutos)
 
 ```powershell
