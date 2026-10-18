@@ -1,0 +1,262 @@
+[
+  {
+    "accuracy": 0.592,
+    "macro_f1": 0.614,
+    "per_class": {
+      "consulta_cuenta": {
+        "precision": 1.0,
+        "recall": 0.625,
+        "f1": 0.769
+      },
+      "conocimiento_producto": {
+        "precision": 1.0,
+        "recall": 0.542,
+        "f1": 0.703
+      },
+      "queja_disputa": {
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4
+      },
+      "fuera_de_alcance": {
+        "precision": 1.0,
+        "recall": 0.542,
+        "f1": 0.703
+      },
+      "ambiguo": {
+        "precision": 0.329,
+        "recall": 1.0,
+        "f1": 0.495
+      }
+    },
+    "backend": "rules",
+    "n": 120,
+    "json_valid_rate": 1.0,
+    "entity_exact_match": {
+      "producto": 0.792,
+      "monto": 1.0,
+      "moneda": 1.0
+    },
+    "latency_ms": {
+      "p50": 0.3,
+      "p95": 0.4
+    },
+    "errors_sample": [
+      {
+        "text": "cobran manteinmiento en la cuenta de ahorro",
+        "gold": "conocimiento_producto",
+        "pred": "ambiguo"
+      },
+      {
+        "text": "me clavaron un cobro de Bs. 120 que no hice",
+        "gold": "queja_disputa",
+        "pred": "ambiguo"
+      },
+      {
+        "text": "me clavaron un cobro de 350 bs que no hice",
+        "gold": "queja_disputa",
+        "pred": "ambiguo"
+      },
+      {
+        "text": "me clavaron un cobro de 8.900 bs que no hice",
+        "gold": "queja_disputa",
+        "pred": "ambiguo"
+      },
+      {
+        "text": "¿cobran mantenimiento en la caja de ahorro?",
+        "gold": "conocimiento_producto",
+        "pred": "ambiguo"
+      },
+      {
+        "text": "la app me cobró USD 230 y la operacóin falló",
+        "gold": "queja_disputa",
+        "pred": "ambiguo"
+      },
+      {
+        "text": "la app me cobró 500 bs y la operación falló",
+        "gold": "queja_disputa",
+        "pred": "ambiguo"
+      },
+      {
+        "text": "¿cobran manteinmiento en la cuenta corriente empresarial?",
+        "gold": "conocimiento_producto",
+        "pred": "ambiguo"
+      },
+      {
+        "text": "cobran mantenimiento en la caja de ahorros",
+        "gold": "conocimiento_producto",
+        "pred": "ambiguo"
+      },
+      {
+        "text": "¿CUÁNTA PLATA ME QUEDA?",
+        "gold": "consulta_cuenta",
+        "pred": "ambiguo"
+      }
+    ]
+  },
+  {
+    "accuracy": 0.367,
+    "macro_f1": 0.286,
+    "per_class": {
+      "consulta_cuenta": {
+        "precision": 0.324,
+        "recall": 1.0,
+        "f1": 0.49
+      },
+      "conocimiento_producto": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "queja_disputa": {
+        "precision": 1.0,
+        "recall": 0.792,
+        "f1": 0.884
+      },
+      "fuera_de_alcance": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "ambiguo": {
+        "precision": 0.077,
+        "recall": 0.042,
+        "f1": 0.054
+      }
+    },
+    "backend": "base",
+    "n": 120,
+    "json_valid_rate": 0.908,
+    "entity_exact_match": {
+      "producto": 0.367,
+      "monto": 0.933,
+      "moneda": 0.242
+    },
+    "latency_ms": {
+      "p50": 993.4,
+      "p95": 1327.9
+    },
+    "errors_sample": [
+      {
+        "text": "cobran manteinmiento en la cuenta de ahorro",
+        "gold": "conocimiento_producto",
+        "pred": "consulta_cuenta"
+      },
+      {
+        "text": "porfa NO ENTIEDNO",
+        "gold": "ambiguo",
+        "pred": "consulta_cuenta"
+      },
+      {
+        "text": "¿cobran mantenimiento en la caja de ahorro?",
+        "gold": "conocimiento_producto",
+        "pred": "ambiguo"
+      },
+      {
+        "text": "hola, hola",
+        "gold": "ambiguo",
+        "pred": "consulta_cuenta"
+      },
+      {
+        "text": "¿puedo usar mi tarjeta debito en el extranjero?",
+        "gold": "conocimiento_producto",
+        "pred": "consulta_cuenta"
+      },
+      {
+        "text": "¿cuánto cuesta reponer mi plástico?",
+        "gold": "conocimiento_producto",
+        "pred": "consulta_cuenta"
+      },
+      {
+        "text": "¿cobran manteinmiento en la cuenta corriente empresarial?",
+        "gold": "conocimiento_producto",
+        "pred": "consulta_cuenta"
+      },
+      {
+        "text": "¿cual es la mejor cancion de este ano?",
+        "gold": "fuera_de_alcance",
+        "pred": "invalido"
+      },
+      {
+        "text": "no etniendo",
+        "gold": "ambiguo",
+        "pred": "consulta_cuenta"
+      },
+      {
+        "text": "escrbíeme un poema",
+        "gold": "fuera_de_alcance",
+        "pred": "invalido"
+      }
+    ]
+  },
+  {
+    "accuracy": 0.958,
+    "macro_f1": 0.958,
+    "per_class": {
+      "consulta_cuenta": {
+        "precision": 1.0,
+        "recall": 0.792,
+        "f1": 0.884
+      },
+      "conocimiento_producto": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "queja_disputa": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "fuera_de_alcance": {
+        "precision": 0.828,
+        "recall": 1.0,
+        "f1": 0.906
+      },
+      "ambiguo": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "backend": "lora",
+    "n": 120,
+    "json_valid_rate": 1.0,
+    "entity_exact_match": {
+      "producto": 0.858,
+      "monto": 1.0,
+      "moneda": 1.0
+    },
+    "latency_ms": {
+      "p50": 773.0,
+      "p95": 953.9
+    },
+    "errors_sample": [
+      {
+        "text": "¿CUÁNTA PLATA ME QUEDA?",
+        "gold": "consulta_cuenta",
+        "pred": "fuera_de_alcance"
+      },
+      {
+        "text": "¿cuánto me desconatron este mes?",
+        "gold": "consulta_cuenta",
+        "pred": "fuera_de_alcance"
+      },
+      {
+        "text": "¿cuanta plata me queda?",
+        "gold": "consulta_cuenta",
+        "pred": "fuera_de_alcance"
+      },
+      {
+        "text": "¿cuánta plata me queda?",
+        "gold": "consulta_cuenta",
+        "pred": "fuera_de_alcance"
+      },
+      {
+        "text": "cuánta plata me queda",
+        "gold": "consulta_cuenta",
+        "pred": "fuera_de_alcance"
+      }
+    ]
+  }
+]

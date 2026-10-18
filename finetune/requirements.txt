@@ -1,0 +1,16 @@
+# Fine-tuning y router LoRA (Fase 4). Separado del backend: el CI y el modo "rules" no lo necesitan.
+#
+# 1) PyTorch con CUDA (ajustar cu126 según el driver; para solo CPU omitir --index-url):
+#    pip install torch --index-url https://download.pytorch.org/whl/cu126
+# 2) Resto de dependencias:
+#    pip install -r finetune/requirements.txt
+#
+# IMPORTANTE: respetar el orden. Si se instala transformers/peft ANTES que torch, pip trae
+# torch desde PyPI en versión solo-CPU y el entrenamiento corre sin GPU (10x más lento).
+# Verificar con:  python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
+#                 → debe mostrar "+cu126 True"
+transformers>=5.0,<6.0
+peft>=0.17,<1.0
+accelerate>=1.10,<2.0
+datasets>=4.0,<5.0
+bitsandbytes>=0.47,<1.0

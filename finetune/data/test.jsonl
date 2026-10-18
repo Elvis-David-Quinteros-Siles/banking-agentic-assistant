@@ -1,0 +1,120 @@
+{"text": "cobran manteinmiento en la cuenta de ahorro", "label": {"intent": "conocimiento_producto", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:16"}
+{"text": "me clavaron un cobro de Bs. 120 que no hice", "label": {"intent": "queja_disputa", "producto": null, "monto": 120.0, "moneda": "BOB"}, "template_id": "queja_disputa:5"}
+{"text": "dime cuánto gasté con mi visa de crédito", "label": {"intent": "consulta_cuenta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:19"}
+{"text": "me clavaron un cobro de 350 bs que no hice", "label": {"intent": "queja_disputa", "producto": null, "monto": 350.0, "moneda": "BOB"}, "template_id": "queja_disputa:5"}
+{"text": "me clavaron un cobro de 8.900 bs que no hice", "label": {"intent": "queja_disputa", "producto": null, "monto": 8900.0, "moneda": "BOB"}, "template_id": "queja_disputa:5"}
+{"text": "dime cuanto gaste con mi tarjeta debito", "label": {"intent": "consulta_cuenta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:19"}
+{"text": "dime cáunto gasté con mi tarjeta de débito", "label": {"intent": "consulta_cuenta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:19"}
+{"text": "porfa NO ENTIEDNO", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:11"}
+{"text": "¿cobran mantenimiento en la caja de ahorro?", "label": {"intent": "conocimiento_producto", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:16"}
+{"text": "hola, hola", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:0"}
+{"text": "la app me cobró USD 230 y la operacóin falló", "label": {"intent": "queja_disputa", "producto": "banca_internet", "monto": 230.0, "moneda": "USD"}, "template_id": "queja_disputa:13"}
+{"text": "¿puedo usar mi tarjeta debito en el extranjero?", "label": {"intent": "conocimiento_producto", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:10"}
+{"text": "¿cuánto cuesta reponer mi plástico?", "label": {"intent": "conocimiento_producto", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:9"}
+{"text": "la app me cobró 500 bs y la operación falló", "label": {"intent": "queja_disputa", "producto": "banca_internet", "monto": 500.0, "moneda": "BOB"}, "template_id": "queja_disputa:13"}
+{"text": "¿cobran manteinmiento en la cuenta corriente empresarial?", "label": {"intent": "conocimiento_producto", "producto": "cuenta_corriente", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:16"}
+{"text": "¿cual es la mejor cancion de este ano?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:14"}
+{"text": "no etniendo", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:11"}
+{"text": "escrbíeme un poema", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:5"}
+{"text": "dame el extracto de mi caja de ahorro", "label": {"intent": "consulta_cuenta", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:5"}
+{"text": "cobran mantenimiento en la caja de ahorros", "label": {"intent": "conocimiento_producto", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:16"}
+{"text": "no entiendo", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:11"}
+{"text": "esto es un fraude, alguien usó mi tarjeta de deibto", "label": {"intent": "queja_disputa", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "queja_disputa:3"}
+{"text": "hola", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:0"}
+{"text": "porfa ?", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:6"}
+{"text": "¿CUÁNTA PLATA ME QUEDA?", "label": {"intent": "consulta_cuenta", "producto": null, "monto": null, "moneda": null}, "template_id": "consulta_cuenta:4"}
+{"text": "no entinedo", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:11"}
+{"text": "cuál es el monto mínimo para abrir caja de ahorros", "label": {"intent": "conocimiento_producto", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:15"}
+{"text": "¿cual es la mejor cacnion de este ano?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:14"}
+{"text": "ecsríbeme un poema", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:5"}
+{"text": "NO ENTIEDNO", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:11"}
+{"text": "no entiedno", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:11"}
+{"text": "HOLA", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:0"}
+{"text": "¿cuanto cuesta reponer mi tarjeta de credito?", "label": {"intent": "conocimiento_producto", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:9"}
+{"text": "¿QUÉ SIGNO DEL HORÓSCOPO SOY?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:11"}
+{"text": "buenas, hola", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:0"}
+{"text": "buenas, dime cuánto gasté con mi tarjeta", "label": {"intent": "consulta_cuenta", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:19"}
+{"text": "hola, dime cuánto gasté con mi tarjeta de crédito", "label": {"intent": "consulta_cuenta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:19"}
+{"text": "¿cuál es la mejor cacnión de este año?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:14"}
+{"text": "disculpe, hola", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:0"}
+{"text": "esto es un fraude, alugien usó mi tarjeta débito", "label": {"intent": "queja_disputa", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "queja_disputa:3"}
+{"text": "dame el extracto de mi cuenta corriente", "label": {"intent": "consulta_cuenta", "producto": "cuenta_corriente", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:5"}
+{"text": "¿cuánto me desconatron este mes?", "label": {"intent": "consulta_cuenta", "producto": null, "monto": null, "moneda": null}, "template_id": "consulta_cuenta:14"}
+{"text": "qué signo del horóscopo soy", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:11"}
+{"text": "¿cobran mantenimiento en la cuenta corriente?", "label": {"intent": "conocimiento_producto", "producto": "cuenta_corriente", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:16"}
+{"text": "cuánto cuesta reponer mi tajreta", "label": {"intent": "conocimiento_producto", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:9"}
+{"text": "¿cuánto me descontaron este mes?", "label": {"intent": "consulta_cuenta", "producto": null, "monto": null, "moneda": null}, "template_id": "consulta_cuenta:14"}
+{"text": "dame el extarcto de mi cuenta de ahorro", "label": {"intent": "consulta_cuenta", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:5"}
+{"text": "¿cuanta plata me queda?", "label": {"intent": "consulta_cuenta", "producto": null, "monto": null, "moneda": null}, "template_id": "consulta_cuenta:4"}
+{"text": "dame el extracto de mi cuenta de ahorro", "label": {"intent": "consulta_cuenta", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:5"}
+{"text": "?", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:6"}
+{"text": "porfa ¿qué signo del horóscopo soy?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:11"}
+{"text": "dame el extrcato de mi caja de ahorros", "label": {"intent": "consulta_cuenta", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:5"}
+{"text": "la app me cobró Bs. 64 y la opercaión falló", "label": {"intent": "queja_disputa", "producto": "banca_internet", "monto": 64.0, "moneda": "BOB"}, "template_id": "queja_disputa:13"}
+{"text": "disculpe, no entiendo", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:11"}
+{"text": "¿que signo del hrooscopo soy?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:11"}
+{"text": "¿que signo del horocsopo soy?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:11"}
+{"text": "cobran mantenimiento en la cuenta corriente", "label": {"intent": "conocimiento_producto", "producto": "cuenta_corriente", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:16"}
+{"text": "¿como abro una cuenta corriente empresarial?", "label": {"intent": "conocimiento_producto", "producto": "cuenta_corriente", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:3"}
+{"text": "cuánto cuesta reponer mi tarjeta de débito", "label": {"intent": "conocimiento_producto", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:9"}
+{"text": "puedo usar mi tarjeta en el extranjero", "label": {"intent": "conocimiento_producto", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:10"}
+{"text": "¿QUÉ SIGNO DEL HORÓSCPOO SOY?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:11"}
+{"text": "¿que signo del horoscopo soy?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:11"}
+{"text": "me clavaron un cobro de Bs. 64 que no hice", "label": {"intent": "queja_disputa", "producto": null, "monto": 64.0, "moneda": "BOB"}, "template_id": "queja_disputa:5"}
+{"text": "¿qué signo del horósocpo soy?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:11"}
+{"text": "porfa hola", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:0"}
+{"text": "¿cuánta plata me queda?", "label": {"intent": "consulta_cuenta", "producto": null, "monto": null, "moneda": null}, "template_id": "consulta_cuenta:4"}
+{"text": "NO ETNIENDO", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:11"}
+{"text": "cobran mantenimiento en la cuenta de ahorro", "label": {"intent": "conocimiento_producto", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:16"}
+{"text": "cobran mantenimiento en la cuenta en bolivianos", "label": {"intent": "conocimiento_producto", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:16"}
+{"text": "escribeme un poema", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:5"}
+{"text": "¿cuánto cuesta reponer mi tarjeta de débito?", "label": {"intent": "conocimiento_producto", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:9"}
+{"text": "cuánto me descontaron este mes", "label": {"intent": "consulta_cuenta", "producto": null, "monto": null, "moneda": null}, "template_id": "consulta_cuenta:14"}
+{"text": "¿cuanto me descontaron este mes?", "label": {"intent": "consulta_cuenta", "producto": null, "monto": null, "moneda": null}, "template_id": "consulta_cuenta:14"}
+{"text": "quiero disputar un cargo de usd 15000", "label": {"intent": "queja_disputa", "producto": null, "monto": 15000.0, "moneda": "USD"}, "template_id": "queja_disputa:14"}
+{"text": "ESCÍRBEME UN POEMA", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:5"}
+{"text": "me clavaron un cobro de Bs 15000 que no hice", "label": {"intent": "queja_disputa", "producto": null, "monto": 15000.0, "moneda": "BOB"}, "template_id": "queja_disputa:5"}
+{"text": "¿qué signo del horóscopo soy?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:11"}
+{"text": "¿cobran mantenimiento en la caja de ahorros?", "label": {"intent": "conocimiento_producto", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:16"}
+{"text": "me clavaron un cobro de 230 Bs que no hice", "label": {"intent": "queja_disputa", "producto": null, "monto": 230.0, "moneda": "BOB"}, "template_id": "queja_disputa:5"}
+{"text": "¿cobran mantenimiento en la cuenta de la empresa?", "label": {"intent": "conocimiento_producto", "producto": "cuenta_corriente", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:16"}
+{"text": "NO ENTIENDO", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:11"}
+{"text": "la app me cobró 120 bs y la operación falló", "label": {"intent": "queja_disputa", "producto": "banca_internet", "monto": 120.0, "moneda": "BOB"}, "template_id": "queja_disputa:13"}
+{"text": "", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:6"}
+{"text": "quiero disputar un cargo de 1.250,50 bolivianos", "label": {"intent": "queja_disputa", "producto": null, "monto": 1250.5, "moneda": "BOB"}, "template_id": "queja_disputa:14"}
+{"text": "cuánta plata me queda", "label": {"intent": "consulta_cuenta", "producto": null, "monto": null, "moneda": null}, "template_id": "consulta_cuenta:4"}
+{"text": "dime cuátno gasté con mi plástico", "label": {"intent": "consulta_cuenta", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:19"}
+{"text": "¿cual es la mejor cancoin de este ano?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:14"}
+{"text": "¿cuál es el monto mníimo para abrir caja de ahorro?", "label": {"intent": "conocimiento_producto", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:15"}
+{"text": "esto es un fraude, alguien usó mi tarjeta", "label": {"intent": "queja_disputa", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "queja_disputa:3"}
+{"text": "qué signo del hroóscopo soy", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:11"}
+{"text": "buenas, la app me cobró 25 dólares y la operación falló", "label": {"intent": "queja_disputa", "producto": "banca_internet", "monto": 25.0, "moneda": "USD"}, "template_id": "queja_disputa:13"}
+{"text": "¿cuál es el monto mínimo para abrir tarjeta de débito?", "label": {"intent": "conocimiento_producto", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:15"}
+{"text": "cuál es la mejor canción de este año", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:14"}
+{"text": "no enitendo", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:11"}
+{"text": "¿cuál es la mejor canción de este año?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:14"}
+{"text": "escríbeme un poema", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:5"}
+{"text": "buenas, no entiendo", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:11"}
+{"text": "esto es un fraude, alguien usó mi tarjeta de credito", "label": {"intent": "queja_disputa", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "queja_disputa:3"}
+{"text": "cuál es la mejor canicón de este año", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:14"}
+{"text": "¿cual es la mejor cnacion de este ano?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:14"}
+{"text": "quiero disputar un cargo de 230 dolares", "label": {"intent": "queja_disputa", "producto": null, "monto": 230.0, "moneda": "USD"}, "template_id": "queja_disputa:14"}
+{"text": "puedo usar mi visa de crédito en el extranjero", "label": {"intent": "conocimiento_producto", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:10"}
+{"text": "buenas, ?", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:6"}
+{"text": "NO ENITENDO", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:11"}
+{"text": "cobran mantenimiento en la cuenta de la empresa", "label": {"intent": "conocimiento_producto", "producto": "cuenta_corriente", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:16"}
+{"text": "quiero disputar un cargo de 8.900 bolivianos", "label": {"intent": "queja_disputa", "producto": null, "monto": 8900.0, "moneda": "BOB"}, "template_id": "queja_disputa:14"}
+{"text": "dime cuánto gasté con mi plástico", "label": {"intent": "consulta_cuenta", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:19"}
+{"text": "¿qué signo del horóscpoo soy?", "label": {"intent": "fuera_de_alcance", "producto": null, "monto": null, "moneda": null}, "template_id": "fuera_de_alcance:11"}
+{"text": "me clavaron un cobro de Bs 3.000 que no hice", "label": {"intent": "queja_disputa", "producto": null, "monto": 3000.0, "moneda": "BOB"}, "template_id": "queja_disputa:5"}
+{"text": "me clavaron un cobro de Bs. 3000 que no hice", "label": {"intent": "queja_disputa", "producto": null, "monto": 3000.0, "moneda": "BOB"}, "template_id": "queja_disputa:5"}
+{"text": "la app me cobró 25 bs y la operación falló", "label": {"intent": "queja_disputa", "producto": "banca_internet", "monto": 25.0, "moneda": "BOB"}, "template_id": "queja_disputa:13"}
+{"text": "dime cuánto gasté con mi tarjeta", "label": {"intent": "consulta_cuenta", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:19"}
+{"text": "dime cuánto gasté con mi tarjeta de crédito clásica", "label": {"intent": "consulta_cuenta", "producto": "tarjeta_credito", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:19"}
+{"text": "dime cuánto gasté con mi tarjeta de débito", "label": {"intent": "consulta_cuenta", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:19"}
+{"text": "esto es un fraude, alguien usó mi plástico", "label": {"intent": "queja_disputa", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "queja_disputa:3"}
+{"text": "esto es un fraude, alguien uso mi tarejta de debito", "label": {"intent": "queja_disputa", "producto": "tarjeta_debito", "monto": null, "moneda": null}, "template_id": "queja_disputa:3"}
+{"text": "hola, no enitendo", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:11"}
+{"text": "porfa no entiendo", "label": {"intent": "ambiguo", "producto": null, "monto": null, "moneda": null}, "template_id": "ambiguo:11"}
+{"text": "porfa ¿cuanto cuesta reponer mi plastico?", "label": {"intent": "conocimiento_producto", "producto": "tarjeta", "monto": null, "moneda": null}, "template_id": "conocimiento_producto:9"}
+{"text": "dame el extracto de mi caja de ahorros", "label": {"intent": "consulta_cuenta", "producto": "caja_ahorro", "monto": null, "moneda": null}, "template_id": "consulta_cuenta:5"}

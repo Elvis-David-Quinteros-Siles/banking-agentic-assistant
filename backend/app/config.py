@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=(REPO_DIR / ".env", BACKEND_DIR / ".env"), extra="ignore")
 
     app_name: str = "banking-agentic-assistant"
-    app_version: str = "0.3.0"
+    app_version: str = "0.4.0"
     app_env: Literal["dev", "test", "prod"] = "dev"
     log_level: str = "INFO"
 
@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     # --- Router -----------------------------------------------------------
     router_backend: Literal["rules", "llm", "lora"] = "rules"
     router_min_confidence: float = 0.6
+    # Router LoRA (Fase 4): Qwen2.5-0.5B + adaptador entrenado con finetune/train_lora.py
+    lora_base_model: str = "Qwen/Qwen2.5-0.5B-Instruct"
+    lora_adapter_path: Path = REPO_DIR / "finetune" / "adapters" / "qwen2.5-0.5b-intent-lora"
+    lora_device: Literal["auto", "cuda", "cpu"] = "auto"
 
     # --- Agentes ----------------------------------------------------------
     react_max_iterations: int = 4  # tope de vueltas del loop ReAct (control de costo/latencia)

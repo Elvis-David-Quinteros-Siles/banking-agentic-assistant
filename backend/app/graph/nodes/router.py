@@ -153,11 +153,35 @@ def classify_llm(text: str) -> tuple[RouterOutput, dict]:
     return result["parsed"], usage_from_message(result["raw"], model_name())
 
 
+def classify_lora(text: str) -> tuple[dict, float, dict]:
+    """Router con el modelo fine-tuneado (Fase 4). Costo marginal 0: corre local."""
+    from app.llm.lora_router import get_lora_classifier
+
+    prediction = get_lora_classifier().classify(text)
+    usage = {"tokens_in": prediction.tokens_in, "tokens_out": prediction.tokens_out, "cost_usd": 0.0}
+    return prediction.output, prediction.confidence, usage
+
+
 @traced("router")
 def router_node(state: AgentState) -> dict:
     settings = get_settings()
     text = last_user_text(state)
     entities = extract_entities(text)
+
+    if settings.router_backend == "lora":
+        try:
+            output, confidence, usage = classify_lora(text)
+            lora_entities = {k: output[k] for k in ("producto", "monto", "moneda") if output.get(k) is not None}
+            return {
+                "intent": output["intent"],
+                "intent_confidence": confidence,
+                "entities": {**lora_entities, **entities},  # la regex prevalece en montos
+                "_usage": usage,
+            }
+        except Exception as error:  # noqa: BLE001 - modelo no entrenado, JSON inválido, sin GPU...
+            log_fallback("router(lora)", error)
+            intent, confidence = classify_rules(text)
+            return {"intent": intent, "intent_confidence": confidence, "entities": entities, "degraded": True}
 
     if settings.router_backend == "llm" and get_chat_model() is not None:
         try:

@@ -45,6 +45,15 @@ def _check_neo4j() -> str:
     return "ok" if neo4j_available() else "down"
 
 
+def _check_lora() -> str:
+    """Solo informa si el modelo ya está en memoria (no lo carga: /health debe ser instantáneo)."""
+    if get_settings().router_backend != "lora":
+        return "disabled"
+    from app.llm import lora_router
+
+    return "loaded" if lora_router.get_lora_classifier.cache_info().currsize else "not_loaded"
+
+
 @router.get("/health", response_model=HealthResponse)
 async def health(request: Request) -> HealthResponse:
     settings = get_settings()
@@ -56,6 +65,7 @@ async def health(request: Request) -> HealthResponse:
         "router": settings.router_backend,
         "knowledge": settings.knowledge_backend,
         "neo4j": _check_neo4j(),
+        "lora_router": _check_lora(),
     }
     if components["graph"] != "ok" or components["sqlite"] != "ok":
         status = "down"

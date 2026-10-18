@@ -35,6 +35,13 @@ async def lifespan(app: FastAPI):
         get_retriever().search("precarga")
     except Exception as error:  # noqa: BLE001
         logger.warning("No se pudo precargar el retriever: %s", error)
+    if settings.router_backend == "lora":
+        try:
+            from app.llm.lora_router import get_lora_classifier
+
+            get_lora_classifier().classify("hola")  # carga pesos + calienta kernels CUDA
+        except Exception as error:  # noqa: BLE001
+            logger.warning("Router LoRA no disponible (%s): se usará el router por reglas", error)
     # 3. Checkpointer persistente: los reclamos pendientes de HITL sobreviven a reinicios
     settings.checkpoints_path.parent.mkdir(parents=True, exist_ok=True)
     async with AsyncSqliteSaver.from_conn_string(str(settings.checkpoints_path)) as checkpointer:

@@ -318,12 +318,18 @@ El router además soporta `ROUTER_BACKEND = llm | lora | rules`:
 **Clasificación de intención + extracción de entidades con salida JSON estricta** para el router:
 
 ```json
-{"intent": "queja_disputa", "confidence": 0.93, "entities": {"producto": "tarjeta_credito", "monto": 350, "moneda": "BOB"}}
+{"intent":"queja_disputa","producto":"tarjeta_debito","monto":350.0,"moneda":"BOB"}
 ```
+
+La confianza no la escribe el modelo: se calcula de los logits de los tokens de `intent`.
 
 Por qué esta tarea: se integra directamente en el grafo (sustituye al router LLM), es medible con
 accuracy/macro-F1 y validez de JSON, y es donde un modelo de 0.5B entrega el mayor ahorro de costo y
 latencia (se ejecuta en cada turno).
+
+**Resultados (Fase 4)** sobre 120 frases de plantillas no vistas: reglas 59.2% · Qwen2.5-0.5B base
+36.7% · **Qwen2.5-0.5B + LoRA 95.8%** (recall de quejas 0.25 → 1.00). Entrenado en 5.6 min en una
+RTX 3050 de 4 GB. Detalle, latencias y limitaciones en [`finetune/README.md`](../finetune/README.md).
 
 ---
 
@@ -380,7 +386,9 @@ banking-agentic-assistant/
 │   │   │   (cada nodo define su prompt como constante junto a su lógica)
 │   │   ├── llm/
 │   │   │   ├── provider.py         # factory openai|anthropic|ollama|fake
-│   │   │   └── pricing.py          # tabla de precios configurable → cost_usd
+│   │   │   ├── pricing.py          # tabla de precios configurable → cost_usd
+│   │   │   ├── intent_format.py    # prompt y esquema JSON del router (compartido con finetune/)
+│   │   │   └── lora_router.py      # Qwen2.5-0.5B + LoRA, carga diferida de torch
 │   │   ├── tools/
 │   │   │   ├── sql_tools.py        # tools parametrizadas sobre SQLite
 │   │   │   └── knowledge_base.py   # protocolo Retriever + BM25 en memoria (fallback) + selección de backend
@@ -403,11 +411,15 @@ banking-agentic-assistant/
 │   ├── chat_cli.py                 # cliente de consola: chat, stream SSE, approve
 │   └── seed_neo4j.py               # carga Neo4j (--reset para recargar); SQLite se carga sola al arrancar
 ├── finetune/
-│   ├── generate_dataset.py
-│   ├── train_lora.py
+│   ├── README.md                   # resultados, latencias, limitaciones
+│   ├── requirements.txt            # torch CUDA + transformers/peft (separado del backend)
+│   ├── generate_dataset.py         # dataset sintético con split por plantilla
+│   ├── train_lora.py               # LoRA bf16 / QLoRA 4-bit
 │   ├── infer.py
-│   ├── eval_classifier.py
-│   └── adapters/                   # gitignored
+│   ├── eval_classifier.py          # reglas vs base vs LoRA
+│   ├── data/                       # train/val/test .jsonl (versionados)
+│   ├── reports/                    # router_eval.{json,md}
+│   └── adapters/                   # gitignored (35 MB, se regenera en ~6 min)
 ├── evals/
 │   ├── cases.yaml
 │   ├── run_evals.py
