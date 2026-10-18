@@ -12,7 +12,7 @@ core (SQL), explica productos y políticas con **Graph RAG** sobre Neo4j, gestio
 es un **Qwen2.5-0.5B ajustado con LoRA** que corre on-premise, y todo el sistema se mide con
 **Evals de punta a punta** que corren en CI.
 
-**[▶ Probar la demo en vivo](https://banking-agentic-assistant.edqs.online)** · [ver directamente un reclamo con aprobación humana](https://banking-agentic-assistant.edqs.online/?q=Me%20cobraron%20Bs%20350%20dos%20veces%20en%20la%20tarjeta%20de%20d%C3%A9bito)
+**[▶ Probar la demo en vivo](https://banking-agentic-assistant.edqs.online)** · [dashboard de KPIs](https://banking-agentic-assistant.edqs.online/#/kpis) · [cola del operador](https://banking-agentic-assistant.edqs.online/#/operador) · [ver directamente un reclamo con aprobación humana](https://banking-agentic-assistant.edqs.online/?q=Me%20cobraron%20Bs%20350%20dos%20veces%20en%20la%20tarjeta%20de%20d%C3%A9bito)
 
 <sub>La demo pública corre en modo liviano (router por reglas, búsqueda BM25, respuestas por plantilla) porque no requiere GPU. Los resultados con router LoRA, Graph RAG y LLM real están más abajo y en el GIF.</sub>
 
@@ -90,9 +90,10 @@ flowchart TD
 | Router | Qwen2.5-0.5B + LoRA (JSON: intención + producto + monto + moneda), con fallback a reglas | [finetune/](finetune/README.md) |
 | Consultas | Loop ReAct escrito a mano (máx. 4 vueltas), tools SQL con el cliente fijado por sesión | `backend/app/graph/nodes/query_agent.py` |
 | Conocimiento | Recuperación híbrida: 2 índices vectoriales + full-text en español + entidad + expansión `(Producto)-[:TIENE_POLITICA]->(Politica)`, fusionados con RRF | `backend/app/rag/neo4j_retriever.py` |
-| HITL | El grafo se pausa; el estado sobrevive entre requests y reinicios; approve / edit / reject | `backend/app/graph/nodes/hitl.py` |
+| HITL | El grafo se pausa; el estado sobrevive entre requests y reinicios; approve / edit / reject. **Back-office** (`#/operador`) con la cola ordenada por prioridad y espera; token de operador opcional | `backend/app/graph/nodes/hitl.py`, `backend/app/api/routes_operator.py` |
 | Guardrails | PII (tarjeta con Luhn, CI boliviano, celular, email), injection, acceso ajeno, grounding de cifras | `backend/app/guardrails/` |
-| API | `/chat`, `/chat/stream` (SSE), `/approve/{thread_id}`, `/health` | `backend/app/api/` |
+| API | `/chat`, `/chat/stream` (SSE), `/approve/{thread_id}`, `/operator/queue`, `/metrics/summary`, `/health` | `backend/app/api/` |
+| Analítica | Métricas por turno (intención, estado, latencia por nodo, tokens, costo) y cola HITL; el cliente se guarda seudonimizado y nunca el texto | `backend/app/analytics/` |
 | Frontend | React 18 + Vite + TypeScript: streaming, recorrido del grafo en vivo, tarjeta HITL | [frontend/](frontend/README.md) |
 | Evals + CI | 31 casos, umbrales por métrica, 4 jobs en GitHub Actions (incluye Neo4j como servicio) | [evals/](evals/README.md) |
 
@@ -106,7 +107,7 @@ El sistema empeora en redacción, no en exactitud ni seguridad.
 |---|---|
 | Traducir necesidades de negocio en flujos agénticos | Tabla de negocio de arriba → nodos del grafo, cada uno con su KPI |
 | Flujos agénticos complejos | Grafo de 11 nodos con aristas condicionales, ReAct, HITL con pausa y reanudación |
-| KPIs por caso de uso y monitoreo | Métricas por nodo (latencia, tokens, costo) en cada respuesta; KPIs por agente en Evals |
+| KPIs por caso de uso y monitoreo | **Dashboard en vivo** (`#/kpis`): contención, latencia p50/p95, degradación, bloqueos, costo y, por intención, % resuelto / a HITL / aclaración; HITL: aprobados sin editar y tiempo de decisión del operador. Sin guardar texto de clientes |
 | Optimizar agentes en producción | [Ciclo de mejora](evals/README.md#ciclo-de-mejora-guiado-por-evals): falla detectada → diagnóstico → corrección → re-medición |
 | Evals: precisión/recall, alucinación, KPIs | `evals/`: precision/recall por intención, grounding de cifras, LLM-as-judge opcional, umbrales en CI |
 | LLMs, prompt y context engineering | Prompts cortos por nodo, presupuesto de contexto (top-4, 6 mensajes), vecinos del grafo en el contexto |
@@ -208,9 +209,9 @@ Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi sa
 
 ## Capturas
 
-| Recorrido del grafo en vivo y aprobación | Guardrails: PII e injection | Móvil |
+| Dashboard de KPIs | Recorrido del grafo en vivo y aprobación | Guardrails: PII e injection |
 |---|---|---|
-| ![aprobado](docs/img/ui-approved.png) | ![guardrails](docs/img/ui-guardrails.png) | ![móvil](docs/img/ui-mobile.png) |
+| ![kpis](docs/img/ui-kpis.png) | ![aprobado](docs/img/ui-approved.png) | ![guardrails](docs/img/ui-guardrails.png) |
 
 ## Decisiones de diseño
 
@@ -249,8 +250,9 @@ Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi sa
 **Calidad y operación**
 - Evals sobre conversaciones reales anonimizadas y etiquetadas por humanos; los 31 casos sintéticos
   detectan regresiones, pero no estiman la precisión real.
-- Trazas con OpenTelemetry / LangSmith / Langfuse; dashboards de KPIs por caso de uso y alertas de
-  deriva (subida de `degraded`, de aclaraciones o de reclamos rechazados).
+- Trazas con OpenTelemetry / LangSmith / Langfuse, y los KPIs del dashboard exportados a
+  Prometheus/Grafana con alertas de deriva (subida de `degraded`, de aclaraciones, de reclamos
+  rechazados o de la espera en la cola HITL). La analítica iría a un data warehouse, no a SQLite.
 - Calibrar la confianza del LoRA (hoy sale ~0.99 casi siempre) para que el umbral de aclaración y
   una cascada reglas → LoRA funcionen.
 - Pipeline de reentrenamiento (Airflow / Metaflow): datos nuevos del monitoreo → reentrenar →

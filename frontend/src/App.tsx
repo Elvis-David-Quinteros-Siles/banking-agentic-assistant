@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { getHealth } from "./api/client";
 import type { HealthResponse } from "./api/types";
 import { ApprovalCard } from "./components/ApprovalCard";
+import { KpiView } from "./components/KpiView";
+import { OperatorView } from "./components/OperatorView";
 import { MessageBubble } from "./components/MessageBubble";
 import { TracePanel } from "./components/TracePanel";
 import { useChat } from "./hooks/useChat";
@@ -32,7 +34,31 @@ function initialCustomer(): string {
   return CUSTOMERS.some((c) => c.id === fromUrl) ? fromUrl! : CUSTOMERS[0].id;
 }
 
+// Navegación por hash: cada vista tiene su propio enlace compartible (#/operador, #/kpis)
+type Route = "chat" | "operador" | "kpis";
+const ROUTES: { id: Route; label: string }[] = [
+  { id: "chat", label: "Chat del cliente" },
+  { id: "operador", label: "Operador" },
+  { id: "kpis", label: "KPIs" },
+];
+
+function currentRoute(): Route {
+  const hash = window.location.hash.replace(/^#\/?/, "");
+  return ROUTES.some((r) => r.id === hash) ? (hash as Route) : "chat";
+}
+
+function useRoute(): Route {
+  const [route, setRoute] = useState<Route>(currentRoute);
+  useEffect(() => {
+    const onChange = () => setRoute(currentRoute());
+    window.addEventListener("hashchange", onChange);
+    return () => window.removeEventListener("hashchange", onChange);
+  }, []);
+  return route;
+}
+
 export default function App() {
+  const route = useRoute();
   const { state, send, decide, reset } = useChat(initialCustomer());
   const [input, setInput] = useState("");
   const [health, setHealth] = useState<HealthResponse | null>(null);
@@ -80,7 +106,14 @@ export default function App() {
             <p>Demo multi-agente · LangGraph · Graph RAG · LoRA · HITL</p>
           </div>
         </div>
-        <div className="topbar__controls">
+        <nav className="tabs" aria-label="Vistas">
+          {ROUTES.map((r) => (
+            <a key={r.id} href={`#/${r.id}`} className={`tab ${route === r.id ? "tab--active" : ""}`} aria-current={route === r.id ? "page" : undefined}>
+              {r.label}
+            </a>
+          ))}
+        </nav>
+        <div className={`topbar__controls ${route === "chat" ? "" : "topbar__controls--hidden"}`}>
           <label>
             Cliente
             <select value={state.customerId} onChange={(e) => reset(e.target.value)} disabled={state.busy}>
@@ -97,7 +130,9 @@ export default function App() {
         </div>
       </header>
 
-      <main className="layout">
+      {route === "operador" && <main className="layout layout--single"><OperatorView /></main>}
+      {route === "kpis" && <main className="layout layout--single"><KpiView /></main>}
+      <main className="layout" hidden={route !== "chat"}>
         <section className="chat">
           <div className="chat__messages" aria-live="polite">
             {state.messages.length === 0 && (

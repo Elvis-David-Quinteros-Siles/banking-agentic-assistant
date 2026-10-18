@@ -3,6 +3,7 @@
 Arranque:  uvicorn app.main:app --reload   (desde la carpeta backend/)
 """
 
+import asyncio
 import logging
 import uuid
 from contextlib import asynccontextmanager
@@ -14,7 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.api import routes_chat, routes_health, routes_hitl
+from app.api import routes_chat, routes_health, routes_hitl, routes_operator
 from app.config import get_settings
 from app.db.sqlite import init_db
 from app.graph.builder import build_graph
@@ -58,6 +59,11 @@ async def lifespan(app: FastAPI):
     settings.checkpoints_path.parent.mkdir(parents=True, exist_ok=True)
     async with AsyncSqliteSaver.from_conn_string(str(settings.checkpoints_path)) as checkpointer:
         app.state.graph = build_graph(checkpointer)
+        if settings.demo_seed_traffic:
+            # En segundo plano: el servidor acepta tráfico mientras se genera la demo
+            from app.analytics.demo_seed import seed_demo_traffic
+
+            app.state.seed_task = asyncio.create_task(seed_demo_traffic(app.state.graph))
         logger.info(
             "Grafo compilado (llm=%s, router=%s, knowledge=%s, core=%s)",
             settings.llm_provider, settings.router_backend, settings.knowledge_backend, settings.core_backend,
@@ -76,7 +82,7 @@ app = FastAPI(
     lifespan=lifespan,
     default_response_class=UTF8JSONResponse,
 )
-for api_router in (routes_chat.router, routes_hitl.router, routes_health.router):
+for api_router in (routes_chat.router, routes_hitl.router, routes_health.router, routes_operator.router):
     app.include_router(api_router)
     # Mismo prefijo que usa el frontend (/api): permite servir todo desde un solo puerto
     app.include_router(api_router, prefix="/api", include_in_schema=False)

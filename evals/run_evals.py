@@ -79,6 +79,7 @@ def configure_env(args: argparse.Namespace, tmp: Path) -> None:
         "CORE_BACKEND": args.core,
         "SQLITE_PATH": str(tmp / "bank.db"),
         "CHECKPOINTS_PATH": str(tmp / "checkpoints.db"),
+        "ANALYTICS_PATH": str(tmp / "analytics.db"),
     })
     if args.router == "lora":
         # El modelo LoRA ya está en caché local: evita consultas a Hugging Face en cada corrida

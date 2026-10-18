@@ -56,7 +56,18 @@ with sync_playwright() as p:
     print("Injection:", page.locator(".tag--blocked").inner_text())
     page.screenshot(path=OUT + "/ui-guardrails.png", full_page=True)
 
-    # 4) Vista móvil
+    # 4) Back-office: el reclamo aprobado ya no está en la cola; el dashboard muestra KPIs y gráficos
+    page.goto(page.url.split("#")[0] + "#/operador")
+    expect(page.locator(".counter")).to_contain_text("pendiente", timeout=15000)
+    print("Operador:", page.locator(".counter").inner_text())
+    page.goto(page.url.split("#")[0] + "#/kpis")
+    expect(page.locator(".tile").first).to_be_visible(timeout=15000)
+    print("KPIs: tiles =", page.locator(".tile").count(), "| barras por intención =", page.locator(".hbars__bar").count(),
+          "| contención =", page.locator(".tile").nth(1).locator(".tile__value").inner_text())
+    page.screenshot(path=OUT + "/ui-kpis.png", full_page=False)
+    page.goto(page.url.split("#")[0] + "#/chat")
+
+    # 5) Vista móvil
     page.set_viewport_size({"width": 390, "height": 844})
     page.screenshot(path=OUT + "/ui-mobile.png")
     print("Scroll horizontal en móvil:", page.evaluate("document.documentElement.scrollWidth > window.innerWidth"))

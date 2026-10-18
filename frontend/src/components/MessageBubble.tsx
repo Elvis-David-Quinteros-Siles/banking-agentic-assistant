@@ -1,12 +1,5 @@
 import type { Message } from "../hooks/useChat";
-
-const INTENT_LABELS: Record<string, string> = {
-  consulta_cuenta: "Consulta de cuenta",
-  conocimiento_producto: "Productos y políticas",
-  queja_disputa: "Reclamo",
-  fuera_de_alcance: "Fuera de alcance",
-  ambiguo: "Ambiguo",
-};
+import { INTENT_LABELS } from "../labels";
 
 const STATUS_LABELS: Record<string, string> = {
   blocked: "Bloqueado por guardrail",

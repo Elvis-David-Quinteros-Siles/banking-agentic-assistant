@@ -18,7 +18,9 @@ async def chat(body: ChatRequest, request: Request) -> ChatResponse:
     graph = request.app.state.graph
     thread_id = body.thread_id or str(uuid.uuid4())
     await chat_service.ensure_not_pending(graph, thread_id)
-    return await chat_service.run_turn(graph, thread_id, chat_service.chat_input(body.customer_id, body.message))
+    return await chat_service.run_turn(
+        graph, thread_id, chat_service.chat_input(body.customer_id, body.message), customer_id=body.customer_id
+    )
 
 
 @router.post("/chat/stream")
@@ -27,5 +29,7 @@ async def chat_stream(body: ChatRequest, request: Request) -> StreamingResponse:
     thread_id = body.thread_id or str(uuid.uuid4())
     # Se valida ANTES de abrir el stream para poder responder con un 409 normal
     await chat_service.ensure_not_pending(graph, thread_id)
-    events = chat_service.stream_turn(graph, thread_id, chat_service.chat_input(body.customer_id, body.message))
+    events = chat_service.stream_turn(
+        graph, thread_id, chat_service.chat_input(body.customer_id, body.message), customer_id=body.customer_id
+    )
     return StreamingResponse(events, media_type="text/event-stream; charset=utf-8", headers=SSE_HEADERS)

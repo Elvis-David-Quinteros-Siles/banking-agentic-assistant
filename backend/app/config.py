@@ -73,6 +73,12 @@ class Settings(BaseSettings):
     # --- Persistencia -----------------------------------------------------
     sqlite_path: Path = BACKEND_DIR / "data" / "bank.db"
     checkpoints_path: Path = BACKEND_DIR / "data" / "checkpoints.db"
+    # Analítica operativa (KPIs por caso de uso + cola HITL). Sin texto de clientes.
+    analytics_path: Path = BACKEND_DIR / "data" / "analytics.db"
+    # Si se define, /operator/* y /approve exigen la cabecera X-Operator-Token (back-office)
+    operator_token: str | None = None
+    # Demo pública: al arrancar con analítica vacía, genera tráfico de ejemplo para el dashboard
+    demo_seed_traffic: bool = False
     seed_dir: Path = REPO_DIR / "data" / "seed"
     # Build del frontend (npm run build). Si existe, FastAPI lo sirve en "/" (imagen de demo pública)
     frontend_dist: Path = REPO_DIR / "frontend" / "dist"

@@ -97,11 +97,28 @@ async def build_response(graph, thread_id: str, previous_len: int, started: floa
     )
 
 
-async def run_turn(graph, thread_id: str, graph_input: Any) -> ChatResponse:
+def record_analytics(response: ChatResponse, kind: str, customer_id: str | None,
+                     decision: dict | None = None, source: str = "live") -> None:
+    """KPIs por turno y cola del back-office. Nunca interrumpe la conversación si falla."""
+    from app.analytics.store import get_analytics, safe
+
+    store = get_analytics()
+    if kind == "approve" and decision:
+        safe(store.decide_complaint, response.thread_id, decision)
+        customer_id = customer_id or store.customer_for(response.thread_id)
+    safe(store.record_turn, response.model_dump(), kind, customer_id, source)
+    if response.status == "interrupted" and response.interrupt and customer_id:
+        safe(store.enqueue_complaint, response.thread_id, customer_id, response.interrupt.payload, source)
+
+
+async def run_turn(graph, thread_id: str, graph_input: Any, *, kind: str = "chat", customer_id: str | None = None,
+                   decision: dict | None = None, source: str = "live") -> ChatResponse:
     previous_len = await _trace_len(graph, thread_id)
     started = time.perf_counter()
     await graph.ainvoke(graph_input, config=_config(thread_id))
-    return await build_response(graph, thread_id, previous_len, started)
+    response = await build_response(graph, thread_id, previous_len, started)
+    record_analytics(response, kind, customer_id, decision, source)
+    return response
 
 
 def sse(event: str, data: Any) -> str:
@@ -110,7 +127,7 @@ def sse(event: str, data: Any) -> str:
     return f"event: {event}\ndata: {payload}\n\n"
 
 
-async def stream_turn(graph, thread_id: str, graph_input: Any) -> AsyncIterator[str]:
+async def stream_turn(graph, thread_id: str, graph_input: Any, customer_id: str | None = None) -> AsyncIterator[str]:
     """Ejecuta el turno emitiendo eventos SSE: meta, node, token, interrupt, final, error."""
     previous_len = await _trace_len(graph, thread_id)
     started = time.perf_counter()
@@ -139,6 +156,7 @@ async def stream_turn(graph, thread_id: str, graph_input: Any) -> AsyncIterator[
                     yield sse("token", {"delta": message.content})
 
         response = await build_response(graph, thread_id, previous_len, started)
+        record_analytics(response, "chat", customer_id)
         if not streamed_tokens:
             # Sin LLM (modo fake o plantillas): se emite la respuesta en trozos para una UX uniforme
             for word in response.answer.split(" "):

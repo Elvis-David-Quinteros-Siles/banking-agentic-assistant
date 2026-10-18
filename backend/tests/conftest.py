@@ -16,6 +16,7 @@ os.environ.update({
     "ROUTER_BACKEND": "rules",
     "SQLITE_PATH": str(_TMP / "bank.db"),
     "CHECKPOINTS_PATH": str(_TMP / "checkpoints.db"),
+    "ANALYTICS_PATH": str(_TMP / "analytics.db"),
 })
 
 from fastapi.testclient import TestClient  # noqa: E402

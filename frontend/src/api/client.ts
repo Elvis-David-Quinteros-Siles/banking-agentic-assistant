@@ -1,7 +1,16 @@
 // Cliente HTTP del backend. Todas las rutas pasan por el proxy de Vite (/api → FastAPI).
 
 import { readSSE } from "./sse";
-import type { ApiError, ApproveRequest, ChatRequest, ChatResponse, HealthResponse, StreamEvent } from "./types";
+import type {
+  ApiError,
+  ApproveRequest,
+  ChatRequest,
+  ChatResponse,
+  HealthResponse,
+  MetricsSummary,
+  QueueItem,
+  StreamEvent,
+} from "./types";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
 
@@ -24,10 +33,26 @@ async function toError(response: Response): Promise<ApiRequestError> {
   }
 }
 
+// Token del back-office (si el servidor define OPERATOR_TOKEN). Se guarda solo en este navegador.
+export function operatorHeaders(): Record<string, string> {
+  try {
+    const token = window.localStorage.getItem("operatorToken");
+    return token ? { "X-Operator-Token": token } : {};
+  } catch {
+    return {};
+  }
+}
+
+async function getJson<T>(path: string): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, { headers: operatorHeaders() });
+  if (!response.ok) throw await toError(response);
+  return (await response.json()) as T;
+}
+
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...operatorHeaders() },
     body: JSON.stringify(body),
   });
   if (!response.ok) throw await toError(response);
@@ -39,6 +64,10 @@ export const getHealth = async (): Promise<HealthResponse> => {
   if (!response.ok) throw await toError(response);
   return (await response.json()) as HealthResponse;
 };
+
+export const getQueue = () => getJson<{ pending: number; items: QueueItem[] }>("/operator/queue");
+
+export const getSummary = (hours: number) => getJson<MetricsSummary>(`/metrics/summary?hours=${hours}`);
 
 export const sendChat = (request: ChatRequest) => postJson<ChatResponse>("/chat", request);
 

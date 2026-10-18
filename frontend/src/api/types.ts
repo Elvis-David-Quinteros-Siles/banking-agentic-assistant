@@ -75,3 +75,54 @@ export type StreamEvent =
   | { event: "interrupt"; data: InterruptInfo }
   | { event: "final"; data: ChatResponse }
   | { event: "error"; data: { code: string; message: string } };
+
+// Back-office: cola del operador y KPIs (GET /operator/queue, GET /metrics/summary)
+export interface QueueItem {
+  thread_id: string;
+  customer_id: string;
+  created_at: string;
+  age_minutes: number;
+  priority: "alta" | "media" | "baja";
+  draft: ComplaintDraft;
+}
+
+export interface IntentKpi {
+  intent: string;
+  turns: number;
+  completed_rate: number | null;
+  hitl_rate: number | null;
+  clarification_rate: number | null;
+  blocked_rate: number | null;
+  degraded_rate: number | null;
+  latency_p95_ms: number | null;
+  avg_cost_usd: number;
+}
+
+export interface MetricsSummary {
+  window_hours: number;
+  generated_at: string;
+  kpis: {
+    turns: number;
+    containment_rate: number | null;
+    latency_p50_ms: number | null;
+    latency_p95_ms: number | null;
+    degraded_rate: number | null;
+    blocked_rate: number | null;
+    clarification_rate: number | null;
+    cost_usd: number;
+    tokens: number;
+  };
+  hitl: {
+    created: number;
+    pending: number;
+    approved: number;
+    edited: number;
+    rejected: number;
+    approved_without_edit_rate: number | null;
+    avg_decision_minutes: number | null;
+    oldest_pending_minutes: number | null;
+  };
+  by_intent: IntentKpi[];
+  hourly: { hour: string; turns: number; latency_p95_ms: number | null }[];
+  safety: { blocked_reasons: Record<string, number>; pii_detected: Record<string, number> };
+}
