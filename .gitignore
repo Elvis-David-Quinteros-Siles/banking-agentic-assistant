@@ -29,3 +29,4 @@ Thumbs.db
 
 # Evals: el reporte 'latest' cambia en cada corrida; se versionan los nombrados por configuración
 evals/reports/latest.*
+frontend/*.tsbuildinfo
