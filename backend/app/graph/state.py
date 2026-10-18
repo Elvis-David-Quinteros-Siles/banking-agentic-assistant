@@ -26,6 +26,11 @@ class AgentState(TypedDict, total=False):
     final_answer: str | None
     status: TurnStatus | None  # estado del turno; "interrupted" lo deduce la API del checkpoint
     degraded: bool  # True si algún nodo cayó a su ruta determinista por fallo del LLM
+    # Multi-turno: intención del último turno con intención clara (NO se reinicia entre turnos)
+    last_intent: str | None
+    # Pregunta efectiva del turno: si el mensaje es un seguimiento ("¿y en dólares?"), la pregunta
+    # anterior + la actual; si no, None y los nodos usan el último mensaje
+    effective_query: str | None
     # Acumulativo: cada nodo añade su métrica; la API recorta el tramo del turno actual
     trace: Annotated[list[dict[str, Any]], operator.add]
 
@@ -45,4 +50,5 @@ def turn_reset(customer_id: str) -> dict[str, Any]:
         "final_answer": None,
         "status": None,
         "degraded": False,
+        "effective_query": None,
     }

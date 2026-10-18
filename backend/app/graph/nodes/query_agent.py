@@ -18,7 +18,7 @@ from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
 
 from app.config import get_settings
 from app.db.repository import get_repository
-from app.graph.nodes.common import last_user_text, log_fallback, recent_history
+from app.graph.nodes.common import effective_user_text, log_fallback, recent_history
 from app.graph.state import AgentState
 from app.llm.pricing import add_usage, usage_from_message
 from app.llm.provider import get_chat_model, model_name
@@ -144,7 +144,7 @@ def react_answer(tools: BankingTools, state: AgentState) -> tuple[str, dict]:
             if INTERNAL_LEAK_RE.search(answer):
                 raise ValueError("la respuesta expone el contexto interno")
             # Respuesta de saldos: ninguna cuenta puede quedar fuera
-            return ensure_all_balances(answer, accounts, last_user_text(state)), add_usage(*usages)
+            return ensure_all_balances(answer, accounts, effective_user_text(state)), add_usage(*usages)
         # El LLM ya decidió QUÉ consultar (cuenta y cantidad): el extracto lo redacta el código.
         # Con qwen2.5:3b se observó que reescribía los comercios ("compra de joyería" en lugar de
         # "Joyería Brillante"); un extracto bancario no se parafrasea. Además ahorra una llamada.
@@ -176,10 +176,10 @@ def query_agent_node(state: AgentState) -> dict:
             update["_usage"] = usage
         except Exception as error:  # noqa: BLE001
             log_fallback("query_agent", error)
-            answer = deterministic_answer(tools, last_user_text(state))
+            answer = deterministic_answer(tools, effective_user_text(state))
             update["degraded"] = True
     else:
-        answer = deterministic_answer(tools, last_user_text(state))
+        answer = deterministic_answer(tools, effective_user_text(state))
 
     update.update({"final_answer": answer, "messages": [AIMessage(content=answer)]})
     return update

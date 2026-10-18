@@ -75,10 +75,18 @@ def tokenize(text: str) -> list[str]:
 
 
 class Retriever(Protocol):
+    # Seguimientos multi-turno: los retrievers densos (embeddings) rinden mejor con la pregunta anterior
+    # completa; el léxico (BM25), con el mensaje actual + el producto (medido en Evals M02/M03)
+    prefers_full_context: bool
+
     def search(self, query: str, k: int = 4, product_hint: str | None = None) -> list[dict]: ...
 
 
+PRODUCT_DOC_WEIGHT = 0.75
+
+
 class KeywordRetriever:
+    prefers_full_context = False
     """BM25 sobre documentos de política y producto. Score normalizado a [0, 1]."""
 
     def __init__(self, documents: list[dict], min_score: float = 0.0, k1: float = 1.5, b: float = 0.75):
@@ -113,6 +121,10 @@ class KeywordRetriever:
         scored = []
         for i, doc in enumerate(self.documents):
             score = self._bm25(query_tokens, i) / max_score
+            if doc["type"] == "producto":
+                # Las fichas de producto son cortas y repiten su nombre: BM25 las favorece por longitud,
+                # pero las respuestas (montos, plazos, requisitos) están en las políticas (Evals K03/K05/M03)
+                score *= PRODUCT_DOC_WEIGHT
             if product_hint and product_hint in doc.get("product_tags", []):
                 score += 0.1  # pequeño boost por la entidad que extrajo el router
             if score > 0 and min(score, 1.0) >= self.min_score:

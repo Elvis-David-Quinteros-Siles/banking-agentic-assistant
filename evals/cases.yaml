@@ -215,3 +215,38 @@ cases:
     customer: CLI-005
     message: "tengo una consulta"
     expected: {intent: ambiguo, status: clarification}
+
+  # --- Multi-turno: la pregunta depende del turno anterior ---------------------
+  # "history" son mensajes previos enviados en la MISMA conversación antes del mensaje evaluado.
+  - id: M01
+    category: multiturno
+    customer: CLI-001
+    history: ["Muéstrame mis últimos movimientos"]
+    message: "¿y los de la cuenta en dólares?"
+    tags: [multiturno]
+    expected: {intent: consulta_cuenta, status: completed, answer_contains: ["Streaming Service"]}
+
+  - id: M02
+    category: multiturno
+    customer: CLI-004
+    history: ["¿Cuál es el límite de retiro en cajero de la tarjeta de débito?"]
+    message: "¿y cuánto cuesta reponerla?"
+    tags: [multiturno]
+    expected: {intent: conocimiento_producto, status: completed, citations_any: [POL-004]}
+
+  - id: M03
+    category: multiturno
+    customer: CLI-001
+    history: ["¿Qué requisitos piden para abrir una caja de ahorro?"]
+    message: "¿y cobran mantenimiento?"
+    tags: [multiturno]
+    expected: {intent: conocimiento_producto, status: completed, citations_any: [POL-002]}
+
+  - id: M04
+    category: multiturno
+    customer: CLI-003
+    history: ["¿Cuál es mi saldo?"]
+    # Cambio de tema claro: NO debe heredar la intención anterior
+    message: "¿Qué requisitos piden para la tarjeta de crédito?"
+    tags: [multiturno, trampa]
+    expected: {intent: conocimiento_producto, status: completed, citations_any: [POL-007]}

@@ -11,7 +11,8 @@ import re
 from langchain_core.messages import AIMessage, SystemMessage
 
 from app.config import get_settings
-from app.graph.nodes.common import last_user_text, log_fallback
+from app.graph.nodes.common import effective_user_text, last_user_text, log_fallback
+from app.graph.nodes.router import PRODUCT_PHRASES
 from app.graph.state import AgentState
 from app.guardrails.grounding import numbers_in
 from app.llm.pricing import usage_from_message
@@ -81,15 +82,26 @@ def extractive_answer(docs: list[dict]) -> str:
 @traced("knowledge_agent")
 def knowledge_agent_node(state: AgentState) -> dict:
     settings = get_settings()
-    question = last_user_text(state)
+    question = effective_user_text(state)  # para redactar: con todo el contexto si es un seguimiento
     product_hint = state.get("entities", {}).get("producto")
     update: dict = {"status": "completed"}
-    query = retrieval_query(question)
+    # Para BUSCAR en un seguimiento, cada retriever usa la consulta que mejor le funciona (Evals M02/M03):
+    # los de embeddings, la pregunta anterior + la actual ("reponerla" sola no se parece a "reposición");
+    # el léxico, el mensaje actual + el producto (si no, las palabras del tema anterior dominan)
+    focused = f"{last_user_text(state)} {PRODUCT_PHRASES.get(product_hint or '', '')}"
+
+    def search_query(retriever) -> str:
+        if not state.get("effective_query"):
+            return retrieval_query(question)
+        return retrieval_query(question if retriever.prefers_full_context else focused)
+
+    retriever = get_retriever()
     try:
-        docs = get_retriever().search(query, k=settings.knowledge_top_k, product_hint=product_hint)
+        docs = retriever.search(search_query(retriever), k=settings.knowledge_top_k, product_hint=product_hint)
     except Exception as error:  # noqa: BLE001 - p. ej. Neo4j se cayó después del arranque
         log_fallback("knowledge_agent.retriever", error)
-        docs = get_keyword_retriever().search(query, k=settings.knowledge_top_k, product_hint=product_hint)
+        fallback = get_keyword_retriever()
+        docs = fallback.search(search_query(fallback), k=settings.knowledge_top_k, product_hint=product_hint)
         update["degraded"] = True
 
     update["retrieved_context"] = docs

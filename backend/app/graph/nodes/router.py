@@ -13,7 +13,7 @@ from langchain_core.messages import SystemMessage
 from pydantic import BaseModel, Field
 
 from app.config import get_settings
-from app.graph.nodes.common import last_user_text, log_fallback
+from app.graph.nodes.common import last_user_text, log_fallback, previous_user_text
 from app.graph.state import AgentState
 from app.llm.pricing import usage_from_message
 from app.llm.provider import get_chat_model, model_name
@@ -162,6 +162,12 @@ PRODUCT_HINTS = {
 }
 
 
+# Etiqueta de producto → frase legible (la primera forma de superficie), para armar búsquedas con contexto
+PRODUCT_PHRASES: dict[str, str] = {}
+for _phrase, _tag in PRODUCT_HINTS.items():
+    PRODUCT_PHRASES.setdefault(_tag, _phrase)
+
+
 def parse_amount(raw: str) -> float | None:
     """'1.250,50' -> 1250.5 ; '350' -> 350.0 (formato boliviano: punto miles, coma decimales)."""
     if re.search(r",\d{1,2}$", raw):
@@ -236,12 +242,30 @@ def classify_lora(text: str) -> tuple[dict, float, dict]:
     return prediction.output, prediction.confidence, usage
 
 
-@traced("router")
-def router_node(state: AgentState) -> dict:
-    settings = get_settings()
-    text = last_user_text(state)
-    entities = extract_entities(text)
+# --- Multi-turno ------------------------------------------------------------
+# Un seguimiento es un mensaje corto que depende del turno anterior: empieza con "y…", "¿y…",
+# "también…", o usa referencias ("esa", "la otra", "reponerla").
+FOLLOWUP_START_RE = re.compile(r"^\W*(y|e|tambien|ahora|entonces|pero|y si|igual)\b")
+FOLLOWUP_REF_RE = re.compile(r"\b(esa|ese|eso|esos|esas|la otra|el otro|lo mismo|la misma|\w+(la|lo|las|los))\b")
+FOLLOWUP_MAX_WORDS = 9
 
+
+def is_followup(text: str, previous: str) -> bool:
+    if not previous:
+        return False
+    normalized = normalize(text)
+    if len(normalized.split()) > FOLLOWUP_MAX_WORDS:
+        return False
+    if FOLLOWUP_START_RE.search(normalized):
+        return True
+    # Una referencia ("reponerla", "esa cuenta") solo cuenta si el mensaje no trae su propio tema claro
+    intent, confidence = classify_rules(text)
+    return bool(FOLLOWUP_REF_RE.search(normalized)) and (intent == "ambiguo" or confidence < 0.6)
+
+
+def _classify(text: str, entities: dict) -> dict:
+    """Clasificación con el backend configurado (con degradación a reglas si el modelo falla)."""
+    settings = get_settings()
     if settings.router_backend == "lora":
         try:
             output, confidence, usage = classify_lora(text)
@@ -275,6 +299,32 @@ def router_node(state: AgentState) -> dict:
 
     intent, confidence = classify_rules(text)
     return {"intent": intent, "intent_confidence": confidence, "entities": entities}
+
+
+ROUTABLE_INTENTS = ("consulta_cuenta", "conocimiento_producto", "queja_disputa")
+
+
+@traced("router")
+def router_node(state: AgentState) -> dict:
+    text = last_user_text(state)
+    previous = previous_user_text(state)
+    followup = is_followup(text, previous)
+
+    # En un seguimiento se clasifica y se responde con el contexto del turno anterior
+    query = f"{previous} {text}" if followup else text
+    entities = {**extract_entities(previous), **extract_entities(text)} if followup else extract_entities(text)
+    update = _classify(query, entities)
+
+    if followup:
+        update["effective_query"] = query
+        # Si aun con contexto no queda claro, se hereda la intención del turno anterior
+        last = state.get("last_intent")
+        if update["intent"] in ("ambiguo",) and last in ROUTABLE_INTENTS:
+            update["intent"] = last
+            update["intent_confidence"] = 0.75
+    if update["intent"] in ROUTABLE_INTENTS:
+        update["last_intent"] = update["intent"]
+    return update
 
 
 def route_after_router(state: AgentState) -> str:

@@ -1,6 +1,6 @@
 # Evals — calidad de punta a punta
 
-31 casos etiquetados (`cases.yaml`) que recorren el sistema **completo**: guardrails → router →
+35 casos etiquetados (`cases.yaml`), 4 de ellos multi-turno, que recorren el sistema **completo**: guardrails → router →
 agente → HITL (con un operador simulado vía `/approve`) → output guardrail. No se evalúan
 componentes sueltos: un caso pasa solo si la respuesta final al cliente es la correcta.
 
@@ -14,6 +14,7 @@ componentes sueltos: un caso pasa solo si la respuesta final al cliente es la co
 | Acceso a datos ajenos | 2 | bloqueo + la cifra ajena no aparece |
 | PII | 3 | detección, enmascarado, ausencia en respuesta, historial y borrador HITL |
 | Ambiguos | 2 | pregunta aclaratoria |
+| Multi-turno | 4 | seguimientos ("¿y los de la cuenta en dólares?", "¿y cuánto cuesta reponerla?") y un cambio de tema que NO debe heredar contexto |
 
 ## Métricas
 
@@ -40,13 +41,13 @@ como **freno de regresión** sobre su línea base, no como meta de calidad.
 
 ## Resultados
 
-| Configuración | Casos OK | Enrutamiento | Paráfrasis | Recall reclamos | Citas ¹ | p50 / p95 |
-|---|---|---|---|---|---|---|
-| rules + BM25 (CI) | 24/31 | 80.8% | 28.6% | 71.4% | 66.7% | 64 / 135 ms |
-| rules + Neo4j (CI) | 26/31 | 80.8% | 28.6% | 71.4% | 100% | 80 / 124 ms |
-| rules + **pgvector** + core en **SQL Server** (CI) | 26/31 | 80.8% | 28.6% | 71.4% | 100% | 79 / 128 ms |
-| **LoRA v2 + Neo4j** | **31/31** | **100%** | **100%** | **100%** | **100%** | 731 / 961 ms |
-| **LoRA v2 + Neo4j + LLM real** (qwen2.5:3b en Ollama) | **31/31** ×2 | **100%** | **100%** | **100%** | **100%** | 1.8–2.1 / 2.7–3.6 s |
+| Configuración | Casos OK | Enrutamiento | Paráfrasis | Recall reclamos | Citas ¹ | Multi-turno | p50 / p95 |
+|---|---|---|---|---|---|---|---|
+| rules + BM25 (CI) | 28/35 | 83.3% | 37.5% | 71.4% | 77.8% | 100% | 99 / 252 ms |
+| rules + Neo4j (CI) | 30/35 | 83.3% | 37.5% | 71.4% | 100% | 100% | 110 / 195 ms |
+| rules + **pgvector** + core en **SQL Server** (CI) | 30/35 | 83.3% | 37.5% | 71.4% | 100% | 100% | 88 / 199 ms |
+| **LoRA v2 + Neo4j** | **35/35** | **100%** | **100%** | **100%** | **100%** | **100%** | 770 / 1024 ms |
+| **LoRA v2 + Neo4j + LLM real** (qwen2.5:3b en Ollama; 31 casos, antes de multi-turno) | **31/31** ×2 | **100%** | **100%** | **100%** | **100%** | — | 1.8–2.1 / 2.7–3.6 s |
 
 Con LLM real, además: **fidelidad 100%** (LLM-as-judge), **0% de fugas de contexto**, exactitud de
 datos 100% y **6.5% de turnos degradados**: en cada corrida, 2 respuestas malas del LLM (una evasiva y
@@ -75,14 +76,24 @@ Lo que encontraron los Evals y cómo se corrigió, en orden:
 
 Las correcciones 2 y 3 tienen tests de regresión en `backend/tests/test_graph_rag.py`.
 
+### Tercer ciclo: conversación multi-turno
+
+| # | Hallazgo | Corrección | Efecto |
+|---|---|---|---|
+| 12 | "¿y los de la cuenta en dólares?" y "¿y cobran mantenimiento?" terminaban en una pregunta aclaratoria: el router solo veía el último mensaje | Detección de seguimientos (mensajes cortos con "y…", "también…" o referencias como "reponerla"); se clasifica y responde con la pregunta anterior como contexto y, si sigue ambiguo, se hereda la intención anterior. Un cambio de tema claro no hereda nada | Multi-turno 50% → 75% |
+| 13 | En seguimientos, **cada tipo de retriever necesita otra consulta**: BM25 falla con la pregunta anterior completa (el tema anterior domina) y los embeddings fallan con el mensaje solo ("reponerla" no se parece a "reposición") | Cada retriever declara su preferencia: los densos buscan con la pregunta anterior + la actual; el léxico, con el mensaje actual + el producto del contexto | Multi-turno **100% en las 4 configuraciones** |
+| 14 | BM25 favorecía las fichas de producto (cortas) sobre las políticas, que tienen las respuestas | Peso 0,75 a las fichas de producto en BM25 | Citas BM25 66.7% → 77.8% |
+
 ### Neo4j frente a pgvector (mismo algoritmo híbrido, mismos embeddings)
 
 | | Neo4j | pgvector |
 |---|---|---|
 | Citas correctas (Evals, rules) | 100% | 100% |
-| Router LoRA + RAG (Evals) | 31/31 | 31/31 |
+| Router LoRA + RAG (Evals) | 35/35 | 31/31 ² |
 | `knowledge_agent` p95 | 105 ms | **42–60 ms** |
 | Expansión producto → política | relación del grafo | tabla de unión (1 salto) |
+
+² Medido con los 31 casos previos a multi-turno.
 
 Con este dataset rinden igual en calidad y pgvector es ~2× más rápido. Neo4j se justifica cuando las
 preguntas necesitan varios saltos o relaciones heterogéneas (cliente → productos → quejas → políticas);
@@ -131,7 +142,7 @@ Cada corrida usa bases SQLite temporales y borra de Neo4j las quejas que crea: n
 
 ## Limitaciones
 
-- 31 casos detectan regresiones, pero no estiman la precisión real en producción. El siguiente paso
+- 35 casos detectan regresiones, pero no estiman la precisión real en producción. El siguiente paso
   sería muestrear y etiquetar conversaciones reales (anonimizadas) y medir sobre ellas.
 - En modo `fake` las respuestas de conocimiento son extractivas, así que la fidelidad es 100% por
   construcción. La alucinación real se midió con `--llm ollama --judge` (qwen2.5:3b); el CI no corre

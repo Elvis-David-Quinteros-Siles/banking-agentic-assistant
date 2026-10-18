@@ -30,14 +30,16 @@ es un **Qwen2.5-0.5B ajustado con LoRA** que corre on-premise, y todo el sistema
 
 | | Reglas + BM25 (baseline, CI) | LoRA + Graph RAG | **LoRA + Graph RAG + LLM real** |
 |---|---|---|---|
-| Evals de punta a punta (31 casos) | 24/31 | 31/31 | **31/31** (2 corridas) |
-| Precisión de enrutamiento · en paráfrasis | 80.8% · 28.6% | 100% · 100% | **100% · 100%** |
+| Evals de punta a punta | 28/35 | **35/35** | **31/31** (2 corridas) ¹ |
+| Precisión de enrutamiento · en paráfrasis | 83.3% · 37.5% | 100% · 100% | **100% · 100%** |
+| Conversaciones multi-turno (seguimientos y cambio de tema) | 100% | **100%** | — ¹ |
 | Reclamos detectados (si no se detecta, no pasa por HITL) | 71.4% | 100% | **100%** |
-| Citas a la política correcta | 66.7% | 100% | **100%** |
+| Citas a la política correcta | 77.8% | 100% | **100%** |
 | Fidelidad (LLM-as-judge) · fugas de contexto | — | — | **100% · 0%** |
 | Seguridad: ataques bloqueados · falsos positivos · PII | 100% · 0% · 100% | 100% · 0% · 100% | **100% · 0% · 100%** |
-| Latencia p50 / p95 por turno | 64 / 135 ms | 731 / 961 ms | 1.8–2.1 / 2.7–3.6 s |
+| Latencia p50 / p95 por turno | 99 / 252 ms | 770 / 1024 ms | 1.8–2.1 / 2.7–3.6 s |
 
+¹ La corrida con LLM real se hizo con los 31 casos previos a los 4 de multi-turno.
 LLM real = qwen2.5:3b en Ollama (Docker, GPU de 4 GB, 100% on-premise). Las respuestas de los agentes
 las redacta el LLM; la columna del medio usa redacción determinista.
 
@@ -45,7 +47,7 @@ las redacta el LLM; la columna del medio usa redacción determinista.
   frases no vistas: **100%**, frente a 59.2% de las reglas y **36.7% del mismo modelo sin ajustar**.
 - **Costo**: ~US$ 12 por 100 000 turnos con un LLM cloud económico; −29% con el router local. Ver
   [Cost & Latency](docs/COST_LATENCY.md).
-- **Los Evals encontraron 11 problemas reales**, todos corregidos (los de código, con test de regresión):
+- **Los Evals encontraron 14 problemas reales**, todos corregidos (los de código, con test de regresión):
   4 con redacción determinista (entre ellos un bug de fusión RRF) y 6 al pasar a un LLM real (un
   ReAct que pedía el número de cuenta, citas mal atribuidas, extractos parafraseados, el contexto
   interno filtrado al cliente...). Primera medición con LLM: 28/31; final: 31/31.
@@ -98,7 +100,7 @@ flowchart TD
 | API | `/chat`, `/chat/stream` (SSE), `/approve/{thread_id}`, `/operator/queue`, `/metrics/summary`, `/health` | `backend/app/api/` |
 | Analítica | Métricas por turno (intención, estado, latencia por nodo, tokens, costo) y cola HITL; el cliente se guarda seudonimizado y nunca el texto | `backend/app/analytics/` |
 | Frontend | React 18 + Vite + TypeScript: streaming, recorrido del grafo en vivo, tarjeta HITL | [frontend/](frontend/README.md) |
-| Evals + CI | 31 casos, umbrales por métrica, 4 jobs en GitHub Actions (incluye Neo4j como servicio) | [evals/](evals/README.md) |
+| Evals + CI | 35 casos (incluye multi-turno), umbrales por métrica; CI con calidad (ruff + mypy), cobertura mínima, Neo4j, SQL Server y pgvector como servicios | [evals/](evals/README.md) |
 
 **Degradación controlada**: si el LLM, el modelo LoRA o Neo4j fallan, cada nodo usa su ruta
 determinista (reglas, BM25 en memoria, respuesta extractiva) y la respuesta lleva `degraded: true`.
@@ -201,7 +203,7 @@ Neo4j vs pgvector en [evals/README.md](evals/README.md#neo4j-frente-a-pgvector-m
 ```powershell
 pytest backend -q                                          # 98 tests (los de integración se saltan si falta el servicio)
 python evals/run_evals.py --check                          # Evals de punta a punta con umbrales
-python evals/run_evals.py --router lora --knowledge neo4j  # router LoRA + Graph RAG: 31/31
+python evals/run_evals.py --router lora --knowledge neo4j  # router LoRA + Graph RAG: 35/35
 python evals/run_evals.py --router lora --knowledge neo4j --llm ollama --judge   # + LLM real y juez: 31/31
 cd frontend; npm test; npm run build
 python frontend/e2e/smoke_test.py                          # E2E con clics reales (Playwright + Edge/Chrome)
@@ -251,7 +253,7 @@ Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi sa
 - Red teaming periódico con un set de ataques más amplio que los 5 casos actuales.
 
 **Calidad y operación**
-- Evals sobre conversaciones reales anonimizadas y etiquetadas por humanos; los 31 casos sintéticos
+- Evals sobre conversaciones reales anonimizadas y etiquetadas por humanos; los 35 casos sintéticos
   detectan regresiones, pero no estiman la precisión real.
 - Trazas con OpenTelemetry / LangSmith / Langfuse, y los KPIs del dashboard exportados a
   Prometheus/Grafana con alertas de deriva (subida de `degraded`, de aclaraciones, de reclamos
@@ -269,7 +271,7 @@ Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi sa
 
 - **LLM evaluado**: los resultados con LLM real son con qwen2.5:3b local. Otro modelo (más grande o
   cloud) necesita su propia corrida de Evals; el CI corre sin LLM porque no tiene GPU.
-- **Datos sintéticos**: 600 ejemplos de entrenamiento generados con plantillas y 31 casos de Evals.
+- **Datos sintéticos**: 600 ejemplos de entrenamiento generados con plantillas y 35 casos de Evals.
   El 100% en test mide generalización a frases nuevas del mismo dominio, no rendimiento en producción.
 - **Router por reglas** (configuración del CI, sin GPU): no entiende paráfrasis; pide aclaración en
   lugar de responder mal, pero pierde el 29% de los reclamos expresados con otras palabras.
@@ -281,7 +283,7 @@ Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi sa
 backend/        FastAPI + LangGraph: api/, graph/nodes/, guardrails/, rag/, tools/, llm/ · tests/
 frontend/       React + Vite: chat SSE, tarjeta HITL, recorrido del grafo · e2e/
 finetune/       dataset sintético, entrenamiento LoRA/QLoRA, inferencia, evaluación del router
-evals/          31 casos, umbrales, runner de punta a punta, LLM-as-judge, reportes
+evals/          35 casos, umbrales, runner de punta a punta, LLM-as-judge, reportes
 data/seed/      clientes, cuentas, movimientos, productos, políticas y quejas (ficticios)
 docs/           ARCHITECTURE.md (diseño, Fase 0), COST_LATENCY.md, DEPLOY.md, capturas y demo.gif
 Dockerfile      imagen de la demo pública (frontend + API, modo liviano)

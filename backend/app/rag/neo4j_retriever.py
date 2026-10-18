@@ -67,6 +67,8 @@ RETURN coalesce(n.politica_id, n.producto_id) AS id,
 
 
 class Neo4jHybridRetriever:
+    prefers_full_context = True
+
     def __init__(self, driver: Driver, embedder: Embedder, min_similarity: float, rrf_k: int = 60):
         self.driver = driver
         self.embedder = embedder

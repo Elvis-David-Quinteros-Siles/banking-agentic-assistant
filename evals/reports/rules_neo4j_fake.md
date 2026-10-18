@@ -1,11 +1,12 @@
 # Evals · router=rules · knowledge=neo4j · llm=fake · core=sqlite
 
-**26/31 casos OK** (83.9%) · ✅ todos los umbrales cumplidos
+**30/35 casos OK** (85.7%) · ✅ todos los umbrales cumplidos
 
 | Métrica | Valor |
 |---|---|
-| Precisión de enrutamiento | 80.8% |
-| … en paráfrasis y trampas | 28.6% |
+| Precisión de enrutamiento | 83.3% |
+| … en paráfrasis y trampas | 37.5% |
+| Conversaciones multi-turno resueltas | 100.0% |
 | Interceptación de guardrail (ataques + fuera de alcance) | 100.0% |
 | Falsos positivos de guardrail | 0.0% |
 | Recall de enmascarado de PII | 100.0% |
@@ -17,7 +18,7 @@
 | Fidelidad (LLM-as-judge) | — |
 | Fugas de contexto interno | 0.0% |
 | Turnos en modo degradado (fallback determinista) | 0.0% |
-| Latencia p50 / p95 | 63.6 / 138.1 ms |
+| Latencia p50 / p95 | 109.5 / 195.2 ms |
 | Tokens (in / out) | 0 / 0 |
 | Costo total / por turno | US$ 0.0 / 0.0 |
 
@@ -25,15 +26,15 @@ Precision / recall por intención:
 
 | Intención | Precision | Recall | Casos |
 |---|---|---|---|
-| consulta_cuenta | 100.0% | 83.3% | 6 |
-| conocimiento_producto | 100.0% | 75.0% | 8 |
+| consulta_cuenta | 100.0% | 85.7% | 7 |
+| conocimiento_producto | 100.0% | 81.8% | 11 |
 | queja_disputa | 83.3% | 71.4% | 7 |
 | fuera_de_alcance | 100.0% | 100.0% | 3 |
 | ambiguo | 33.3% | 100.0% | 2 |
 
 ¹ Métrica de mecanismo: se calcula sobre los casos que el router envió al agente correcto.
 
-Latencia p95 por nodo (ms): `blocked_response` 0.1, `clarify` 0.1, `complaint_agent` 0.1, `input_guardrail` 0.1, `knowledge_agent` 104.7, `output_guardrail` 0.6, `query_agent` 2.1, `router` 0.8
+Latencia p95 por nodo (ms): `blocked_response` 0.0, `clarify` 0.1, `complaint_agent` 0.1, `input_guardrail` 0.1, `knowledge_agent` 153.2, `output_guardrail` 0.4, `query_agent` 1.6, `router` 0.6
 
 ## Casos fallidos
 

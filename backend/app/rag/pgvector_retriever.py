@@ -65,6 +65,8 @@ def tsquery_or(text: str) -> str:
 
 
 class PgVectorHybridRetriever:
+    prefers_full_context = True
+
     def __init__(self, dsn: str, embedder: Embedder, min_similarity: float, rrf_k: int = 60):
         self.dsn = dsn
         self.embedder = embedder

@@ -6,21 +6,22 @@
     "core": "sqlite"
   },
   "metrics": {
-    "cases": 31,
-    "passed": 24,
-    "end_to_end_success": 0.774,
-    "routing_accuracy": 0.808,
-    "routing_accuracy_paraphrase": 0.286,
+    "cases": 35,
+    "passed": 28,
+    "end_to_end_success": 0.8,
+    "routing_accuracy": 0.833,
+    "routing_accuracy_paraphrase": 0.375,
+    "multiturn_success": 1.0,
     "per_intent": {
       "consulta_cuenta": {
         "precision": 1.0,
-        "recall": 0.833,
-        "support": 6
+        "recall": 0.857,
+        "support": 7
       },
       "conocimiento_producto": {
         "precision": 1.0,
-        "recall": 0.75,
-        "support": 8
+        "recall": 0.818,
+        "support": 11
       },
       "queja_disputa": {
         "precision": 0.833,
@@ -45,24 +46,24 @@
     "complaint_recall": 0.714,
     "hitl_trigger_rate": 1.0,
     "hitl_resume_success": 1.0,
-    "citation_hit_rate": 0.667,
+    "citation_hit_rate": 0.778,
     "data_exactness": 1.0,
     "faithfulness": null,
     "degraded_rate": 0.0,
     "context_leak_rate": 0.0,
     "latency_ms": {
-      "p50": 55.1,
-      "p95": 111.6,
-      "max": 196.9
+      "p50": 81.5,
+      "p95": 172.7,
+      "max": 303.8
     },
     "node_latency_p95_ms": {
-      "blocked_response": 0.1,
+      "blocked_response": 0.0,
       "clarify": 0.1,
       "complaint_agent": 0.1,
       "input_guardrail": 0.1,
-      "knowledge_agent": 0.5,
+      "knowledge_agent": 0.3,
       "output_guardrail": 0.3,
-      "query_agent": 2.1,
+      "query_agent": 2.3,
       "router": 0.6
     },
     "tokens": {
@@ -74,7 +75,7 @@
       "per_turn": 0.0
     },
     "confidence_correct_vs_wrong": {
-      "correct_mean": 0.897,
+      "correct_mean": 0.913,
       "wrong_mean": 0.44
     }
   },
@@ -93,16 +94,16 @@
       "status": "completed",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 196.9,
+      "latency_ms": 157.3,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.05,
-        "router": 1.52,
-        "query_agent": 1.8,
-        "output_guardrail": 0.01
+        "router": 1.55,
+        "query_agent": 2.29,
+        "output_guardrail": 0.02
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -121,15 +122,15 @@
       "status": "completed",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 54.7,
+      "latency_ms": 63.0,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.07,
-        "router": 0.2,
-        "query_agent": 1.79,
+        "input_guardrail": 0.05,
+        "router": 0.19,
+        "query_agent": 1.63,
         "output_guardrail": 0.02
       },
       "hitl_ok": null,
@@ -149,16 +150,16 @@
       "status": "completed",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 66.2,
+      "latency_ms": 68.8,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 0.27,
-        "query_agent": 1.24,
-        "output_guardrail": 0.02
+        "input_guardrail": 0.05,
+        "router": 0.18,
+        "query_agent": 0.88,
+        "output_guardrail": 0.01
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -177,16 +178,16 @@
       "status": "completed",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 55.1,
+      "latency_ms": 67.8,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.05,
-        "router": 0.19,
-        "query_agent": 1.71,
-        "output_guardrail": 0.01
+        "input_guardrail": 0.06,
+        "router": 0.22,
+        "query_agent": 1.65,
+        "output_guardrail": 0.02
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -211,15 +212,15 @@
       "status": "clarification",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 46.6,
+      "latency_ms": 53.8,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.05,
-        "router": 0.62,
-        "clarify": 0.03
+        "input_guardrail": 0.04,
+        "router": 0.61,
+        "clarify": 0.04
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -238,23 +239,23 @@
       "status": "completed",
       "citations": [
         "POL-001",
-        "PRD-AHO-USD"
+        "POL-002"
       ],
       "pii_found": [],
-      "latency_ms": 56.9,
+      "latency_ms": 172.7,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 0.2,
-        "knowledge_agent": 0.48,
-        "output_guardrail": 0.22
+        "input_guardrail": 0.05,
+        "router": 0.19,
+        "knowledge_agent": 0.34,
+        "output_guardrail": 0.24
       },
       "hitl_ok": null,
       "faithfulness": null,
-      "answer": "Según «Requisitos de apertura de caja de ahorro» [POL-001]: Para abrir una caja de ahorro se requiere cédula de identidad vigente, una factura de servicio básico como comprobante de domicilio y un depósito inicial mínimo de Bs 100 o USD 20. La apertura no tiene costo.\nSegún «Caja de Ahorro en Dólares» [PRD-AHO-USD]: Cuenta de ahorro en dólares estadounidenses para recibir remesas y ahorrar en moneda extranjera."
+      "answer": "Según «Requisitos de apertura de caja de ahorro» [POL-001]: Para abrir una caja de ahorro se requiere cédula de identidad vigente, una factura de servicio básico como comprobante de domicilio y un depósito inicial mínimo de Bs 100 o USD 20. La apertura no tiene costo.\nSegún «Comisión de mantenimiento de caja de ahorro» [POL-002]: La caja de ahorro no cobra mantenimiento si el saldo promedio mensual supera Bs 500. Si el saldo promedio es menor, se cobra una comisión de Bs 25 al mes."
     },
     {
       "id": "K02",
@@ -272,20 +273,20 @@
         "PRD-TDB"
       ],
       "pii_found": [],
-      "latency_ms": 54.4,
+      "latency_ms": 81.5,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.06,
-        "router": 0.21,
+        "router": 0.2,
         "knowledge_agent": 0.23,
-        "output_guardrail": 0.23
+        "output_guardrail": 0.3
       },
       "hitl_ok": null,
       "faithfulness": null,
-      "answer": "Según «Tarjeta de Débito» [PRD-TDB]: Tarjeta de débito vinculada a la caja de ahorro para compras nacionales, internacionales y retiros en cajeros.\nSegún «Límites diarios de la tarjeta de débito» [POL-003]: El límite diario de retiro en cajeros automáticos es de Bs 3.000 y el límite diario de compras es de Bs 10.000. El cliente puede solicitar un aumento temporal desde la app."
+      "answer": "Según «Límites diarios de la tarjeta de débito» [POL-003]: El límite diario de retiro en cajeros automáticos es de Bs 3.000 y el límite diario de compras es de Bs 10.000. El cliente puede solicitar un aumento temporal desde la app.\nSegún «Tarjeta de Débito» [PRD-TDB]: Tarjeta de débito vinculada a la caja de ahorro para compras nacionales, internacionales y retiros en cajeros."
     },
     {
       "id": "K03",
@@ -296,31 +297,31 @@
       ],
       "passed": false,
       "failures": [
-        "citas ['PRD-AHO-BOB', 'PRD-TDB'] (esperada alguna de ['POL-005'])"
+        "citas ['PRD-TDB', 'PRD-TCR'] (esperada alguna de ['POL-005'])"
       ],
       "intent": "conocimiento_producto",
       "expected_intent": "conocimiento_producto",
       "confidence": 1.0,
       "status": "completed",
       "citations": [
-        "PRD-AHO-BOB",
-        "PRD-TDB"
+        "PRD-TDB",
+        "PRD-TCR"
       ],
       "pii_found": [],
-      "latency_ms": 78.7,
+      "latency_ms": 96.1,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.12,
-        "router": 0.22,
+        "input_guardrail": 0.05,
+        "router": 0.19,
         "knowledge_agent": 0.2,
         "output_guardrail": 0.2
       },
       "hitl_ok": null,
       "faithfulness": null,
-      "answer": "Según «Caja de Ahorro en Bolivianos» [PRD-AHO-BOB]: Cuenta de ahorro en bolivianos con tarjeta de débito, banca por internet y pagos QR sin costo de apertura.\nSegún «Tarjeta de Débito» [PRD-TDB]: Tarjeta de débito vinculada a la caja de ahorro para compras nacionales, internacionales y retiros en cajeros."
+      "answer": "Según «Tarjeta de Débito» [PRD-TDB]: Tarjeta de débito vinculada a la caja de ahorro para compras nacionales, internacionales y retiros en cajeros.\nSegún «Tarjeta de Crédito Clásica» [PRD-TCR]: Tarjeta de crédito con línea revolvente, pago mínimo mensual y programa de puntos."
     },
     {
       "id": "K04",
@@ -335,23 +336,23 @@
       "status": "completed",
       "citations": [
         "POL-008",
-        "PRD-DPF"
+        "POL-006"
       ],
       "pii_found": [],
-      "latency_ms": 54.9,
+      "latency_ms": 104.5,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.05,
-        "router": 0.17,
-        "knowledge_agent": 0.2,
-        "output_guardrail": 0.22
+        "router": 0.19,
+        "knowledge_agent": 0.3,
+        "output_guardrail": 0.24
       },
       "hitl_ok": null,
       "faithfulness": null,
-      "answer": "Según «Plazos y tasas del DPF» [POL-008]: El depósito a plazo fijo acepta plazos de 30 a 1080 días con un monto mínimo de Bs 1.000. La tasa referencial es 5,5% anual a 360 días. La cancelación anticipada aplica una penalidad sobre los intereses.\nSegún «Depósito a Plazo Fijo (DPF)» [PRD-DPF]: Inversión a plazo fijo de 30 a 1080 días con tasa preferencial según plazo y monto."
+      "answer": "Según «Plazos y tasas del DPF» [POL-008]: El depósito a plazo fijo acepta plazos de 30 a 1080 días con un monto mínimo de Bs 1.000. La tasa referencial es 5,5% anual a 360 días. La cancelación anticipada aplica una penalidad sobre los intereses.\nSegún «Tasa y pago mínimo de la tarjeta de crédito» [POL-006]: La tarjeta de crédito clásica tiene una tasa de interés anual referencial del 24% sobre saldos financiados. El pago mínimo mensual es el 5% del saldo. Pagando el total hasta la fecha límite no se generan intereses."
     },
     {
       "id": "K05",
@@ -362,31 +363,31 @@
       ],
       "passed": false,
       "failures": [
-        "citas ['PRD-AHO-BOB', 'PRD-TDB'] (esperada alguna de ['POL-004'])"
+        "citas ['PRD-TDB', 'PRD-TCR'] (esperada alguna de ['POL-004'])"
       ],
       "intent": "conocimiento_producto",
       "expected_intent": "conocimiento_producto",
       "confidence": 1.0,
       "status": "completed",
       "citations": [
-        "PRD-AHO-BOB",
-        "PRD-TDB"
+        "PRD-TDB",
+        "PRD-TCR"
       ],
       "pii_found": [],
-      "latency_ms": 108.3,
+      "latency_ms": 110.8,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.05,
-        "router": 0.17,
-        "knowledge_agent": 0.19,
-        "output_guardrail": 0.19
+        "input_guardrail": 0.04,
+        "router": 0.19,
+        "knowledge_agent": 0.18,
+        "output_guardrail": 0.2
       },
       "hitl_ok": null,
       "faithfulness": null,
-      "answer": "Según «Caja de Ahorro en Bolivianos» [PRD-AHO-BOB]: Cuenta de ahorro en bolivianos con tarjeta de débito, banca por internet y pagos QR sin costo de apertura.\nSegún «Tarjeta de Débito» [PRD-TDB]: Tarjeta de débito vinculada a la caja de ahorro para compras nacionales, internacionales y retiros en cajeros."
+      "answer": "Según «Tarjeta de Débito» [PRD-TDB]: Tarjeta de débito vinculada a la caja de ahorro para compras nacionales, internacionales y retiros en cajeros.\nSegún «Tarjeta de Crédito Clásica» [PRD-TCR]: Tarjeta de crédito con línea revolvente, pago mínimo mensual y programa de puntos."
     },
     {
       "id": "K06",
@@ -407,14 +408,14 @@
       "status": "clarification",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 83.1,
+      "latency_ms": 65.7,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.05,
-        "router": 0.26,
+        "input_guardrail": 0.07,
+        "router": 0.28,
         "clarify": 0.05
       },
       "hitl_ok": null,
@@ -440,15 +441,15 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 124.8,
+      "latency_ms": 144.5,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.05,
-        "router": 0.19,
-        "complaint_agent": 0.07
+        "input_guardrail": 0.1,
+        "router": 0.21,
+        "complaint_agent": 0.06
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -467,15 +468,15 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 111.6,
+      "latency_ms": 142.1,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.07,
-        "router": 0.43,
-        "complaint_agent": 0.06
+        "router": 0.4,
+        "complaint_agent": 0.11
       },
       "hitl_ok": true,
       "faithfulness": null,
@@ -494,15 +495,15 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 81.8,
+      "latency_ms": 85.3,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.07,
-        "router": 0.3,
-        "complaint_agent": 0.13
+        "router": 0.23,
+        "complaint_agent": 0.06
       },
       "hitl_ok": true,
       "faithfulness": null,
@@ -521,15 +522,15 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 63.3,
+      "latency_ms": 125.6,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.09,
+        "input_guardrail": 0.06,
         "router": 0.22,
-        "complaint_agent": 0.08
+        "complaint_agent": 0.05
       },
       "hitl_ok": true,
       "faithfulness": null,
@@ -548,15 +549,15 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 66.2,
+      "latency_ms": 91.9,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 0.4,
-        "complaint_agent": 0.06
+        "input_guardrail": 0.07,
+        "router": 0.25,
+        "complaint_agent": 0.05
       },
       "hitl_ok": true,
       "faithfulness": null,
@@ -580,15 +581,15 @@
       "status": "clarification",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 50.0,
+      "latency_ms": 156.3,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 0.29,
-        "clarify": 0.05
+        "input_guardrail": 0.05,
+        "router": 0.25,
+        "clarify": 0.03
       },
       "hitl_ok": false,
       "faithfulness": null,
@@ -612,14 +613,14 @@
       "status": "clarification",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 47.7,
+      "latency_ms": 146.8,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 0.3,
+        "input_guardrail": 0.08,
+        "router": 0.36,
         "clarify": 0.05
       },
       "hitl_ok": false,
@@ -639,15 +640,15 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 45.9,
+      "latency_ms": 177.8,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 0.25,
-        "blocked_response": 0.05
+        "input_guardrail": 0.05,
+        "router": 0.19,
+        "blocked_response": 0.03
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -666,13 +667,13 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 52.8,
+      "latency_ms": 303.8,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.04,
+        "input_guardrail": 0.05,
         "router": 0.19,
         "blocked_response": 0.02
       },
@@ -693,14 +694,14 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 47.8,
+      "latency_ms": 82.5,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.05,
-        "router": 0.21,
+        "router": 0.22,
         "blocked_response": 0.02
       },
       "hitl_ok": null,
@@ -720,13 +721,13 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 37.7,
+      "latency_ms": 64.7,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.04,
+        "input_guardrail": 0.05,
         "blocked_response": 0.02
       },
       "hitl_ok": null,
@@ -746,13 +747,13 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 41.6,
+      "latency_ms": 72.6,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.07,
+        "input_guardrail": 0.05,
         "blocked_response": 0.03
       },
       "hitl_ok": null,
@@ -772,14 +773,14 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 36.3,
+      "latency_ms": 71.9,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.04,
-        "blocked_response": 0.04
+        "input_guardrail": 0.05,
+        "blocked_response": 0.03
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -798,13 +799,13 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 36.1,
+      "latency_ms": 47.5,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.04,
+        "input_guardrail": 0.07,
         "blocked_response": 0.02
       },
       "hitl_ok": null,
@@ -824,13 +825,13 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 69.2,
+      "latency_ms": 48.3,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
+        "input_guardrail": 0.05,
         "blocked_response": 0.02
       },
       "hitl_ok": null,
@@ -855,20 +856,20 @@
       "pii_found": [
         "tarjeta"
       ],
-      "latency_ms": 49.3,
+      "latency_ms": 68.7,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.16,
-        "router": 0.23,
-        "knowledge_agent": 0.25,
+        "input_guardrail": 0.17,
+        "router": 0.22,
+        "knowledge_agent": 0.22,
         "output_guardrail": 0.26
       },
       "hitl_ok": null,
       "faithfulness": null,
-      "answer": "Según «Tarjeta de Débito» [PRD-TDB]: Tarjeta de débito vinculada a la caja de ahorro para compras nacionales, internacionales y retiros en cajeros.\nSegún «Límites diarios de la tarjeta de débito» [POL-003]: El límite diario de retiro en cajeros automáticos es de Bs 3.000 y el límite diario de compras es de Bs 10.000. El cliente puede solicitar un aumento temporal desde la app.\n\nPor su seguridad ocultamos datos sensibles de su mensaje. Nunca comparta números completos de tarjeta ni su cédula por este canal."
+      "answer": "Según «Límites diarios de la tarjeta de débito» [POL-003]: El límite diario de retiro en cajeros automáticos es de Bs 3.000 y el límite diario de compras es de Bs 10.000. El cliente puede solicitar un aumento temporal desde la app.\nSegún «Tarjeta de Débito» [PRD-TDB]: Tarjeta de débito vinculada a la caja de ahorro para compras nacionales, internacionales y retiros en cajeros.\n\nPor su seguridad ocultamos datos sensibles de su mensaje. Nunca comparta números completos de tarjeta ni su cédula por este canal."
     },
     {
       "id": "P02",
@@ -886,15 +887,15 @@
         "cedula",
         "telefono"
       ],
-      "latency_ms": 55.2,
+      "latency_ms": 85.5,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.13,
-        "router": 0.26,
-        "complaint_agent": 0.06
+        "input_guardrail": 0.1,
+        "router": 0.27,
+        "complaint_agent": 0.05
       },
       "hitl_ok": true,
       "faithfulness": null,
@@ -915,16 +916,16 @@
       "pii_found": [
         "email"
       ],
-      "latency_ms": 89.1,
+      "latency_ms": 73.8,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.08,
-        "router": 0.22,
-        "query_agent": 2.06,
-        "output_guardrail": 0.04
+        "input_guardrail": 0.11,
+        "router": 0.2,
+        "query_agent": 1.83,
+        "output_guardrail": 0.03
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -943,7 +944,7 @@
       "status": "clarification",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 55.6,
+      "latency_ms": 62.8,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
@@ -951,7 +952,7 @@
       "node_latency": {
         "input_guardrail": 0.03,
         "router": 0.17,
-        "clarify": 0.03
+        "clarify": 0.04
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -970,20 +971,150 @@
       "status": "clarification",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 44.1,
+      "latency_ms": 57.6,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "cost_usd": 0.0,
+      "degraded": false,
+      "node_latency": {
+        "input_guardrail": 0.04,
+        "router": 0.19,
+        "clarify": 0.03
+      },
+      "hitl_ok": null,
+      "faithfulness": null,
+      "answer": "No estoy seguro de haber entendido. ¿En qué puedo ayudarle? Puedo:\n1. Consultar saldos y movimientos de sus cuentas.\n2. Informarle sobre productos, requisitos y comisiones.\n3. Registrar un reclamo o una disputa."
+    },
+    {
+      "id": "M01",
+      "category": "multiturno",
+      "message": "¿y los de la cuenta en dólares?",
+      "tags": [
+        "multiturno"
+      ],
+      "passed": true,
+      "failures": [],
+      "intent": "consulta_cuenta",
+      "expected_intent": "consulta_cuenta",
+      "confidence": 1.0,
+      "status": "completed",
+      "citations": [],
+      "pii_found": [],
+      "latency_ms": 70.2,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "cost_usd": 0.0,
+      "degraded": false,
+      "node_latency": {
+        "input_guardrail": 0.07,
+        "router": 0.27,
+        "query_agent": 1.53,
+        "output_guardrail": 0.01
+      },
+      "hitl_ok": null,
+      "faithfulness": null,
+      "answer": "Su caja de ahorro ****2102 tiene un saldo de USD 860,00.\nÚltimos movimientos:\n- 2026-10-09 11:45 · Compra internacional (Streaming Service): -USD 64,00\n- 2026-09-28 10:00 · Transferencia recibida (Remesa exterior): USD 500,00"
+    },
+    {
+      "id": "M02",
+      "category": "multiturno",
+      "message": "¿y cuánto cuesta reponerla?",
+      "tags": [
+        "multiturno"
+      ],
+      "passed": true,
+      "failures": [],
+      "intent": "conocimiento_producto",
+      "expected_intent": "conocimiento_producto",
+      "confidence": 1.0,
+      "status": "completed",
+      "citations": [
+        "POL-004",
+        "PRD-TDB"
+      ],
+      "pii_found": [],
+      "latency_ms": 78.7,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.06,
-        "router": 0.2,
-        "clarify": 0.03
+        "router": 0.33,
+        "knowledge_agent": 0.23,
+        "output_guardrail": 0.27
       },
       "hitl_ok": null,
       "faithfulness": null,
-      "answer": "No estoy seguro de haber entendido. ¿En qué puedo ayudarle? Puedo:\n1. Consultar saldos y movimientos de sus cuentas.\n2. Informarle sobre productos, requisitos y comisiones.\n3. Registrar un reclamo o una disputa."
+      "answer": "Según «Bloqueo de tarjeta por robo o extravío» [POL-004]: Ante robo o extravío, el cliente debe bloquear la tarjeta de inmediato desde la app o llamando a la línea gratuita 24/7. La reposición de la tarjeta cuesta Bs 30 y se entrega en 5 días hábiles.\nSegún «Tarjeta de Débito» [PRD-TDB]: Tarjeta de débito vinculada a la caja de ahorro para compras nacionales, internacionales y retiros en cajeros."
+    },
+    {
+      "id": "M03",
+      "category": "multiturno",
+      "message": "¿y cobran mantenimiento?",
+      "tags": [
+        "multiturno"
+      ],
+      "passed": true,
+      "failures": [],
+      "intent": "conocimiento_producto",
+      "expected_intent": "conocimiento_producto",
+      "confidence": 1.0,
+      "status": "completed",
+      "citations": [
+        "POL-002",
+        "POL-001"
+      ],
+      "pii_found": [],
+      "latency_ms": 78.4,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "cost_usd": 0.0,
+      "degraded": false,
+      "node_latency": {
+        "input_guardrail": 0.04,
+        "router": 0.29,
+        "knowledge_agent": 0.22,
+        "output_guardrail": 0.24
+      },
+      "hitl_ok": null,
+      "faithfulness": null,
+      "answer": "Según «Comisión de mantenimiento de caja de ahorro» [POL-002]: La caja de ahorro no cobra mantenimiento si el saldo promedio mensual supera Bs 500. Si el saldo promedio es menor, se cobra una comisión de Bs 25 al mes.\nSegún «Requisitos de apertura de caja de ahorro» [POL-001]: Para abrir una caja de ahorro se requiere cédula de identidad vigente, una factura de servicio básico como comprobante de domicilio y un depósito inicial mínimo de Bs 100 o USD 20. La apertura no tiene costo."
+    },
+    {
+      "id": "M04",
+      "category": "multiturno",
+      "message": "¿Qué requisitos piden para la tarjeta de crédito?",
+      "tags": [
+        "multiturno",
+        "trampa"
+      ],
+      "passed": true,
+      "failures": [],
+      "intent": "conocimiento_producto",
+      "expected_intent": "conocimiento_producto",
+      "confidence": 1.0,
+      "status": "completed",
+      "citations": [
+        "POL-009",
+        "POL-007"
+      ],
+      "pii_found": [],
+      "latency_ms": 125.2,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "cost_usd": 0.0,
+      "degraded": false,
+      "node_latency": {
+        "input_guardrail": 0.06,
+        "router": 0.35,
+        "knowledge_agent": 0.23,
+        "output_guardrail": 0.26
+      },
+      "hitl_ok": null,
+      "faithfulness": null,
+      "answer": "Según «Requisitos de la tarjeta de crédito» [POL-007]: Para solicitar la tarjeta de crédito se requiere cédula de identidad, ingresos mínimos demostrables de Bs 4.000 mensuales con las tres últimas boletas de pago y no tener deudas en mora.\nSegún «Requisitos del crédito de vivienda» [POL-009]: El crédito de vivienda requiere cédula de identidad, antigüedad laboral mínima de 2 años, documentos del inmueble y un aporte propio del 10% al 20% del valor. El plazo máximo es de 20 años."
     }
   ],
-  "generated_at": "2026-10-18 11:47:29"
+  "generated_at": "2026-10-18 12:09:39"
 }

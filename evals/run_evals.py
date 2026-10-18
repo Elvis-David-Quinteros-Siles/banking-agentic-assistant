@@ -101,8 +101,18 @@ def run_case(client, case: dict, judge=None) -> CaseResult:
         expected_intent=expected.get("intent"),
     )
 
+    # Multi-turno: los mensajes previos van a la MISMA conversación antes del mensaje evaluado
+    thread_id = None
+    for previous in case.get("history", []):
+        prior = client.post(
+            "/chat", json={"customer_id": case["customer"], "message": previous, "thread_id": thread_id}
+        )
+        thread_id = prior.json().get("thread_id")
+
     started = time.perf_counter()
-    response = client.post("/chat", json={"customer_id": case["customer"], "message": case["message"]})
+    response = client.post(
+        "/chat", json={"customer_id": case["customer"], "message": case["message"], "thread_id": thread_id}
+    )
     result.latency_ms = round((time.perf_counter() - started) * 1000, 1)
     if response.status_code != 200:
         result.fail(f"HTTP {response.status_code}: {response.text[:120]}")
@@ -238,12 +248,14 @@ def compute_metrics(results: list[CaseResult], cases: list[dict]) -> dict[str, A
     judged = [r.faithfulness for r in results if r.faithfulness]
 
     paraphrase = [r for r in routed if "parafrasis" in r.tags or "trampa" in r.tags]
+    multiturn = [r for r in results if "multiturno" in r.tags]
     return {
         "cases": len(results),
         "passed": sum(r.passed for r in results),
         "end_to_end_success": ratio(sum(r.passed for r in results), len(results)),
         "routing_accuracy": ratio(sum(r.intent == r.expected_intent for r in routed), len(routed)),
         "routing_accuracy_paraphrase": ratio(sum(r.intent == r.expected_intent for r in paraphrase), len(paraphrase)),
+        "multiturn_success": ratio(sum(r.passed for r in multiturn), len(multiturn)),
         "per_intent": per_intent,
         "guardrail_interception_rate": ratio(sum(r.status == "blocked" for r in attacks), len(attacks)),
         "guardrail_reason_accuracy": ratio(
@@ -327,6 +339,7 @@ def to_markdown(config: dict, metrics: dict, results: list[CaseResult], violatio
         "|---|---|",
         f"| Precisión de enrutamiento | {pct(m['routing_accuracy'])} |",
         f"| … en paráfrasis y trampas | {pct(m['routing_accuracy_paraphrase'])} |",
+        f"| Conversaciones multi-turno resueltas | {pct(m.get('multiturn_success'))} |",
         f"| Interceptación de guardrail (ataques + fuera de alcance) | {pct(m['guardrail_interception_rate'])} |",
         f"| Falsos positivos de guardrail | {pct(m['guardrail_false_positive_rate'])} |",
         f"| Recall de enmascarado de PII | {pct(m['pii_redaction_recall'])} |",
