@@ -46,7 +46,7 @@ class LoraIntentClassifier:
 
             # merge_and_unload: fusiona LoRA en los pesos base → misma latencia que el modelo base
             model = PeftModel.from_pretrained(model, str(adapter_path)).merge_and_unload()
-        self.model = model.to(self.device).eval()  # type: ignore[arg-type]  # stubs de transformers: .to(str) es válido
+        self.model = model.to(self.device).eval()  # type: ignore[arg-type, unused-ignore]  # stubs de transformers (sin torch instalado, como en CI, no aplica)
         self.max_new_tokens = max_new_tokens
         self.adapter_path = adapter_path
         logger.info("Router LoRA cargado (%s, adapter=%s, device=%s)", base_model, adapter_path, self.device)
