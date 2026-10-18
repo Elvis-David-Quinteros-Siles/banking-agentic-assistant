@@ -36,6 +36,15 @@ def _check_sqlite() -> str:
         return "down"
 
 
+def _check_neo4j() -> str:
+    if get_settings().knowledge_backend != "neo4j":
+        return "disabled"
+    from app.rag.neo4j_client import neo4j_available
+
+    # "down" => el knowledge_agent está usando el fallback BM25 en memoria
+    return "ok" if neo4j_available() else "down"
+
+
 @router.get("/health", response_model=HealthResponse)
 async def health(request: Request) -> HealthResponse:
     settings = get_settings()
@@ -46,10 +55,11 @@ async def health(request: Request) -> HealthResponse:
         "llm_provider": settings.llm_provider,
         "router": settings.router_backend,
         "knowledge": settings.knowledge_backend,
+        "neo4j": _check_neo4j(),
     }
     if components["graph"] != "ok" or components["sqlite"] != "ok":
         status = "down"
-    elif components["llm"] not in ("ok", "disabled"):
+    elif components["llm"] not in ("ok", "disabled") or components["neo4j"] not in ("ok", "disabled"):
         status = "degraded"  # el sistema responde con rutas deterministas
     else:
         status = "ok"

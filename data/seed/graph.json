@@ -1,0 +1,29 @@
+{
+  "_nota": "Datos FICTICIOS. Relaciones de grafo que no viven en el core SQL: productos contratados y quejas históricas.",
+  "contracts": [
+    {"customer_id": "CLI-001", "producto_id": "PRD-AHO-BOB", "desde": "2019-03-14"},
+    {"customer_id": "CLI-001", "producto_id": "PRD-AHO-USD", "desde": "2020-08-01"},
+    {"customer_id": "CLI-001", "producto_id": "PRD-TDB", "desde": "2019-03-14"},
+    {"customer_id": "CLI-001", "producto_id": "PRD-BXI", "desde": "2019-03-20"},
+    {"customer_id": "CLI-002", "producto_id": "PRD-CTE", "desde": "2021-07-02"},
+    {"customer_id": "CLI-002", "producto_id": "PRD-AHO-BOB", "desde": "2021-07-02"},
+    {"customer_id": "CLI-002", "producto_id": "PRD-PYME", "desde": "2022-02-15"},
+    {"customer_id": "CLI-003", "producto_id": "PRD-AHO-USD", "desde": "2016-11-20"},
+    {"customer_id": "CLI-003", "producto_id": "PRD-TCR", "desde": "2017-05-10"},
+    {"customer_id": "CLI-003", "producto_id": "PRD-DPF", "desde": "2024-10-04"},
+    {"customer_id": "CLI-004", "producto_id": "PRD-AHO-BOB", "desde": "2023-01-09"},
+    {"customer_id": "CLI-004", "producto_id": "PRD-TDB", "desde": "2023-01-09"},
+    {"customer_id": "CLI-005", "producto_id": "PRD-AHO-BOB", "desde": "2024-05-30"},
+    {"customer_id": "CLI-005", "producto_id": "PRD-VIV", "desde": "2025-03-01"}
+  ],
+  "complaints": [
+    {"queja_id": "QJ-H00001", "customer_id": "CLI-001", "producto_id": "PRD-TDB", "categoria": "cobro_indebido", "descripcion": "Cobro duplicado en compra por internet.", "monto": 180.0, "moneda": "BOB", "prioridad": "media", "estado": "resuelta", "fecha": "2025-11-03"},
+    {"queja_id": "QJ-H00002", "customer_id": "CLI-002", "producto_id": "PRD-CTE", "categoria": "atencion", "descripcion": "Demora de 40 minutos en ventanilla para depósito empresarial.", "monto": null, "moneda": null, "prioridad": "baja", "estado": "resuelta", "fecha": "2026-01-15"},
+    {"queja_id": "QJ-H00003", "customer_id": "CLI-003", "producto_id": "PRD-TCR", "categoria": "fraude", "descripcion": "Compra internacional no reconocida con tarjeta de crédito.", "monto": 420.0, "moneda": "USD", "prioridad": "alta", "estado": "resuelta", "fecha": "2026-02-20"},
+    {"queja_id": "QJ-H00004", "customer_id": "CLI-004", "producto_id": "PRD-AHO-BOB", "categoria": "cobro_indebido", "descripcion": "Cobro de mantenimiento con saldo promedio superior a Bs 500.", "monto": 25.0, "moneda": "BOB", "prioridad": "media", "estado": "en_revision", "fecha": "2026-10-15"},
+    {"queja_id": "QJ-H00005", "customer_id": "CLI-002", "producto_id": "PRD-BXI", "categoria": "transferencia", "descripcion": "Transferencia interbancaria a proveedor no acreditada.", "monto": 8900.0, "moneda": "BOB", "prioridad": "alta", "estado": "resuelta", "fecha": "2026-06-08"},
+    {"queja_id": "QJ-H00006", "customer_id": "CLI-005", "producto_id": "PRD-AHO-BOB", "categoria": "producto", "descripcion": "Cuenta bloqueada sin notificación previa.", "monto": null, "moneda": null, "prioridad": "media", "estado": "en_revision", "fecha": "2026-10-10"},
+    {"queja_id": "QJ-H00007", "customer_id": "CLI-001", "producto_id": "PRD-BXI", "categoria": "producto", "descripcion": "La app no permitía generar código QR durante dos días.", "monto": null, "moneda": null, "prioridad": "baja", "estado": "resuelta", "fecha": "2026-04-22"},
+    {"queja_id": "QJ-H00008", "customer_id": "CLI-003", "producto_id": "PRD-DPF", "categoria": "producto", "descripcion": "Interés del DPF acreditado con un día de retraso.", "monto": 410.25, "moneda": "USD", "prioridad": "baja", "estado": "resuelta", "fecha": "2025-10-05"}
+  ]
+}

@@ -8,6 +8,10 @@ langgraph>=1.2,<2.0
 langgraph-checkpoint-sqlite>=3.1,<4.0
 langchain-core>=1.6,<2.0
 
+# Graph RAG: driver de Neo4j + embeddings locales (ONNX en CPU, sin torch)
+neo4j>=6.0,<7.0
+fastembed>=0.9,<1.0
+
 # Proveedores de LLM (se importan solo el que esté configurado en LLM_PROVIDER)
 langchain-ollama>=1.1,<2.0
 langchain-openai>=1.7,<2.0

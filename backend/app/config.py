@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=(REPO_DIR / ".env", BACKEND_DIR / ".env"), extra="ignore")
 
     app_name: str = "banking-agentic-assistant"
-    app_version: str = "0.2.0"
+    app_version: str = "0.3.0"
     app_env: Literal["dev", "test", "prod"] = "dev"
     log_level: str = "INFO"
 
@@ -37,9 +37,18 @@ class Settings(BaseSettings):
 
     # --- Agentes ----------------------------------------------------------
     react_max_iterations: int = 4  # tope de vueltas del loop ReAct (control de costo/latencia)
-    knowledge_backend: Literal["keyword", "neo4j"] = "keyword"  # "neo4j" llega en la Fase 3
+    knowledge_backend: Literal["keyword", "neo4j"] = "keyword"
     knowledge_top_k: int = 4
-    knowledge_min_score: float = 0.15  # por debajo, el agente se abstiene
+    knowledge_min_score: float = 0.15  # BM25 normalizado: por debajo, el agente se abstiene
+
+    # --- Graph RAG (Neo4j) -----------------------------------------------
+    neo4j_uri: str = "bolt://localhost:7687"
+    neo4j_user: str = "neo4j"
+    neo4j_password: str = "bankdemo123"
+    embeddings_backend: Literal["fastembed", "hash"] = "fastembed"
+    embeddings_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    neo4j_min_similarity: float = 0.65  # coseno mínimo del mejor documento para no abstenerse
+    rrf_k: int = 60  # constante de Reciprocal Rank Fusion
     complaint_high_priority_amount: float = 1000.0  # monto (Bs) desde el cual la queja es prioridad alta
 
     # --- Persistencia -----------------------------------------------------

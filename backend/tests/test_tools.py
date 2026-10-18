@@ -1,6 +1,6 @@
 """Tests de las tools SQL y del retriever de conocimiento."""
 
-from app.tools.knowledge_base import get_retriever
+from app.tools.knowledge_base import get_keyword_retriever
 from app.tools.sql_tools import BankingTools
 
 
@@ -21,7 +21,7 @@ def test_transactions_limit(seeded_db):
 
 
 def test_retriever_finds_relevant_policy(settings):
-    retriever = get_retriever(settings.seed_dir / "knowledge.json")
+    retriever = get_keyword_retriever()
     results = retriever.search("límite de retiro en cajero con tarjeta de débito")
     # Top-2 porque la respuesta se arma con los 2 primeros; la ficha corta del producto
     # compite con la política (sesgo de BM25 por longitud). La Fase 3 lo mejora con vectores.
@@ -29,6 +29,6 @@ def test_retriever_finds_relevant_policy(settings):
 
 
 def test_retriever_returns_low_score_for_unrelated(settings):
-    retriever = get_retriever(settings.seed_dir / "knowledge.json")
+    retriever = get_keyword_retriever()
     results = retriever.search("receta de majadito")
-    assert not results or results[0]["score"] < settings.knowledge_min_score
+    assert results == []  # el retriever filtra internamente por KNOWLEDGE_MIN_SCORE

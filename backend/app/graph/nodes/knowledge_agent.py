@@ -16,7 +16,7 @@ from app.graph.state import AgentState
 from app.llm.pricing import usage_from_message
 from app.llm.provider import get_chat_model, model_name
 from app.observability.tracing import traced
-from app.tools.knowledge_base import get_retriever
+from app.tools.knowledge_base import get_keyword_retriever, get_retriever
 
 ABSTAIN_MESSAGE = (
     "No encontré información sobre eso en nuestras políticas y productos. "
@@ -31,7 +31,15 @@ CITATION_RE = re.compile(r"\[((?:POL|PRD)-[A-Z0-9-]+)\]")
 
 
 def format_context(docs: list[dict]) -> str:
-    return "\n\n".join(f"[{d['id']}] {d['title']}: {d['text']}" for d in docs)
+    """Contexto para el LLM. Los vecinos del grafo ("related") explicitan a qué productos aplica cada política."""
+    blocks = []
+    for d in docs:
+        block = f"[{d['id']}] {d['title']}: {d['text']}"
+        if d.get("related"):
+            label = "Aplica a" if d.get("type") == "politica" else "Políticas asociadas"
+            block += f"\n  ({label}: {', '.join(d['related'])})"
+        blocks.append(block)
+    return "\n\n".join(blocks)
 
 
 def extractive_answer(docs: list[dict]) -> str:
@@ -44,11 +52,16 @@ def extractive_answer(docs: list[dict]) -> str:
 def knowledge_agent_node(state: AgentState) -> dict:
     settings = get_settings()
     question = last_user_text(state)
-    retriever = get_retriever(settings.seed_dir / "knowledge.json")
-    docs = retriever.search(question, k=settings.knowledge_top_k, product_hint=state.get("entities", {}).get("producto"))
-    docs = [d for d in docs if d["score"] >= settings.knowledge_min_score]
+    product_hint = state.get("entities", {}).get("producto")
+    update: dict = {"status": "completed"}
+    try:
+        docs = get_retriever().search(question, k=settings.knowledge_top_k, product_hint=product_hint)
+    except Exception as error:  # noqa: BLE001 - p. ej. Neo4j se cayó después del arranque
+        log_fallback("knowledge_agent.retriever", error)
+        docs = get_keyword_retriever().search(question, k=settings.knowledge_top_k, product_hint=product_hint)
+        update["degraded"] = True
 
-    update: dict = {"status": "completed", "retrieved_context": docs}
+    update["retrieved_context"] = docs
     if not docs:
         update.update({"final_answer": ABSTAIN_MESSAGE, "citations": [], "messages": [AIMessage(content=ABSTAIN_MESSAGE)]})
         return update

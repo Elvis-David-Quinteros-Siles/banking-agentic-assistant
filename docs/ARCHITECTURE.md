@@ -160,6 +160,47 @@ pregunta ──► embed ──► vector search (Politica + Producto, top-k=8) 
                                        contexto deduplicado + citas ──► LLM (respuesta con fuentes)
 ```
 
+**Implementación (Fase 3)**: `backend/app/rag/neo4j_retriever.py`. Las cinco listas se fusionan con RRF:
+`vector_politica`, `vector_producto`, `fulltext` (analizador `spanish`), `entidad` (producto del router)
+y `grafo` (políticas de los productos semilla, 1 salto). Cada documento devuelto lleva sus `channels`
+(qué listas lo encontraron) y `related` (vecinos del grafo), que se inyectan en el contexto del LLM.
+
+**Resultados medidos** (MiniLM multilingüe, CPU, Neo4j 5.26 en Docker):
+
+| Pregunta | BM25 (Fase 2) top-1 | Híbrido top-1 | Canales |
+|---|---|---|---|
+| límite de retiro en cajero con tarjeta de débito | PRD-TDB ✗ | **POL-003** ✓ | vector+fulltext+entidad+grafo |
+| ¿cuánto puedo sacar del ATM por día? | *(nada)* ✗ | **POL-003** ✓ | vector+fulltext |
+| ¿cuánto cobran por usar la tarjeta en el extranjero? | PRD-AHO-BOB ✗ | **POL-005** ✓ | vector+fulltext+entidad+grafo |
+| perdí mi tarjeta, ¿qué hago? | PRD-AHO-BOB ✗ | **POL-004** ✓ | vector+fulltext+entidad+grafo |
+| quiero comprar una casa, ¿me pueden prestar? | POL-011 ✗ | **POL-009** ✓ | vector+grafo |
+| receta de majadito / ¿quién ganó el mundial? | — | *(abstención)* ✓ | similitud máx. 0,52–0,58 < 0,65 |
+
+- **Umbral de abstención** `NEO4J_MIN_SIMILARITY=0.65`: preguntas cubiertas ≥ 0,70; no cubiertas 0,52–0,58.
+  Margen estrecho → se recalibra con los Evals de la Fase 6.
+- **Latencia** del retriever: 40–140 ms en caliente. El primer request pagaba ~3 s de carga del modelo
+  de embeddings; se precarga en el `lifespan` de FastAPI.
+- **Degradación**: si Neo4j no responde al arrancar o falla en una consulta, el `knowledge_agent` usa
+  BM25 en memoria (`degraded: true`) y `/health` reporta `neo4j: down`.
+- **Limitación conocida**: el router `rules` no reconoce paráfrasis como "sacar del ATM" y pide aclaración
+  aunque el retriever sí sabría responder. Lo resuelve el router LLM/LoRA (Fase 4) y lo miden los Evals.
+
+**Consultas útiles en Neo4j Browser** (http://localhost:7474):
+
+```cypher
+// Todo el grafo de un cliente: productos, quejas y las políticas que las regulan
+MATCH path = (c:Cliente {cliente_id: 'CLI-001'})-[*1..2]-() RETURN path
+
+// Productos con más quejas y su categoría dominante
+MATCH (q:Queja)-[:APLICA_A]->(p:Producto)
+RETURN p.nombre AS producto, count(q) AS quejas, collect(DISTINCT q.categoria) AS categorias
+ORDER BY quejas DESC
+
+// Búsqueda vectorial directa (el embedding se pasa como parámetro desde Python)
+CALL db.index.vector.queryNodes('politica_embedding', 3, $embedding) YIELD node, score
+RETURN node.titulo, score
+```
+
 ### 3.3 SQLite (simula el core bancario en SQL Server on-premise)
 
 ```sql
@@ -342,7 +383,12 @@ banking-agentic-assistant/
 │   │   │   └── pricing.py          # tabla de precios configurable → cost_usd
 │   │   ├── tools/
 │   │   │   ├── sql_tools.py        # tools parametrizadas sobre SQLite
-│   │   │   └── knowledge_base.py   # Retriever: KeywordRetriever (Fase 2) → Neo4j híbrido (Fase 3)
+│   │   │   └── knowledge_base.py   # protocolo Retriever + BM25 en memoria (fallback) + selección de backend
+│   │   ├── rag/
+│   │   │   ├── embeddings.py       # fastembed (MiniLM multilingüe, ONNX) | hash (tests)
+│   │   │   ├── neo4j_client.py     # driver + chequeo de salud
+│   │   │   ├── neo4j_retriever.py  # recuperación híbrida vector + full-text + entidad + grafo, RRF
+│   │   │   └── graph_seed.py       # esquema, índices y carga idempotente (MERGE)
 │   │   ├── guardrails/
 │   │   │   ├── pii.py              # detección/enmascarado (Luhn, CI, tel, email)
 │   │   │   ├── injection.py
@@ -352,10 +398,10 @@ banking-agentic-assistant/
 │   ├── data/                       # bank.db, checkpoints.db (gitignored)
 │   ├── tests/
 │   └── requirements.txt
-├── data/seed/                      # customers.json (clientes/cuentas/movimientos), knowledge.json (productos/políticas)
+├── data/seed/                      # customers.json · knowledge.json · graph.json (contratos y quejas históricas)
 ├── backend/scripts/
 │   ├── chat_cli.py                 # cliente de consola: chat, stream SSE, approve
-│   └── seed_neo4j.py               # (Fase 3) — SQLite se crea y carga sola al arrancar
+│   └── seed_neo4j.py               # carga Neo4j (--reset para recargar); SQLite se carga sola al arrancar
 ├── finetune/
 │   ├── generate_dataset.py
 │   ├── train_lora.py

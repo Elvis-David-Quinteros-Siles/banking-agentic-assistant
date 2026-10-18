@@ -18,6 +18,7 @@ from app.config import get_settings
 from app.db.sqlite import init_db
 from app.graph.builder import build_graph
 from app.services.chat_service import ThreadError
+from app.tools.knowledge_base import get_retriever
 
 settings = get_settings()
 logging.basicConfig(level=settings.log_level)
@@ -28,7 +29,13 @@ logger = logging.getLogger(settings.app_name)
 async def lifespan(app: FastAPI):
     # 1. Core bancario simulado: crea el esquema y carga los datos semilla si está vacío
     init_db(settings.sqlite_path, settings.seed_dir / "customers.json")
-    # 2. Checkpointer persistente: los reclamos pendientes de HITL sobreviven a reinicios
+    # 2. Precarga del retriever (y del modelo de embeddings): sin esto, la primera pregunta
+    #    del día paga ~3 s de arranque en frío
+    try:
+        get_retriever().search("precarga")
+    except Exception as error:  # noqa: BLE001
+        logger.warning("No se pudo precargar el retriever: %s", error)
+    # 3. Checkpointer persistente: los reclamos pendientes de HITL sobreviven a reinicios
     settings.checkpoints_path.parent.mkdir(parents=True, exist_ok=True)
     async with AsyncSqliteSaver.from_conn_string(str(settings.checkpoints_path)) as checkpointer:
         app.state.graph = build_graph(checkpointer)

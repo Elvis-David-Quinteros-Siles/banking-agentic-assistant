@@ -1,0 +1,26 @@
+# Neo4j local para el Graph RAG (Fase 3).
+#   docker compose up -d neo4j
+#   Browser: http://localhost:7474   (usuario neo4j / contraseña de NEO4J_PASSWORD)
+services:
+  neo4j:
+    image: neo4j:5.26-community
+    container_name: bank-neo4j
+    ports:
+      - "7474:7474"   # Neo4j Browser (HTTP)
+      - "7687:7687"   # protocolo Bolt (driver Python)
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-bankdemo123}
+      # Memoria acotada: es una demo en laptop, no un cluster
+      NEO4J_server_memory_heap_initial__size: 512m
+      NEO4J_server_memory_heap_max__size: 1g
+      NEO4J_server_memory_pagecache_size: 256m
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  neo4j_data:

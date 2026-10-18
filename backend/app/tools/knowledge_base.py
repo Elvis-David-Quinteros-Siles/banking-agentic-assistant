@@ -1,11 +1,15 @@
 """Recuperación de conocimiento (productos y políticas).
 
-Fase 2: KeywordRetriever, un BM25 simplificado en memoria sobre data/seed/knowledge.json.
-Fase 3: Neo4jHybridRetriever (vector + full-text + expansión Cypher) con la MISMA interfaz,
-de modo que el knowledge_agent no cambia al migrar.
+- KeywordRetriever: BM25 en memoria sobre data/seed/knowledge.json. Sin dependencias;
+  es el backend "keyword" y el fallback si Neo4j no está disponible.
+- Neo4jHybridRetriever (app/rag/neo4j_retriever.py): vector + full-text + expansión de grafo.
+
+Ambos cumplen el protocolo Retriever y filtran internamente lo irrelevante, de modo que el
+knowledge_agent no sabe ni le importa qué backend está activo.
 """
 
 import json
+import logging
 import math
 import re
 from collections import Counter
@@ -13,7 +17,10 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Protocol
 
+from app.config import get_settings
 from app.text import normalize
+
+logger = logging.getLogger("knowledge")
 
 STOPWORDS = set(
     "de la el en y a los las del un una que por para con se su sus al lo como mas o es cual cuales "
@@ -34,8 +41,9 @@ class Retriever(Protocol):
 class KeywordRetriever:
     """BM25 sobre documentos de política y producto. Score normalizado a [0, 1]."""
 
-    def __init__(self, documents: list[dict], k1: float = 1.5, b: float = 0.75):
+    def __init__(self, documents: list[dict], min_score: float = 0.0, k1: float = 1.5, b: float = 0.75):
         self.documents = documents
+        self.min_score = min_score
         self.k1, self.b = k1, b
         self.doc_tokens = [tokenize(f"{d['title']} {d['title']} {d['text']}") for d in documents]
         self.avg_len = sum(map(len, self.doc_tokens)) / max(len(self.doc_tokens), 1)
@@ -65,7 +73,7 @@ class KeywordRetriever:
             score = self._bm25(query_tokens, i) / max_score
             if product_hint and product_hint in doc.get("product_tags", []):
                 score += 0.1  # pequeño boost por la entidad que extrajo el router
-            if score > 0:
+            if score > 0 and min(score, 1.0) >= self.min_score:
                 scored.append({**doc, "score": round(min(score, 1.0), 3)})
         return sorted(scored, key=lambda d: d["score"], reverse=True)[:k]
 
@@ -97,5 +105,29 @@ def load_documents(seed_file: Path) -> list[dict]:
 
 
 @lru_cache
-def get_retriever(seed_file: Path) -> Retriever:
-    return KeywordRetriever(load_documents(seed_file))
+def get_keyword_retriever() -> KeywordRetriever:
+    settings = get_settings()
+    return KeywordRetriever(load_documents(settings.seed_dir / "knowledge.json"), min_score=settings.knowledge_min_score)
+
+
+def product_id_for_tag(tag: str | None) -> str | None:
+    """Entidad del router ("tarjeta_debito") -> producto del catálogo ("PRD-TDB")."""
+    for product_id, tags in PRODUCT_TAGS.items():
+        if tag in tags:
+            return product_id
+    return None
+
+
+@lru_cache
+def get_retriever() -> Retriever:
+    """Backend configurado en KNOWLEDGE_BACKEND; si es neo4j y no responde, cae a keyword."""
+    settings = get_settings()
+    if settings.knowledge_backend == "neo4j":
+        from app.rag.embeddings import get_embedder
+        from app.rag.neo4j_client import get_driver, neo4j_available
+        from app.rag.neo4j_retriever import Neo4jHybridRetriever
+
+        if neo4j_available():
+            return Neo4jHybridRetriever(get_driver(), get_embedder(), settings.neo4j_min_similarity, settings.rrf_k)
+        logger.warning("KNOWLEDGE_BACKEND=neo4j pero Neo4j no responde o está vacío: se usa BM25 en memoria")
+    return get_keyword_retriever()

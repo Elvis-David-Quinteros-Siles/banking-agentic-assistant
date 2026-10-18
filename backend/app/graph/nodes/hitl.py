@@ -7,8 +7,9 @@ Flujo:
 4. interrupt() devuelve esa decisión y el grafo continúa hacia registrar o rechazar.
 """
 
+import logging
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
 from langchain_core.messages import AIMessage
 from langgraph.types import interrupt
@@ -17,6 +18,8 @@ from app.config import get_settings
 from app.db.sqlite import connect
 from app.graph.state import AgentState
 from app.observability.tracing import traced
+
+logger = logging.getLogger("hitl")
 
 
 @traced("hitl_review")
@@ -29,6 +32,36 @@ def hitl_review_node(state: AgentState) -> dict:
 
 def route_after_hitl(state: AgentState) -> str:
     return "complaint_rejected" if state["hitl_decision"]["decision"] == "reject" else "register_complaint"
+
+
+def mirror_complaint_to_graph(complaint_id: str, customer_id: str, draft: dict, reviewer_id: str) -> None:
+    """Replica el reclamo en Neo4j: (Cliente)-[:PRESENTO]->(Queja)-[:APLICA_A]->(Producto).
+
+    Best-effort: SQLite es el sistema de registro. Si Neo4j falla, el reclamo igual queda
+    registrado y se loguea para reconciliar (en producción: cola/outbox).
+    """
+    if get_settings().knowledge_backend != "neo4j":
+        return
+    try:
+        from app.rag.graph_seed import upsert_complaint
+        from app.rag.neo4j_client import get_driver
+        from app.tools.knowledge_base import product_id_for_tag
+
+        upsert_complaint(get_driver(), {
+            "queja_id": complaint_id,
+            "customer_id": customer_id,
+            "producto_id": product_id_for_tag(draft.get("producto")),
+            "categoria": draft["categoria"],
+            "descripcion": draft["resumen"],
+            "monto": draft.get("monto"),
+            "moneda": draft.get("moneda"),
+            "prioridad": draft["prioridad"],
+            "estado": "registrada",
+            "fecha": date.today().isoformat(),
+            "aprobada_por": reviewer_id,
+        })
+    except Exception as error:  # noqa: BLE001
+        logger.warning("No se pudo replicar el reclamo %s en Neo4j: %s", complaint_id, error)
 
 
 @traced("register_complaint")
@@ -47,6 +80,8 @@ def register_complaint_node(state: AgentState, config) -> dict:
                 draft["resumen"], "registrada", decision["reviewer_id"], datetime.now().isoformat(timespec="seconds"),
             ),
         )
+
+    mirror_complaint_to_graph(complaint_id, state["customer_id"], draft, decision["reviewer_id"])
 
     days = 15 if draft["categoria"] in ("fraude", "cobro_indebido") else 5
     answer = (
