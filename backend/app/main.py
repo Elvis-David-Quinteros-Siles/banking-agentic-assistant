@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -73,9 +74,15 @@ app = FastAPI(
     lifespan=lifespan,
     default_response_class=UTF8JSONResponse,
 )
-app.include_router(routes_chat.router)
-app.include_router(routes_hitl.router)
-app.include_router(routes_health.router)
+for api_router in (routes_chat.router, routes_hitl.router, routes_health.router):
+    app.include_router(api_router)
+    # Mismo prefijo que usa el frontend (/api): permite servir todo desde un solo puerto
+    app.include_router(api_router, prefix="/api", include_in_schema=False)
+
+# Demo pública (imagen Docker): si existe el build del frontend, se sirve en "/".
+# Se monta al final para que las rutas de la API tengan prioridad.
+if settings.frontend_dist.is_dir():
+    app.mount("/", StaticFiles(directory=settings.frontend_dist, html=True), name="frontend")
 
 
 def _error(status_code: int, code: str, message: str) -> JSONResponse:

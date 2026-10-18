@@ -1,0 +1,14 @@
+# Solo se copian backend/app, data/seed y el frontend: todo lo demás queda fuera del contexto
+.git
+.venv
+**/__pycache__
+**/.pytest_cache
+**/node_modules
+frontend/dist
+backend/data
+backend/tests
+finetune
+evals
+docs
+.env
+*.log

@@ -3,10 +3,11 @@
 Recorre con clics reales: pregunta con citas del grafo, reclamo -> tarjeta HITL -> editar y aprobar,
 PII enmascarada, prompt injection bloqueado y vista móvil. Guarda capturas en docs/img/.
 
-Requisitos: backend en :8000 y `npm run dev` en :5173; `pip install playwright`.
+Requisitos: backend en :8000 y `npm run dev` en :5173 (o BASE_URL apuntando a la imagen Docker de la demo); `pip install playwright`.
 Uso (desde la raíz):  python frontend/e2e/smoke_test.py [carpeta_capturas]
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -19,7 +20,7 @@ with sync_playwright() as p:
     page = browser.new_page(viewport={"width": 1280, "height": 900})
     errors = []
     page.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
-    page.goto("http://localhost:5173/")
+    page.goto(os.environ.get("BASE_URL", "http://localhost:5173") + "/")
 
     # 1) Conocimiento con citas (Graph RAG)
     page.get_by_label("Mensaje").fill("¿Cuál es el límite de retiro en cajero de la tarjeta de débito?")

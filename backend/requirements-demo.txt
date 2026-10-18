@@ -1,0 +1,11 @@
+# Dependencias mínimas para la demo pública (modo liviano: router por reglas, BM25, sin LLM).
+# Los módulos de Neo4j, embeddings, LoRA y proveedores de LLM se importan solo si se activan,
+# así que la imagen no necesita torch, onnxruntime ni el driver de Neo4j.
+fastapi>=0.143,<1.0
+uvicorn[standard]>=0.54,<1.0
+pydantic>=2.14,<3.0
+pydantic-settings>=2.16,<3.0
+httpx>=0.28,<1.0
+langgraph>=1.2,<2.0
+langgraph-checkpoint-sqlite>=3.1,<4.0
+langchain-core>=1.6,<2.0

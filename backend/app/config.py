@@ -62,6 +62,8 @@ class Settings(BaseSettings):
     sqlite_path: Path = BACKEND_DIR / "data" / "bank.db"
     checkpoints_path: Path = BACKEND_DIR / "data" / "checkpoints.db"
     seed_dir: Path = REPO_DIR / "data" / "seed"
+    # Build del frontend (npm run build). Si existe, FastAPI lo sirve en "/" (imagen de demo pública)
+    frontend_dist: Path = REPO_DIR / "frontend" / "dist"
 
 
 @lru_cache

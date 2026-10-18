@@ -12,7 +12,9 @@ core (SQL), explica productos y políticas con **Graph RAG** sobre Neo4j, gestio
 es un **Qwen2.5-0.5B ajustado con LoRA** que corre on-premise, y todo el sistema se mide con
 **Evals de punta a punta** que corren en CI.
 
-![Reclamo esperando aprobación del operador](docs/img/ui-hitl.png)
+![Demo: saldo, paráfrasis resuelta con Graph RAG, reclamo aprobado por el operador y ataque bloqueado](docs/img/demo.gif)
+
+<sub>Recorrido real de 45 s con router LoRA + Graph RAG + qwen2.5:3b en Ollama: saldo, una paráfrasis sin palabras clave, un reclamo que el operador edita y aprueba, y un prompt injection bloqueado. [Video en MP4](docs/img/demo.mp4).</sub>
 
 > Todos los clientes, cuentas, productos y políticas son **ficticios**. No representan la oferta ni la
 > normativa de ninguna entidad financiera real.
@@ -123,6 +125,9 @@ Requisitos: Python 3.11+, Node 20+. Opcional: Docker (Neo4j), GPU NVIDIA (router
 .\start-demo.ps1 -Stop      # detiene servidores, ventanas y contenedores de la demo
 ```
 
+**Demo pública**: el `Dockerfile` de la raíz empaqueta frontend + API en modo liviano (~220 MB, sin GPU
+ni servicios externos) para publicarla gratis en Render o Hugging Face Spaces: ver [docs/DEPLOY.md](docs/DEPLOY.md).
+
 Los pasos manuales equivalentes son los siguientes.
 
 ### 1. Mínimo: sin Docker, sin GPU, sin API keys (unos 2 minutos)
@@ -179,6 +184,7 @@ python evals/run_evals.py --router lora --knowledge neo4j  # router LoRA + Graph
 python evals/run_evals.py --router lora --knowledge neo4j --llm ollama --judge   # + LLM real y juez: 31/31
 cd frontend; npm test; npm run build
 python frontend/e2e/smoke_test.py                          # E2E con clics reales (Playwright + Edge/Chrome)
+python frontend/e2e/record_demo.py                         # regraba docs/img/demo.gif y demo.mp4
 ```
 
 Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi saldo?"`.
@@ -254,7 +260,9 @@ frontend/       React + Vite: chat SSE, tarjeta HITL, recorrido del grafo · e2e
 finetune/       dataset sintético, entrenamiento LoRA/QLoRA, inferencia, evaluación del router
 evals/          31 casos, umbrales, runner de punta a punta, LLM-as-judge, reportes
 data/seed/      clientes, cuentas, movimientos, productos, políticas y quejas (ficticios)
-docs/           ARCHITECTURE.md (diseño, Fase 0), COST_LATENCY.md, capturas
+docs/           ARCHITECTURE.md (diseño, Fase 0), COST_LATENCY.md, DEPLOY.md, capturas y demo.gif
+Dockerfile      imagen de la demo pública (frontend + API, modo liviano)
+start-demo.ps1  levanta la demo completa en Windows con un comando
 .github/        CI: backend, Evals, Graph RAG con Neo4j, frontend
 ```
 
