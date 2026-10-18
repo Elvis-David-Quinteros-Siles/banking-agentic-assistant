@@ -105,6 +105,7 @@ flowchart TD
 | HITL | El grafo se pausa; el estado sobrevive entre requests y reinicios; approve / edit / reject. **Back-office** (`#/operador`) con la cola ordenada por prioridad y espera; token de operador opcional | `backend/app/graph/nodes/hitl.py`, `backend/app/api/routes_operator.py` |
 | Acciones | Bloqueo de tarjeta con confirmación del cliente: pausa en `action_confirmation`, `/confirm` valida que quien confirma sea el dueño de la conversación; `usp_BlockCard` valida pertenencia, es idempotente y audita en una transacción | `backend/app/graph/nodes/card_action.py`, `backend/app/api/routes_confirm.py` |
 | Guardrails | PII (tarjeta con Luhn, CI boliviano, celular, email), injection, acceso ajeno, grounding de cifras | `backend/app/guardrails/` |
+| MCP | Servidor MCP (SDK oficial): 7 tools + resource `policy://`, identidad fijada en el servidor, bloqueo en dos pasos, el grafo completo como tool | [docs/MCP.md](docs/MCP.md) |
 | API | `/chat`, `/chat/stream` (SSE), `/approve/{thread_id}`, `/confirm/{thread_id}`, `/operator/queue`, `/metrics/summary`, `/health` | `backend/app/api/` |
 | Analítica | Métricas por turno (intención, estado, latencia por nodo, tokens, costo) y cola HITL; el cliente se guarda seudonimizado y nunca el texto | `backend/app/analytics/` |
 | Frontend | React 18 + Vite + TypeScript: streaming, recorrido del grafo en vivo, tarjeta HITL | [frontend/](frontend/README.md) |
@@ -128,6 +129,7 @@ El sistema empeora en redacción, no en exactitud ni seguridad.
 | Guardrails y HITL | Entrada y salida deterministas; HITL obligatorio en reclamos, con edición del operador |
 | SQL (SQL Server on-premise) | **SQL Server 2022** en Docker: procedimientos almacenados que validan la pertenencia de cada cuenta y un login de aplicación con **mínimo privilegio** (sin `SELECT` sobre tablas). SQLite para desarrollo y CI, detrás del mismo repositorio |
 | Hybrid retrieval, vector DB (pgvector), multi-agente, ReAct | Recuperación híbrida en **Neo4j y en pgvector** (HNSW + tsvector + RRF), comparadas con los Evals; router + 3 subagentes; ReAct propio |
+| MCP (deseable) | El sistema se consume desde Claude Code / Claude Desktop u otro agente vía MCP, con las mismas garantías que el chat; tests con un cliente MCP real | [docs/MCP.md](docs/MCP.md) |
 | Cost & latency awareness | [docs/COST_LATENCY.md](docs/COST_LATENCY.md) con cifras medidas |
 
 ## Cómo ejecutarlo

@@ -79,6 +79,8 @@ class Settings(BaseSettings):
     operator_token: str | None = None
     # Demo pública: al arrancar con analítica vacía, genera tráfico de ejemplo para el dashboard
     demo_seed_traffic: bool = False
+    # Servidor MCP: cliente de la sesión (en producción saldría del token OAuth del host MCP)
+    mcp_customer_id: str = "CLI-001"
     # Turnos por minuto por cliente en /chat, /chat/stream y /approve (0 = sin límite)
     rate_limit_per_minute: int = 0
     seed_dir: Path = REPO_DIR / "data" / "seed"
