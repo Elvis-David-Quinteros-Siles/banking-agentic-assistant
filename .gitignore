@@ -26,3 +26,6 @@ frontend/dist/
 Thumbs.db
 .DS_Store
 *.log
+
+# Evals: el reporte 'latest' cambia en cada corrida; se versionan los nombrados por configuración
+evals/reports/latest.*

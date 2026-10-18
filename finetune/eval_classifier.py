@@ -9,6 +9,7 @@ Métricas: accuracy y macro-F1 de intención, precision/recall por clase, valide
 exact-match de entidades (producto, monto, moneda) y latencia p50/p95.
 
 Uso:  python finetune/eval_classifier.py [--device cpu] [--skip-base]
+      python finetune/eval_classifier.py --adapter lora_v1=finetune/adapters/...-v1 lora_v2=finetune/adapters/...
 Salida: finetune/reports/router_eval.json y router_eval.md
 """
 
@@ -88,7 +89,7 @@ def evaluate(name: str, rows: list[dict], predict) -> dict:
         "latency_ms": {"p50": percentile(latencies, 0.5), "p95": percentile(latencies, 0.95)},
         "errors_sample": errors[:10],
     })
-    print(f"{name:6} acc={report['accuracy']:.3f} macroF1={report['macro_f1']:.3f} "
+    print(f"{name:8} acc={report['accuracy']:.3f} macroF1={report['macro_f1']:.3f} "
           f"json={report['json_valid_rate']:.2f} p95={report['latency_ms']['p95']}ms")
     return report
 
@@ -116,7 +117,8 @@ def main() -> None:
     parser.add_argument("--split", default="test")
     parser.add_argument("--device", default="auto", choices=["auto", "cuda", "cpu"])
     parser.add_argument("--base-model", default="Qwen/Qwen2.5-0.5B-Instruct")
-    parser.add_argument("--adapter", type=Path, default=DEFAULT_ADAPTER)
+    parser.add_argument("--adapter", nargs="+", default=[f"lora={DEFAULT_ADAPTER}"],
+                        help="Uno o más adaptadores como nombre=ruta (se evalúan todos sobre el mismo test)")
     parser.add_argument("--skip-base", action="store_true", help="No evaluar el modelo base zero-shot")
     args = parser.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
@@ -137,9 +139,12 @@ def main() -> None:
         results.append(evaluate("base", rows, lambda t: base.classify(t).output))
         del base
 
-    lora = LoraIntentClassifier(args.base_model, args.adapter, args.device)
-    lora.classify("hola")
-    results.append(evaluate("lora", rows, lambda t: lora.classify(t).output))
+    for spec in args.adapter:
+        name, _, path = spec.partition("=") if "=" in spec else ("lora", "", spec)
+        lora = LoraIntentClassifier(args.base_model, Path(path), args.device)
+        lora.classify("hola")
+        results.append(evaluate(name, rows, lambda t, model=lora: model.classify(t).output))
+        del lora
 
     REPORTS.mkdir(exist_ok=True)
     suffix = "" if args.device in ("auto", "cuda") else f"_{args.device}"

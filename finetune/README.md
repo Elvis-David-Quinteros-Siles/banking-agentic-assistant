@@ -14,9 +14,10 @@ especializado da el mayor ahorro frente a un LLM grande, y donde la salida es me
 
 | Backend | Accuracy | Macro-F1 | JSON válido | Producto EM | Monto EM | Moneda EM | p50 (ms) | p95 (ms) |
 |---|---|---|---|---|---|---|---|---|
-| Reglas (palabras clave) | 0.592 | 0.614 | 1.00 | 0.79 | 1.00 | 1.00 | 0.3 | 0.4 |
-| Qwen2.5-0.5B base (zero-shot) | 0.367 | 0.286 | 0.91 | 0.37 | 0.93 | 0.24 | 993 | 1328 |
-| **Qwen2.5-0.5B + LoRA** | **0.958** | **0.958** | **1.00** | **0.86** | **1.00** | **1.00** | 773 | 954 |
+| Reglas (palabras clave) | 0.592 | 0.614 | 1.00 | 0.79 | 1.00 | 1.00 | 0.2 | 0.2 |
+| Qwen2.5-0.5B base (zero-shot) | 0.367 | 0.286 | 0.91 | 0.37 | 0.93 | 0.24 | 967 | 1254 |
+| Qwen2.5-0.5B + LoRA v1 | 0.958 | 0.958 | 1.00 | 0.86 | 1.00 | 1.00 | 747 | 896 |
+| **Qwen2.5-0.5B + LoRA v2** | **1.000** | **1.000** | **1.00** | **0.88** | **1.00** | **1.00** | 773 | 912 |
 
 Recall por intención:
 
@@ -24,18 +25,21 @@ Recall por intención:
 |---|---|---|---|---|---|
 | Reglas | 0.62 | 0.54 | **0.25** | 0.54 | 1.00 |
 | Base | 1.00 | 0.00 | 0.79 | 0.00 | 0.04 |
-| **LoRA** | 0.79 | 1.00 | **1.00** | 1.00 | 1.00 |
+| LoRA v1 | 0.79 | 1.00 | 1.00 | 1.00 | 1.00 |
+| **LoRA v2** | **1.00** | 1.00 | **1.00** | 1.00 | 1.00 |
 
 Lectura:
 - El modelo base **sin** fine-tuning es peor que las reglas (y 9% de sus salidas no son JSON válido):
   el valor está en el ajuste, no en "usar un LLM".
 - Las reglas pierden el **75% de las quejas** expresadas con otras palabras ("me clavaron un cobro").
   En banca es el error más caro: un reclamo no detectado no pasa por HITL. LoRA: recall 1.00.
-- Los 5 errores de LoRA vienen de **una sola plantilla** de test: "¿cuánta plata me queda?". El
-  coloquialismo "plata" no aparece en ninguna plantilla de consulta de entrenamiento. Es una brecha
-  de datos, no se corrigió reentrenando sobre el test (eso invalidaría la medición).
+- **v1 → v2**: los 5 errores de v1 venían de una sola plantilla de test, "¿cuánta plata me queda?".
+  "plata" solo aparecía en plantillas de quejas. Los Evals de la Fase 6 lo detectaron. v2 agrega
+  8 plantillas coloquiales **solo en entrenamiento** ("¿cuánta plata tengo en mi cuenta?",
+  "platita"...), con el test intacto (mismo archivo). Esto corrige la cobertura de vocabulario, no
+  memoriza el test. Aun así, 100% en un test sintético de 24 plantillas no implica 100% en producción.
 - La confianza (probabilidad de los tokens de `intent`) sale ~0.99 casi siempre: el modelo está
-  **sobreconfiado**. El umbral de aclaración del router sirve poco con LoRA hasta calibrarlo (Fase 6).
+  **sobreconfiado**, y el umbral de aclaración del router sirve poco con LoRA hasta calibrarlo.
 
 ### Entrenamiento
 
@@ -43,9 +47,9 @@ Lectura:
 |---|---|
 | Método | LoRA bf16, r=16, α=32, dropout 0.05, todas las proyecciones (q,k,v,o,gate,up,down) |
 | Parámetros entrenables | 8.8M de 503M (**1.75%**) |
-| Datos | 427 train / 53 val / 120 test (sintéticos, balanceados en 5 intenciones) |
+| Datos | 427 train / 53 val / 120 test (sintéticos, balanceados en 5 intenciones; test fijo entre versiones) |
 | Hiperparámetros | 3 épocas, lr 2e-4 coseno, batch efectivo 16 (2 × 8 acumulación), gradient checkpointing |
-| Loss | train 0.063 · val 0.026 (solo sobre los tokens del JSON de respuesta) |
+| Loss | v1: train 0.063 · val 0.026 — v2: train 0.063 · val 0.008 (solo sobre los tokens del JSON) |
 | Hardware / tiempo | RTX 3050 Laptop 4 GB · **5.6 min** · pico 1.9 GB VRAM |
 | Adaptador | 35 MB (`adapters/`, no se versiona: se regenera en ~6 min) |
 
@@ -99,7 +103,8 @@ entrenamiento y la inferencia. En el nodo `router`:
 
 ## Qué haría distinto con más tiempo
 
-- Ampliar vocabulario coloquial con frases reales (anonimizadas) del canal, no solo plantillas.
+- Ampliar vocabulario coloquial con frases reales (anonimizadas) del canal, no solo plantillas
+  (v2 lo hizo a mano para "plata"; en producción saldría del monitoreo de conversaciones).
 - Calibrar la confianza (temperature scaling sobre val) para que el umbral de aclaración funcione.
 - Bajar latencia: limitar la salida a las claves no nulas, exportar a ONNX/llama.cpp, o usar un
   clasificador de cabeza lineal sobre el encoder para la intención y dejar el LLM solo para entidades.

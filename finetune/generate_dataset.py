@@ -119,6 +119,22 @@ TEMPLATES: dict[str, list[str]] = {
 }
 
 
+# Iteración 2 (tras los Evals de la Fase 6): vocabulario coloquial que el modelo v1 no conocía.
+# "¿cuánta plata me queda?" (plantilla de TEST) se bloqueaba como fuera de alcance porque "plata"
+# solo aparecía en plantillas de quejas. Estas plantillas van SIEMPRE a entrenamiento y son
+# frases distintas de las de test: se corrige la cobertura de vocabulario, no se memoriza el test.
+EXTRA_TRAIN_TEMPLATES: dict[str, list[str]] = {
+    "consulta_cuenta": [
+        "¿cuánta plata tengo en mi {p_account}?", "quiero saber cuánta platita tengo",
+        "¿cuánta plata entró a mi cuenta este mes?", "revisar cuánta plata hay en mi {p_account}",
+        "¿cuántos bolivianos tengo en la cuenta?", "¿todavía tengo plata en mi {p_account}?",
+    ],
+    "fuera_de_alcance": [
+        "¿cómo gano plata rápido con apuestas?", "¿cuánta plata gana un futbolista?",
+    ],
+}
+
+
 def strip_accents(text: str) -> str:
     return "".join(c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c))
 
@@ -177,6 +193,8 @@ def main() -> None:
     parser.add_argument("--n", type=int, default=600, help="Ejemplos totales aproximados")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--test-template-ratio", type=float, default=0.2)
+    parser.add_argument("--regenerate-test", action="store_true",
+                        help="Sobrescribe test.jsonl (por defecto se conserva para comparar modelos sobre el MISMO test)")
     args = parser.parse_args()
     rng = random.Random(args.seed)
 
@@ -188,6 +206,8 @@ def main() -> None:
         cut = max(2, round(len(ids) * args.test_template_ratio))
         test_templates += ids[:cut]
         train_templates += ids[cut:]
+    for intent, templates in EXTRA_TRAIN_TEMPLATES.items():
+        train_templates += [(intent, f"extra{i}", t) for i, t in enumerate(templates)]
 
     # 2. Muestreo balanceado por intención (cada intención ~ n/5)
     def sample(pool: list, n_total: int) -> list[dict]:
@@ -217,6 +237,15 @@ def main() -> None:
     test = sample(test_templates, n_test)
     n_val = len(train_val) // 9
     splits = {"train": train_val[n_val:], "val": train_val[:n_val], "test": test}
+
+    test_file = DATA_DIR / "test.jsonl"
+    if test_file.exists() and not args.regenerate_test:
+        # El test versionado es la referencia: comparar v1 vs v2 exige exactamente los mismos casos
+        splits["test"] = [json.loads(line) for line in test_file.read_text(encoding="utf-8").splitlines() if line]
+        print("test.jsonl existente conservado (usar --regenerate-test para sobrescribirlo)")
+        test_texts = {r["text"] for r in splits["test"]}
+        for name in ("train", "val"):
+            splits[name] = [r for r in splits[name] if r["text"] not in test_texts]
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     for name, rows in splits.items():

@@ -28,6 +28,13 @@ Usa ÚNICAMENTE la información del CONTEXTO. Si el contexto no responde la preg
 Cita cada dato con el id del documento entre corchetes, por ejemplo [POL-003]. No inventes montos, tasas ni plazos."""
 
 CITATION_RE = re.compile(r"\[((?:POL|PRD)-[A-Z0-9-]+)\]")
+# Marcadores que deja el input_guardrail al enmascarar PII. No aportan significado a la búsqueda
+# y la desvían (detectado en Evals, caso P01: "[TARJETA ****1111]" arrastraba políticas de tarjeta).
+PII_PLACEHOLDER_RE = re.compile(r"\[(?:TARJETA[^\]]*|CI|CELULAR|EMAIL)\]")
+
+
+def retrieval_query(question: str) -> str:
+    return re.sub(r"\s+", " ", PII_PLACEHOLDER_RE.sub(" ", question)).strip()
 
 
 def format_context(docs: list[dict]) -> str:
@@ -54,11 +61,12 @@ def knowledge_agent_node(state: AgentState) -> dict:
     question = last_user_text(state)
     product_hint = state.get("entities", {}).get("producto")
     update: dict = {"status": "completed"}
+    query = retrieval_query(question)
     try:
-        docs = get_retriever().search(question, k=settings.knowledge_top_k, product_hint=product_hint)
+        docs = get_retriever().search(query, k=settings.knowledge_top_k, product_hint=product_hint)
     except Exception as error:  # noqa: BLE001 - p. ej. Neo4j se cayó después del arranque
         log_fallback("knowledge_agent.retriever", error)
-        docs = get_keyword_retriever().search(question, k=settings.knowledge_top_k, product_hint=product_hint)
+        docs = get_keyword_retriever().search(query, k=settings.knowledge_top_k, product_hint=product_hint)
         update["degraded"] = True
 
     update["retrieved_context"] = docs

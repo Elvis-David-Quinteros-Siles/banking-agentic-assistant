@@ -38,8 +38,8 @@
       "moneda": 1.0
     },
     "latency_ms": {
-      "p50": 0.3,
-      "p95": 0.4
+      "p50": 0.2,
+      "p95": 0.2
     },
     "errors_sample": [
       {
@@ -133,8 +133,8 @@
       "moneda": 0.242
     },
     "latency_ms": {
-      "p50": 993.4,
-      "p95": 1327.9
+      "p50": 967.0,
+      "p95": 1254.2
     },
     "errors_sample": [
       {
@@ -219,7 +219,7 @@
         "f1": 1.0
       }
     },
-    "backend": "lora",
+    "backend": "lora_v1",
     "n": 120,
     "json_valid_rate": 1.0,
     "entity_exact_match": {
@@ -228,8 +228,8 @@
       "moneda": 1.0
     },
     "latency_ms": {
-      "p50": 773.0,
-      "p95": 953.9
+      "p50": 746.6,
+      "p95": 896.2
     },
     "errors_sample": [
       {
@@ -258,5 +258,49 @@
         "pred": "fuera_de_alcance"
       }
     ]
+  },
+  {
+    "accuracy": 1.0,
+    "macro_f1": 1.0,
+    "per_class": {
+      "consulta_cuenta": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "conocimiento_producto": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "queja_disputa": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "fuera_de_alcance": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "ambiguo": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "backend": "lora_v2",
+    "n": 120,
+    "json_valid_rate": 1.0,
+    "entity_exact_match": {
+      "producto": 0.883,
+      "monto": 1.0,
+      "moneda": 1.0
+    },
+    "latency_ms": {
+      "p50": 773.0,
+      "p95": 911.9
+    },
+    "errors_sample": []
   }
 ]

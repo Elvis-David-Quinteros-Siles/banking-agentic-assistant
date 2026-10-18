@@ -114,3 +114,16 @@ def test_complaint_is_mirrored_in_graph(neo4j_retriever):
         assert records[0].data() == {"c": "CLI-001", "p": "PRD-TDB", "pol": "POL-011"}
     finally:
         driver.execute_query("MATCH (q:Queja {queja_id: 'QJ-TEST01'}) DETACH DELETE q")
+
+
+def test_pii_placeholders_are_removed_from_retrieval_query():
+    # Regresión detectada en Evals (P01): el marcador de PII desviaba la búsqueda
+    query = knowledge_agent.retrieval_query("Mi tarjeta es [TARJETA ****1111], ¿cuál es el límite de retiro en cajero?")
+    assert "TARJETA" not in query
+    assert "límite de retiro en cajero" in query
+
+
+def test_rrf_counts_each_document_once_per_list():
+    # Regresión detectada en Evals (P01): duplicados en una lista inflaban el score
+    scores = rrf({"entidad": ["POL-004", "POL-003", "POL-004"], "vector": ["POL-003", "POL-004"]}, k=60)
+    assert scores["POL-003"] == scores["POL-004"]

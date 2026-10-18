@@ -335,6 +335,11 @@ RTX 3050 de 4 GB. Detalle, latencias y limitaciones en [`finetune/README.md`](..
 
 ## 7. Evals y KPIs
 
+> **Implementado en la Fase 6** — ver [`evals/README.md`](../evals/README.md). La tabla de abajo es el
+> diseño original; la versión final separa métricas de *mecanismo* (condicionadas al enrutamiento
+> correcto) de las de *router*, agrega recall de reclamos y fija umbrales por backend.
+> Resultado: LoRA v2 + Neo4j **31/31 casos**; rules + BM25 (CI) 24/31 con seguridad y mecanismos al 100%.
+
 | Métrica | Definición | Umbral CI |
 |---|---|---|
 | Routing accuracy / macro-F1 | intención predicha vs. etiquetada | accuracy ≥ 0.90 |
@@ -421,11 +426,13 @@ banking-agentic-assistant/
 │   ├── reports/                    # router_eval.{json,md}
 │   └── adapters/                   # gitignored (35 MB, se regenera en ~6 min)
 ├── evals/
-│   ├── cases.yaml
-│   ├── run_evals.py
-│   ├── metrics.py
+│   ├── README.md                   # métricas, resultados y ciclo de mejora
+│   ├── cases.yaml                  # 31 casos etiquetados
+│   ├── thresholds.yaml             # umbrales comunes y por backend
+│   ├── run_evals.py                # runner de punta a punta (en proceso, bases temporales)
+│   ├── judge.py                    # LLM-as-judge de fidelidad (opcional)
 │   ├── test_evals.py               # pytest con umbrales
-│   └── reports/
+│   └── reports/                    # <router>_<knowledge>_<llm>.{md,json}
 ├── frontend/                       # React 18 + Vite + TypeScript
 │   ├── src/
 │   │   ├── api/client.ts           # fetch + parser SSE
