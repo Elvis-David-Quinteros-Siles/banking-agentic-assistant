@@ -79,3 +79,29 @@ def test_followup_inherits_intent_and_builds_effective_query():
     assert update["intent"] == "conocimiento_producto"
     assert update["effective_query"].startswith("¿Qué requisitos piden")
     assert update["entities"]["producto"] == "caja_ahorro"  # el producto viene del turno anterior
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Muéstrame mis últimos movimientos ¿y los de la cuenta en dólares?", None),  # sin cantidad: default
+        ("dame los últimos 3 movimientos", 3),
+        ("quiero ver diez movimientos de mi caja de ahorro", 10),
+        ("mis ultimas dos transacciones", 2),
+        ("¿cuál es mi saldo? tengo 2 cuentas", None),
+    ],
+)
+def test_requested_limit_comes_from_the_customer(text, expected):
+    from app.graph.nodes.query_agent import requested_limit
+
+    assert requested_limit(text) == expected
+
+
+def test_invented_amounts_in_query_answers_are_detected():
+    from app.graph.nodes.query_agent import ungrounded_amounts
+
+    accounts = [{"saldo_texto": "Bs 12.450,30"}, {"saldo_texto": "USD 860,00"}]
+    # Caso real (Evals con LLM real, M01): movimiento inventado imitando el formato del extracto
+    invented = "Su caja de ahorro ****2102 tiene un saldo de USD 860,00.\n- Retiro ATM: -USD 100,00"
+    assert ungrounded_amounts(invented, accounts) == ["USD 100,00"]
+    assert ungrounded_amounts("Sus saldos: Bs 12.450,30 y USD 860,00", accounts) == []

@@ -7,10 +7,16 @@ medición más semántica (cara, solo offline en los Evals).
 Limitación conocida: si el juez es el mismo modelo que generó la respuesta, tiende a ser
 indulgente consigo mismo. En producción se usaría un modelo juez distinto y más capaz, y se
 validaría el juez contra una muestra etiquetada por humanos.
+
+Validación determinista del veredicto: con qwen2.5:3b el juez a veces "encuentra" afirmaciones que
+la respuesta no contiene (caso M02: marcó "el pago mínimo es el 5% del saldo", una frase de OTRA
+política del contexto). Una afirmación no respaldada solo cuenta si aparece en la respuesta; las
+descartadas quedan en el reporte (discarded_claims).
 """
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -26,6 +32,30 @@ están en el contexto NO. Lista las afirmaciones no respaldadas."""
 class JudgeVerdict(BaseModel):
     faithful: bool = Field(description="True si todas las afirmaciones están respaldadas por el contexto")
     unsupported_claims: list[str] = Field(default_factory=list)
+
+
+WORD_RE = re.compile(r"[a-záéíóúñü]{4,}")
+NUM_RE = re.compile(r"\d+(?:[.,]\d+)?")
+
+
+def claim_in_answer(claim: str, answer: str) -> bool:
+    """True si la afirmación está realmente en la respuesta: sus cifras aparecen y comparte al menos
+    la mitad de sus palabras de contenido."""
+    answer_low = answer.lower()
+    numbers = NUM_RE.findall(claim)
+    if any(n not in answer for n in numbers):
+        return False
+    words = set(WORD_RE.findall(claim.lower()))
+    if not words:
+        return bool(numbers)
+    return len({w for w in words if w in answer_low}) / len(words) >= 0.5
+
+
+def validate_verdict(verdict: dict, answer: str) -> dict:
+    kept = [c for c in verdict.get("unsupported_claims", []) if claim_in_answer(c, answer)]
+    discarded = [c for c in verdict.get("unsupported_claims", []) if c not in kept]
+    faithful = verdict.get("faithful", False) or (not kept and bool(discarded))
+    return {"faithful": faithful and not kept, "unsupported_claims": kept, "discarded_claims": discarded}
 
 
 def make_judge(model: BaseChatModel | None = None) -> Callable[[str, str, list[dict]], dict]:
@@ -46,7 +76,7 @@ def make_judge(model: BaseChatModel | None = None) -> Callable[[str, str, list[d
                     ("human", f"CONTEXTO:\n{context_text}\n\nPREGUNTA: {question}\n\nRESPUESTA: {answer}"),
                 ]
             )
-            return verdict.model_dump()
+            return validate_verdict(verdict.model_dump(), answer)
         except Exception as error:  # noqa: BLE001 - un fallo del juez no debe tumbar los Evals
             return {"faithful": False, "unsupported_claims": [f"error del juez: {error}"]}
 

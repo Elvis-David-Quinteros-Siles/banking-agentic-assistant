@@ -76,4 +76,20 @@ def test_judge_parses_verdict():
 
     judge = make_judge(ScriptedJudgeModel(verdict={"faithful": False, "unsupported_claims": ["límite de Bs 5.000"]}))
     result = judge("¿límite?", "El límite es Bs 5.000", [{"id": "POL-003", "title": "Límites", "text": "Bs 3.000"}])
-    assert result == {"faithful": False, "unsupported_claims": ["límite de Bs 5.000"]}
+    assert result == {"faithful": False, "unsupported_claims": ["límite de Bs 5.000"], "discarded_claims": []}
+
+
+def test_judge_claims_not_in_the_answer_are_discarded():
+    from judge import validate_verdict
+
+    # Caso real (M02, qwen2.5:3b como juez): la "afirmación" es de otra política del contexto
+    answer = "La reposición de la tarjeta cuesta Bs 30 y se entrega en 5 días hábiles [POL-004]."
+    verdict = {"faithful": False, "unsupported_claims": ["El pago mínimo mensual es el 5% del saldo."]}
+    assert validate_verdict(verdict, answer) == {
+        "faithful": True,
+        "unsupported_claims": [],
+        "discarded_claims": ["El pago mínimo mensual es el 5% del saldo."],
+    }
+    # Una afirmación que SÍ está en la respuesta se conserva
+    real = {"faithful": False, "unsupported_claims": ["la reposición cuesta Bs 30"]}
+    assert validate_verdict(real, answer)["faithful"] is False

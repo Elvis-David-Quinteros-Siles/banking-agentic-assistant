@@ -49,25 +49,36 @@ def state(text: str, **extra) -> dict:
     return {"messages": [HumanMessage(content=text, id="m1")], "customer_id": "CLI-001", "entities": {}, **extra}
 
 
-def test_llm_chooses_tool_args_and_code_renders_statement(monkeypatch, seeded_db):
-    # El LLM decide cuenta y cantidad; el extracto (comercios y montos) lo redacta el código
+def test_llm_chooses_account_and_code_renders_statement(monkeypatch, seeded_db):
+    # El LLM decide la cuenta; la CANTIDAD la pide el cliente ("últimos 3") y el extracto lo redacta el código
     model = ScriptedModel(
         script=[
             AIMessage(
                 content="",
-                tool_calls=[{"name": "get_transactions", "args": {"account": "****2101", "limit": 3}, "id": "c1"}],
+                tool_calls=[{"name": "get_transactions", "args": {"account": "****2101", "limit": 1}, "id": "c1"}],
                 usage_metadata=usage(300, 20),
             ),
         ]
     )
     use_model(monkeypatch, model, query_agent)
-    update = query_agent.query_agent_node(state("muéstrame mis movimientos"))
+    update = query_agent.query_agent_node(state("muéstrame mis últimos 3 movimientos"))
     assert model.calls == 1  # sin segunda llamada para redactar
     assert "Cooperativa Eléctrica" in update["final_answer"]
     assert "-Bs 230,40" in update["final_answer"]
-    assert update["final_answer"].count("\n- ") == 3
+    assert update["final_answer"].count("\n- ") == 3  # lo que pidió el cliente, no el limit=1 del modelo
     assert update["trace"][0]["tokens_in"] == 300
     assert not update.get("degraded")
+
+
+def test_llm_statement_without_tool_call_is_rejected(monkeypatch, seeded_db):
+    # Caso real (Evals con LLM real, M01): el modelo "respondió" un extracto sin consultarlo,
+    # con un movimiento inventado. Se descarta y el extracto sale de la base.
+    fake_statement = "Su caja de ahorro ****2102 tiene un saldo de USD 860,00.\n- 2026-10-15 · Retiro ATM: -USD 100,00"
+    model = ScriptedModel(script=[AIMessage(content=fake_statement, usage_metadata=usage(300, 40))])
+    use_model(monkeypatch, model, query_agent)
+    update = query_agent.query_agent_node(state("¿y los movimientos de la cuenta en dólares?"))
+    assert "USD 100,00" not in update["final_answer"]
+    assert "Streaming Service" in update["final_answer"]
 
 
 def test_tool_call_for_foreign_account_is_rejected(monkeypatch, seeded_db):

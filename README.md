@@ -1,7 +1,7 @@
 # Asistente bancario agéntico
 
 [![CI](https://github.com/Elvis-David-Quinteros-Siles/banking-agentic-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/Elvis-David-Quinteros-Siles/banking-agentic-assistant/actions/workflows/ci.yml)
-![Cobertura](https://img.shields.io/badge/cobertura-82%25%20(m%C3%ADn.%2080%25%20en%20CI)-brightgreen)
+![Cobertura](https://img.shields.io/badge/cobertura-88%25%20(m%C3%ADn.%2080%25%20en%20CI)-brightgreen)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 ![mypy](https://img.shields.io/badge/tipos-mypy-blue)
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
@@ -15,7 +15,7 @@ core (SQL), explica productos y políticas con **Graph RAG** sobre Neo4j, gestio
 es un **Qwen2.5-0.5B ajustado con LoRA** que corre on-premise, y todo el sistema se mide con
 **Evals de punta a punta** que corren en CI.
 
-**[▶ Probar la demo en vivo](https://banking-agentic-assistant.edqs.online)** · [dashboard de KPIs](https://banking-agentic-assistant.edqs.online/#/kpis) · [cola del operador](https://banking-agentic-assistant.edqs.online/#/operador) · [ver directamente un reclamo con aprobación humana](https://banking-agentic-assistant.edqs.online/?q=Me%20cobraron%20Bs%20350%20dos%20veces%20en%20la%20tarjeta%20de%20d%C3%A9bito)
+**[▶ Probar la demo en vivo](https://banking-agentic-assistant.edqs.online)** · **[Resumen en una página](docs/RESUMEN.md)** · [dashboard de KPIs](https://banking-agentic-assistant.edqs.online/#/kpis) · [cola del operador](https://banking-agentic-assistant.edqs.online/#/operador) · [ver directamente un reclamo con aprobación humana](https://banking-agentic-assistant.edqs.online/?q=Me%20cobraron%20Bs%20350%20dos%20veces%20en%20la%20tarjeta%20de%20d%C3%A9bito)
 
 <sub>La demo pública corre en modo liviano (router por reglas, búsqueda BM25, respuestas por plantilla) porque no requiere GPU. Los resultados con router LoRA, Graph RAG y LLM real están más abajo y en el GIF.</sub>
 
@@ -30,28 +30,29 @@ es un **Qwen2.5-0.5B ajustado con LoRA** que corre on-premise, y todo el sistema
 
 | | Reglas + BM25 (baseline, CI) | LoRA + Graph RAG | **LoRA + Graph RAG + LLM real** |
 |---|---|---|---|
-| Evals de punta a punta | 31/39 | **39/39** | **31/31** (2 corridas) ¹ |
+| Evals de punta a punta | 31/39 | **39/39** | **39/39** (2 corridas) |
 | Precisión de enrutamiento · en paráfrasis | 85.3% · 50.0% | 100% · 100% | **100% · 100%** |
-| Conversaciones multi-turno (seguimientos y cambio de tema) | 100% | **100%** | — ¹ |
-| Acciones con confirmación del cliente · ejecutadas sin confirmación | 100% · 0% | **100% · 0%** | — ¹ |
+| Conversaciones multi-turno (seguimientos y cambio de tema) | 100% | **100%** | **100%** |
+| Acciones con confirmación del cliente · ejecutadas sin confirmación | 100% · 0% | **100% · 0%** | **100% · 0%** |
 | Reclamos detectados (si no se detecta, no pasa por HITL) | 71.4% | 100% | **100%** |
 | Citas a la política correcta | 70.0% | 100% | **100%** |
 | Fidelidad (LLM-as-judge) · fugas de contexto | — | — | **100% · 0%** |
 | Seguridad: ataques bloqueados · falsos positivos · PII | 100% · 0% · 100% | 100% · 0% · 100% | **100% · 0% · 100%** |
-| Latencia p50 / p95 por turno | 103 / 202 ms | 772 / 1059 ms | 1.8–2.1 / 2.7–3.6 s |
+| Latencia p50 / p95 por turno | 103 / 202 ms | 772 / 1059 ms | 2.2–2.6 / 3.6–4.9 s |
 
-¹ La corrida con LLM real se hizo con los 31 casos previos a los de multi-turno y acciones.
 LLM real = qwen2.5:3b en Ollama (Docker, GPU de 4 GB, 100% on-premise). Las respuestas de los agentes
 las redacta el LLM; la columna del medio usa redacción determinista.
 
-- **Fine-tuning**: LoRA sobre Qwen2.5-0.5B, 5.6 min en una GPU de laptop (4 GB). Precisión en
-  frases no vistas: **100%**, frente a 59.2% de las reglas y **36.7% del mismo modelo sin ajustar**.
+- **Fine-tuning**: LoRA sobre Qwen2.5-0.5B, ~6 min por versión en una GPU de laptop (4 GB). Precisión
+  en frases no vistas (6 intenciones, v3): **96,5%**, frente a 62,2% de las reglas y **25,2% del mismo
+  modelo sin ajustar**.
 - **Costo**: ~US$ 12 por 100 000 turnos con un LLM cloud económico; −29% con el router local. Ver
   [Cost & Latency](docs/COST_LATENCY.md).
-- **Los Evals encontraron 15 problemas reales**, todos corregidos (los de código, con test de regresión):
+- **Los Evals encontraron 17 problemas reales**, todos corregidos (los de código, con test de regresión):
   4 con redacción determinista (entre ellos un bug de fusión RRF) y 6 al pasar a un LLM real (un
   ReAct que pedía el número de cuenta, citas mal atribuidas, extractos parafraseados, el contexto
-  interno filtrado al cliente...). Primera medición con LLM: 28/31; final: 31/31.
+  interno filtrado al cliente, un movimiento bancario inventado...). Con LLM real: 28/31 → 31/31,
+  y sobre los 39 casos: 38/39 → 39/39.
   Ver [ciclo de mejora](evals/README.md#ciclo-de-mejora-guiado-por-evals).
 
 ---
@@ -221,7 +222,7 @@ Neo4j vs pgvector en [evals/README.md](evals/README.md#neo4j-frente-a-pgvector-m
 pytest backend -q                                          # 121 tests (los de integración se saltan si falta el servicio)
 python evals/run_evals.py --check                          # Evals de punta a punta con umbrales
 python evals/run_evals.py --router lora --knowledge neo4j  # router LoRA + Graph RAG: 39/39
-python evals/run_evals.py --router lora --knowledge neo4j --llm ollama --judge   # + LLM real y juez: 31/31
+python evals/run_evals.py --router lora --knowledge neo4j --llm ollama --judge   # + LLM real y juez: 39/39
 cd frontend; npm test; npm run build
 python frontend/e2e/smoke_test.py                          # E2E con clics reales (Playwright + Edge/Chrome)
 python frontend/e2e/record_demo.py                         # regraba docs/img/demo.gif y demo.mp4

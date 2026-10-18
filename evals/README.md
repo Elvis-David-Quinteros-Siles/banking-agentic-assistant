@@ -48,7 +48,8 @@ como **freno de regresión** sobre su línea base, no como meta de calidad.
 | rules + Neo4j (CI) | 34/39 | 85.3% | 50.0% | 71.4% | 100% | 100% | 100% | 84 / 249 ms |
 | rules + **pgvector** + core en **SQL Server** (CI) | 34/39 | 85.3% | 50.0% | 71.4% | 100% | 100% | 100% | 85 / 131 ms |
 | **LoRA v3 + Neo4j** | **39/39** | **100%** | **100%** | **100%** | **100%** | **100%** | **100%** | 772 / 1059 ms |
-| **LoRA v2 + Neo4j + LLM real** (qwen2.5:3b en Ollama; 31 casos, antes de multi-turno) | **31/31** ×2 | **100%** | **100%** | **100%** | **100%** | — | — | 1.8–2.1 / 2.7–3.6 s |
+| **LoRA v3 + Neo4j + LLM real** (qwen2.5:3b en Ollama) | **39/39** ×2 | **100%** | **100%** | **100%** | **100%** | **100%** | **100%** | 2.2–2.6 / 3.6–4.9 s |
+| *(medición anterior, 31 casos, LoRA v2)* | *31/31 ×2* | | | | | | | *1.8–2.1 / 2.7–3.6 s |
 
 Con LLM real, además: **fidelidad 100%** (LLM-as-judge), **0% de fugas de contexto**, exactitud de
 datos 100% y **6.5% de turnos degradados**: en cada corrida, 2 respuestas malas del LLM (una evasiva y
@@ -130,9 +131,21 @@ Patrón general: **el LLM decide, el código redacta los datos**. Un modelo de 3
 entender qué pide el cliente y para redactar explicaciones con contexto; no para copiar cifras y
 nombres de un extracto bancario sin alterarlos.
 
-El juez (el mismo modelo de 3B) también se equivocó una vez en la primera corrida: marcó como no
-respaldado un "24%" que sí estaba en el contexto. Por eso la fidelidad del juez es una señal
-informativa y no un umbral del CI.
+El juez (el mismo modelo de 3B) también se equivoca: marcó como no respaldado un "24%" que sí estaba
+en el contexto. Por eso la fidelidad del juez es una señal informativa y no un umbral del CI.
+
+### Cuarto ciclo: LLM real sobre los 39 casos (multi-turno y acciones incluidos)
+
+Primera medición: **38/39** (dos corridas, mismo fallo); final: **39/39** (dos corridas).
+
+| # | Hallazgo | Corrección | Efecto |
+|---|---|---|---|
+| 16 | En el seguimiento "¿y los de la cuenta en dólares?" el modelo **respondió sin consultar la base e inventó un movimiento** ("Retiro ATM -USD 100,00") imitando el formato del extracto del turno anterior. Primera hipótesis (pedía `limit=1`) resultó incompleta: corregirla no cambió el resultado | Si el cliente pide movimientos y el modelo no los consulta, su texto se descarta y el extracto lo arma el código; además, **todo monto de una respuesta de consultas debe ser un saldo real** (`ungrounded_amounts`). La cantidad de movimientos la pide el cliente ("los últimos 3"), no el modelo | Multi-turno 75% → **100%**; exactitud de datos 87,5% → **100%** |
+| 17 | El **juez** listó como "no respaldada" una frase que la respuesta no contiene ("el pago mínimo es el 5% del saldo", de otra política del contexto), en todas las corridas | Validación determinista del veredicto: una afirmación solo cuenta si sus cifras y la mitad de sus palabras están en la respuesta; las descartadas quedan en el reporte | Fidelidad 83–92% → **100%**, sin ocultar nada (`discarded_claims`) |
+
+En las corridas finales, 3 de 39 turnos (7,7%) usan la respuesta del código porque una defensa
+rechazó el texto del modelo: C05 y P03 (como antes) y M01 (el movimiento inventado). Es el
+comportamiento buscado: ante la duda, el dato sale de la base.
 
 ## Cómo ejecutar
 

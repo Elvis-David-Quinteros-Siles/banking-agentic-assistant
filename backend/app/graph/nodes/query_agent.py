@@ -47,6 +47,25 @@ EVASIVE_RE = re.compile(
 INTERNAL_LEAK_RE = re.compile(r'CUENTAS:|"saldo_texto"|"monto_texto"|\[\s*\{\s*"')
 
 
+MOVEMENT_WORDS = ("movimiento", "extracto", "transaccion", "gaste", "depositaron")
+MONEY_RE = re.compile(r"\b(Bs|USD)\.?\s*(-?[\d.]+(?:,\d{2})?)")
+
+
+def asks_for_movements(text: str) -> bool:
+    return any(w in normalize(text) for w in MOVEMENT_WORDS)
+
+
+def ungrounded_amounts(answer: str, accounts: list[dict]) -> list[str]:
+    """Montos de la respuesta que no son el saldo de ninguna cuenta del cliente.
+
+    Una respuesta FINAL del modelo (sin tool call) solo conoce los saldos: cualquier otro monto es
+    inventado. Caso real (Evals con LLM real, M01): qwen2.5:3b imitó el formato del extracto del turno
+    anterior y escribió un "Retiro ATM -USD 100,00" que no existe.
+    """
+    known = {a["saldo_texto"].split(" ", 1)[1].lstrip("-") for a in accounts}
+    return [f"{cur} {amount}" for cur, amount in MONEY_RE.findall(answer) if amount.lstrip("-") not in known]
+
+
 def pick_account(accounts: list[dict], text: str) -> dict | None:
     """Elige la cuenta mencionada (por moneda, tipo o últimos 4 dígitos); si no, la primera."""
     normalized = normalize(text)
@@ -83,6 +102,25 @@ def ensure_all_balances(answer: str, accounts: list[dict], question: str) -> str
     return f"{answer.rstrip()}\n\nTambién tiene:\n{lines}"
 
 
+DEFAULT_MOVEMENTS = 5
+NUMBER_WORDS = {"un": 1, "uno": 1, "dos": 2, "tres": 3, "cuatro": 4, "cinco": 5, "seis": 6, "siete": 7,
+                "ocho": 8, "nueve": 9, "diez": 10, "quince": 15, "veinte": 20}  # fmt: skip
+QUANTITY_RE = re.compile(
+    r"\b(\d{1,2}|" + "|".join(NUMBER_WORDS) + r")\s+(?:ultim\w+\s+)?(?:movimiento|transacc|operac)"
+)
+LAST_N_RE = re.compile(r"\bultim[oa]s\s+(\d{1,2}|" + "|".join(NUMBER_WORDS) + r")\b")
+
+
+def requested_limit(text: str) -> int | None:
+    """Cantidad de movimientos que el cliente pidió explícitamente ("los últimos 3", "diez movimientos")."""
+    normalized = normalize(text)
+    match = QUANTITY_RE.search(normalized) or LAST_N_RE.search(normalized)
+    if not match:
+        return None
+    raw = match.group(1)
+    return int(raw) if raw.isdigit() else NUMBER_WORDS[raw]
+
+
 def format_movements(account: dict, movements: list[dict]) -> str:
     """Extracto redactado por código: fechas, comercios y montos textuales del core, siempre."""
     # El saldo va en el encabezado, como en un extracto real (y cubre el caso observado de un
@@ -100,9 +138,10 @@ def deterministic_answer(tools: BankingTools, text: str) -> str:
         return "No encontré cuentas asociadas a su usuario."
 
     normalized = normalize(text)
-    if any(w in normalized for w in ("movimiento", "extracto", "transaccion", "gaste", "depositaron")):
+    if asks_for_movements(normalized):
         account = pick_account(accounts, text) or accounts[0]
-        return format_movements(account, tools.get_transactions(account["cuenta"], limit=5))
+        limit = requested_limit(text) or DEFAULT_MOVEMENTS
+        return format_movements(account, tools.get_transactions(account["cuenta"], limit=limit))
 
     lines = [
         f"- {a['tipo']} {a['cuenta']} ({a['moneda']}): {format_money(a['saldo'], a['moneda'])}"
@@ -143,6 +182,12 @@ def react_answer(tools: BankingTools, state: AgentState) -> tuple[str, dict]:
                 raise ValueError(f"respuesta evasiva del LLM: {answer[:80]!r}")
             if INTERNAL_LEAK_RE.search(answer):
                 raise ValueError("la respuesta expone el contexto interno")
+            if asks_for_movements(effective_user_text(state)):
+                # Pidió movimientos y el modelo no los consultó: su texto no puede ser un extracto real
+                raise ValueError("pidió movimientos y el LLM respondió sin consultarlos")
+            invented = ungrounded_amounts(answer, accounts)
+            if invented:
+                raise ValueError(f"montos que no están en los datos: {invented}")
             # Respuesta de saldos: ninguna cuenta puede quedar fuera
             return ensure_all_balances(answer, accounts, effective_user_text(state)), add_usage(*usages)
         # El LLM ya decidió QUÉ consultar (cuenta y cantidad): el extracto lo redacta el código.
@@ -158,7 +203,9 @@ def react_answer(tools: BankingTools, state: AgentState) -> tuple[str, dict]:
             if account is None:
                 messages.append(ToolMessage(content="esa cuenta no pertenece al cliente", tool_call_id=call["id"]))
                 continue
-            limit = call["args"].get("limit", 5)
+            # La cantidad la decide el cliente, no el modelo: con qwen2.5:3b se observó limit=1 ante
+            # "¿y los de la cuenta en dólares?" (Evals con LLM real, caso M01)
+            limit = requested_limit(effective_user_text(state)) or DEFAULT_MOVEMENTS
             sections.append(format_movements(account, tools.get_transactions(account["cuenta"], limit=limit)))
         if sections:
             return "\n\n".join(sections), add_usage(*usages)
