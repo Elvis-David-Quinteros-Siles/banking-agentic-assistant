@@ -1,45 +1,31 @@
-"""Endpoint POST /chat (síncrono). /chat/stream se agrega en la Fase 2."""
+"""Endpoints POST /chat (respuesta completa) y POST /chat/stream (SSE)."""
 
-import time
 import uuid
 
 from fastapi import APIRouter, Request
-from langchain_core.messages import HumanMessage
+from fastapi.responses import StreamingResponse
 
-from app.api.schemas import ChatRequest, ChatResponse, Metrics, NodeMetric
+from app.api.schemas import ChatRequest, ChatResponse
+from app.services import chat_service
 
 router = APIRouter(tags=["chat"])
+
+SSE_HEADERS = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"}
 
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat(body: ChatRequest, request: Request) -> ChatResponse:
     graph = request.app.state.graph
     thread_id = body.thread_id or str(uuid.uuid4())
-    config = {"configurable": {"thread_id": thread_id}}
+    await chat_service.ensure_not_pending(graph, thread_id)
+    return await chat_service.run_turn(graph, thread_id, chat_service.chat_input(body.customer_id, body.message))
 
-    # El trace es acumulativo por thread: guardamos su largo para quedarnos solo con este turno
-    previous = await graph.aget_state(config)
-    previous_len = len(previous.values.get("trace", [])) if previous.values else 0
 
-    started = time.perf_counter()
-    result = await graph.ainvoke(
-        {"messages": [HumanMessage(content=body.message)], "customer_id": body.customer_id},
-        config=config,
-    )
-    total_ms = round((time.perf_counter() - started) * 1000, 2)
-
-    nodes = [NodeMetric(**entry) for entry in result.get("trace", [])[previous_len:]]
-    return ChatResponse(
-        thread_id=thread_id,
-        status="completed",
-        answer=result.get("final_answer") or "",
-        intent=result.get("intent"),
-        intent_confidence=result.get("intent_confidence"),
-        metrics=Metrics(
-            latency_ms=total_ms,
-            tokens_in=sum(n.tokens_in for n in nodes),
-            tokens_out=sum(n.tokens_out for n in nodes),
-            cost_usd=round(sum(n.cost_usd for n in nodes), 6),
-            nodes=nodes,
-        ),
-    )
+@router.post("/chat/stream")
+async def chat_stream(body: ChatRequest, request: Request) -> StreamingResponse:
+    graph = request.app.state.graph
+    thread_id = body.thread_id or str(uuid.uuid4())
+    # Se valida ANTES de abrir el stream para poder responder con un 409 normal
+    await chat_service.ensure_not_pending(graph, thread_id)
+    events = chat_service.stream_turn(graph, thread_id, chat_service.chat_input(body.customer_id, body.message))
+    return StreamingResponse(events, media_type="text/event-stream; charset=utf-8", headers=SSE_HEADERS)

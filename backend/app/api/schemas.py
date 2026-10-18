@@ -2,13 +2,26 @@
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class ChatRequest(BaseModel):
     thread_id: str | None = Field(default=None, description="Si se omite, se crea una conversación nueva")
     customer_id: str = Field(pattern=r"^CLI-\d{3}$", examples=["CLI-001"])
     message: str = Field(min_length=1, max_length=2000)
+
+
+class ApproveRequest(BaseModel):
+    decision: Literal["approve", "edit", "reject"]
+    reviewer_id: str = Field(min_length=1, examples=["OP-17"])
+    comment: str | None = None
+    edited_draft: dict[str, Any] | None = None
+
+    @model_validator(mode="after")
+    def edit_requires_draft(self):
+        if self.decision == "edit" and not self.edited_draft:
+            raise ValueError("decision 'edit' requiere edited_draft")
+        return self
 
 
 class GuardrailInfo(BaseModel):
@@ -47,6 +60,7 @@ class ChatResponse(BaseModel):
     citations: list[str] = []
     interrupt: InterruptInfo | None = None
     guardrail: GuardrailInfo = GuardrailInfo()
+    degraded: bool = False  # True si algún nodo usó su ruta determinista por fallo del LLM
     metrics: Metrics
 
 

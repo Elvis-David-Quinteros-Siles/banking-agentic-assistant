@@ -1,0 +1,37 @@
+{
+  "customers": [
+    {"customer_id": "CLI-001", "full_name": "María Fernanda Rojas", "doc_id_masked": "****567 SC", "segment": "personas", "created_at": "2019-03-14"},
+    {"customer_id": "CLI-002", "full_name": "Juan Carlos Mendoza", "doc_id_masked": "****321 SC", "segment": "pyme", "created_at": "2021-07-02"},
+    {"customer_id": "CLI-003", "full_name": "Ana Lucía Vargas", "doc_id_masked": "****889 CB", "segment": "premium", "created_at": "2016-11-20"},
+    {"customer_id": "CLI-004", "full_name": "Pedro Antonio Suárez", "doc_id_masked": "****104 LP", "segment": "personas", "created_at": "2023-01-09"},
+    {"customer_id": "CLI-005", "full_name": "Carla Gutiérrez", "doc_id_masked": "****772 SC", "segment": "personas", "created_at": "2024-05-30"}
+  ],
+  "accounts": [
+    {"account_id": "1000452101", "customer_id": "CLI-001", "account_type": "caja_ahorro", "currency": "BOB", "balance": 12450.30, "status": "activa", "opened_at": "2019-03-14"},
+    {"account_id": "1000452102", "customer_id": "CLI-001", "account_type": "caja_ahorro", "currency": "USD", "balance": 860.00, "status": "activa", "opened_at": "2020-08-01"},
+    {"account_id": "2000781201", "customer_id": "CLI-002", "account_type": "cuenta_corriente", "currency": "BOB", "balance": 48210.75, "status": "activa", "opened_at": "2021-07-02"},
+    {"account_id": "1000781202", "customer_id": "CLI-002", "account_type": "caja_ahorro", "currency": "BOB", "balance": 3120.00, "status": "activa", "opened_at": "2021-07-02"},
+    {"account_id": "1000330301", "customer_id": "CLI-003", "account_type": "caja_ahorro", "currency": "USD", "balance": 25300.40, "status": "activa", "opened_at": "2016-11-20"},
+    {"account_id": "1000104401", "customer_id": "CLI-004", "account_type": "caja_ahorro", "currency": "BOB", "balance": 540.10, "status": "activa", "opened_at": "2023-01-09"},
+    {"account_id": "1000772501", "customer_id": "CLI-005", "account_type": "caja_ahorro", "currency": "BOB", "balance": 0.00, "status": "bloqueada", "opened_at": "2024-05-30"}
+  ],
+  "transactions": [
+    {"tx_id": "TX-0001", "account_id": "1000452101", "posted_at": "2026-10-01 09:12", "description": "Depósito de sueldo", "amount": 7800.00, "currency": "BOB", "channel": "transferencia", "merchant": "Empresa Agroindustrial SRL"},
+    {"tx_id": "TX-0002", "account_id": "1000452101", "posted_at": "2026-10-03 18:40", "description": "Compra supermercado", "amount": -412.50, "currency": "BOB", "channel": "tarjeta_debito", "merchant": "Supermercado Central"},
+    {"tx_id": "TX-0003", "account_id": "1000452101", "posted_at": "2026-10-05 12:05", "description": "Pago QR restaurante", "amount": -95.00, "currency": "BOB", "channel": "qr", "merchant": "Restaurante El Patio"},
+    {"tx_id": "TX-0004", "account_id": "1000452101", "posted_at": "2026-10-08 20:31", "description": "Compra en línea", "amount": -350.00, "currency": "BOB", "channel": "tarjeta_debito", "merchant": "Tienda Online XYZ"},
+    {"tx_id": "TX-0005", "account_id": "1000452101", "posted_at": "2026-10-08 20:32", "description": "Compra en línea", "amount": -350.00, "currency": "BOB", "channel": "tarjeta_debito", "merchant": "Tienda Online XYZ"},
+    {"tx_id": "TX-0006", "account_id": "1000452101", "posted_at": "2026-10-10 08:00", "description": "Retiro ATM", "amount": -500.00, "currency": "BOB", "channel": "atm", "merchant": "ATM Av. Monseñor Rivero"},
+    {"tx_id": "TX-0007", "account_id": "1000452101", "posted_at": "2026-10-12 15:22", "description": "Pago servicio de luz", "amount": -230.40, "currency": "BOB", "channel": "banca_internet", "merchant": "Cooperativa Eléctrica"},
+    {"tx_id": "TX-0008", "account_id": "1000452102", "posted_at": "2026-09-28 10:00", "description": "Transferencia recibida", "amount": 500.00, "currency": "USD", "channel": "transferencia", "merchant": "Remesa exterior"},
+    {"tx_id": "TX-0009", "account_id": "1000452102", "posted_at": "2026-10-09 11:45", "description": "Compra internacional", "amount": -64.00, "currency": "USD", "channel": "tarjeta_debito", "merchant": "Streaming Service"},
+    {"tx_id": "TX-0010", "account_id": "2000781201", "posted_at": "2026-10-02 09:30", "description": "Cobro a cliente", "amount": 15200.00, "currency": "BOB", "channel": "transferencia", "merchant": "Distribuidora Oriente"},
+    {"tx_id": "TX-0011", "account_id": "2000781201", "posted_at": "2026-10-06 16:10", "description": "Pago a proveedor", "amount": -8900.00, "currency": "BOB", "channel": "banca_internet", "merchant": "Insumos Agrícolas SA"},
+    {"tx_id": "TX-0012", "account_id": "2000781201", "posted_at": "2026-10-11 10:05", "description": "Pago de planilla", "amount": -21000.00, "currency": "BOB", "channel": "banca_internet", "merchant": "Planilla octubre"},
+    {"tx_id": "TX-0013", "account_id": "1000781202", "posted_at": "2026-10-07 13:00", "description": "Depósito en ventanilla", "amount": 1200.00, "currency": "BOB", "channel": "ventanilla", "merchant": "Agencia Centro"},
+    {"tx_id": "TX-0014", "account_id": "1000330301", "posted_at": "2026-10-04 09:00", "description": "Interés DPF acreditado", "amount": 410.25, "currency": "USD", "channel": "sistema", "merchant": "DPF-778"},
+    {"tx_id": "TX-0015", "account_id": "1000330301", "posted_at": "2026-10-13 19:20", "description": "Compra joyería", "amount": -1250.00, "currency": "USD", "channel": "tarjeta_credito", "merchant": "Joyería Brillante"},
+    {"tx_id": "TX-0016", "account_id": "1000104401", "posted_at": "2026-10-09 07:50", "description": "Pago QR transporte", "amount": -15.00, "currency": "BOB", "channel": "qr", "merchant": "Micro Línea 18"},
+    {"tx_id": "TX-0017", "account_id": "1000104401", "posted_at": "2026-10-14 21:10", "description": "Cargo por mantenimiento", "amount": -25.00, "currency": "BOB", "channel": "sistema", "merchant": "Comisión mensual"}
+  ]
+}

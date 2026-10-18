@@ -1,11 +1,17 @@
-# Fase 1 — backend mínimo (FastAPI + LangGraph)
+# Backend (FastAPI + LangGraph)
 fastapi>=0.143,<1.0
 uvicorn[standard]>=0.54,<1.0
 pydantic>=2.14,<3.0
 pydantic-settings>=2.16,<3.0
+httpx>=0.28,<1.0
 langgraph>=1.2,<2.0
+langgraph-checkpoint-sqlite>=3.1,<4.0
 langchain-core>=1.6,<2.0
+
+# Proveedores de LLM (se importan solo el que esté configurado en LLM_PROVIDER)
+langchain-ollama>=1.1,<2.0
+langchain-openai>=1.7,<2.0
+langchain-anthropic>=1.7,<2.0
 
 # Tests
 pytest>=9.1,<10.0
-httpx>=0.28,<1.0

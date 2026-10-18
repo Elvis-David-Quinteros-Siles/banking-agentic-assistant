@@ -84,7 +84,7 @@ START
 | `knowledge_agent` | RAG | Recuperación híbrida (vector + full-text + expansión Cypher), fusión RRF, respuesta con citas | Si no hay contexto con score suficiente → **se abstiene** ("no tengo esa información") |
 | `complaint_agent` | LLM con salida estructurada | Genera borrador `{categoria, producto, monto, prioridad, resumen}` | El LLM propone, el humano dispone |
 | `hitl_review` | `interrupt()` | Pausa el grafo y expone el borrador al operador | Requisito regulatorio/reputacional: ninguna queja se registra sin revisión |
-| `register_complaint` | Determinista | Crea `(:Queja)` y `(:Cliente)-[:PRESENTO]->(:Queja)-[:APLICA_A]->(:Producto)` | Cierra el ciclo con el grafo de conocimiento |
+| `register_complaint` | Determinista | Inserta en la tabla `complaints` (SQLite, sistema de registro) y, desde la Fase 3, crea `(:Cliente)-[:PRESENTO]->(:Queja)-[:APLICA_A]->(:Producto)` en Neo4j | Cierra el ciclo con el grafo de conocimiento |
 | `output_guardrail` | Determinista + LLM-judge opcional | Verifica que la respuesta esté soportada por el contexto (RAG), que no filtre PII (cuentas → últimos 4 dígitos) | Última línea de defensa contra alucinación |
 | `blocked_response` | Plantilla | Respuesta fija y cortés | Costo cero, comportamiento predecible |
 
@@ -318,27 +318,31 @@ banking-agentic-assistant/
 │   │   │   ├── schemas.py          # modelos Pydantic del contrato de API
 │   │   │   ├── routes_chat.py      # /chat, /chat/stream
 │   │   │   ├── routes_hitl.py      # /approve/{thread_id}
-│   │   │   ├── routes_health.py    # /health
-│   │   │   └── sse.py              # helpers de serialización SSE
+│   │   │   └── routes_health.py    # /health
+│   │   ├── services/
+│   │   │   └── chat_service.py     # turno del grafo compartido por /chat, /chat/stream (SSE) y /approve
+│   │   ├── db/sqlite.py            # esquema + carga de seed del core bancario simulado
+│   │   ├── text.py                 # normalización de texto (sin tildes)
 │   │   ├── graph/
 │   │   │   ├── state.py            # AgentState
 │   │   │   ├── builder.py          # construcción y compilación del StateGraph
 │   │   │   ├── nodes/
 │   │   │   │   ├── input_guardrail.py
 │   │   │   │   ├── router.py
-│   │   │   │   ├── clarify.py
+│   │   │   │   ├── responses.py    # blocked_response y clarify (plantillas, costo 0)
 │   │   │   │   ├── query_agent.py
 │   │   │   │   ├── knowledge_agent.py
 │   │   │   │   ├── complaint_agent.py
 │   │   │   │   ├── hitl.py         # hitl_review, register_complaint, complaint_rejected
-│   │   │   │   └── output_guardrail.py
-│   │   │   └── prompts/            # prompts versionados (.md / .py)
+│   │   │   │   ├── output_guardrail.py
+│   │   │   │   └── common.py
+│   │   │   (cada nodo define su prompt como constante junto a su lógica)
 │   │   ├── llm/
 │   │   │   ├── provider.py         # factory openai|anthropic|ollama|fake
 │   │   │   └── pricing.py          # tabla de precios configurable → cost_usd
 │   │   ├── tools/
 │   │   │   ├── sql_tools.py        # tools parametrizadas sobre SQLite
-│   │   │   └── graph_rag.py        # retriever híbrido Neo4j
+│   │   │   └── knowledge_base.py   # Retriever: KeywordRetriever (Fase 2) → Neo4j híbrido (Fase 3)
 │   │   ├── guardrails/
 │   │   │   ├── pii.py              # detección/enmascarado (Luhn, CI, tel, email)
 │   │   │   ├── injection.py
@@ -348,10 +352,10 @@ banking-agentic-assistant/
 │   ├── data/                       # bank.db, checkpoints.db (gitignored)
 │   ├── tests/
 │   └── requirements.txt
-├── data/seed/                      # JSON de productos, políticas, clientes, cuentas, quejas
-├── scripts/
-│   ├── seed_sqlite.py
-│   └── seed_neo4j.py
+├── data/seed/                      # customers.json (clientes/cuentas/movimientos), knowledge.json (productos/políticas)
+├── backend/scripts/
+│   ├── chat_cli.py                 # cliente de consola: chat, stream SSE, approve
+│   └── seed_neo4j.py               # (Fase 3) — SQLite se crea y carga sola al arrancar
 ├── finetune/
 │   ├── generate_dataset.py
 │   ├── train_lora.py

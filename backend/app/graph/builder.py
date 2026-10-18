@@ -1,30 +1,67 @@
-"""Construcción del grafo LangGraph.
+"""Construcción del grafo multi-agente (ver docs/ARCHITECTURE.md §2).
 
-Fase 1:  START → router → echo_agent → END
-Fase 2:  el router pasará a tener aristas condicionales hacia los subagentes.
+START → input_guardrail ─┬─(bloqueado)──────────────────────────► blocked_response → END
+                         └─► router ─┬─ consulta_cuenta ─────────► query_agent ─────┐
+                                     ├─ conocimiento_producto ───► knowledge_agent ─┤
+                                     ├─ queja_disputa ─► complaint_agent            │
+                                     │                    ▼                         │
+                                     │                hitl_review (interrupt)       │
+                                     │                 ├─ approve/edit ─► register ─┤
+                                     │                 └─ reject ─► rejected ───────┤
+                                     ├─ fuera_de_alcance ────────► blocked_response │
+                                     └─ ambiguo / baja confianza ► clarify → END    ▼
+                                                                         output_guardrail → END
 """
 
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 
-from app.graph.nodes.echo_agent import echo_agent_node
-from app.graph.nodes.router import router_node
+from app.graph.nodes.complaint_agent import complaint_agent_node
+from app.graph.nodes.hitl import (
+    complaint_rejected_node,
+    hitl_review_node,
+    register_complaint_node,
+    route_after_hitl,
+)
+from app.graph.nodes.input_guardrail import input_guardrail_node, route_after_input_guardrail
+from app.graph.nodes.knowledge_agent import knowledge_agent_node
+from app.graph.nodes.output_guardrail import output_guardrail_node
+from app.graph.nodes.query_agent import query_agent_node
+from app.graph.nodes.responses import blocked_response_node, clarify_node
+from app.graph.nodes.router import route_after_router, router_node
 from app.graph.state import AgentState
 
 
 def build_graph(checkpointer: BaseCheckpointSaver | None = None):
-    """Compila el grafo. El checkpointer persiste el estado por thread_id.
-
-    En la Fase 1 se usa InMemorySaver; en la Fase 2 se cambia a AsyncSqliteSaver
-    para que las interrupciones HITL sobrevivan entre requests y reinicios.
-    """
+    """Compila el grafo. El checkpointer persiste el estado por thread_id (necesario para HITL)."""
     builder = StateGraph(AgentState)
-    builder.add_node("router", router_node)
-    builder.add_node("echo_agent", echo_agent_node)
 
-    builder.add_edge(START, "router")
-    builder.add_edge("router", "echo_agent")
-    builder.add_edge("echo_agent", END)
+    builder.add_node("input_guardrail", input_guardrail_node)
+    builder.add_node("router", router_node)
+    builder.add_node("query_agent", query_agent_node)
+    builder.add_node("knowledge_agent", knowledge_agent_node)
+    builder.add_node("complaint_agent", complaint_agent_node)
+    builder.add_node("hitl_review", hitl_review_node)
+    builder.add_node("register_complaint", register_complaint_node)
+    builder.add_node("complaint_rejected", complaint_rejected_node)
+    builder.add_node("blocked_response", blocked_response_node)
+    builder.add_node("clarify", clarify_node)
+    builder.add_node("output_guardrail", output_guardrail_node)
+
+    builder.add_edge(START, "input_guardrail")
+    builder.add_conditional_edges("input_guardrail", route_after_input_guardrail, ["router", "blocked_response"])
+    builder.add_conditional_edges(
+        "router",
+        route_after_router,
+        ["query_agent", "knowledge_agent", "complaint_agent", "blocked_response", "clarify"],
+    )
+    builder.add_edge("complaint_agent", "hitl_review")
+    builder.add_conditional_edges("hitl_review", route_after_hitl, ["register_complaint", "complaint_rejected"])
+
+    for node in ("query_agent", "knowledge_agent", "register_complaint", "complaint_rejected"):
+        builder.add_edge(node, "output_guardrail")
+    for node in ("output_guardrail", "blocked_response", "clarify"):
+        builder.add_edge(node, END)
 
     return builder.compile(checkpointer=checkpointer or InMemorySaver())
