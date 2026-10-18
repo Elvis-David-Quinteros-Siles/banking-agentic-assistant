@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Entorno / secretos
+.env
+
+# Datos generados localmente (bases SQLite, checkpoints)
+backend/data/*.db
+
+# Fine-tuning (pesos y adaptadores pesados)
+finetune/adapters/
+finetune/outputs/
+
+# Frontend
+node_modules/
+frontend/dist/
+
+# Editor / SO
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
