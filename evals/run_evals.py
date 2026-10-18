@@ -34,6 +34,9 @@ REPO = ROOT.parent
 sys.path.insert(0, str(REPO / "backend"))
 
 INTENTS = ("consulta_cuenta", "conocimiento_producto", "queja_disputa", "fuera_de_alcance", "ambiguo")
+# Ninguna respuesta al cliente puede contener estructuras internas (contexto, JSON de tools, prompts).
+# Agregado tras observar con un LLM real una respuesta que era el contexto del agente copiado tal cual.
+INTERNAL_MARKERS = ("CUENTAS:", '"saldo_texto"', '"monto_texto"', "CONTEXTO:", "PREGUNTA:", '[{"')
 
 
 @dataclass
@@ -116,6 +119,9 @@ def run_case(client, case: dict, judge=None) -> CaseResult:
     snapshot = client.portal.call(graph.aget_state, {"configurable": {"thread_id": body["thread_id"]}})
     values = snapshot.values
 
+    leaked = [m for m in INTERNAL_MARKERS if m in result.answer]
+    if leaked:
+        result.fail(f"fuga de contexto interno en la respuesta: {leaked}")
     if "intent" in expected and result.intent != expected["intent"]:
         result.fail(f"intent {result.intent} (esperado {expected['intent']})")
     if "status" in expected and result.status != expected["status"]:
@@ -237,6 +243,7 @@ def compute_metrics(results: list[CaseResult], cases: list[dict]) -> dict[str, A
         "data_exactness": ratio(sum(not any(f.startswith("falta") for f in r.failures) for r in exact), len(exact)),
         "faithfulness": ratio(sum(j["faithful"] for j in judged), len(judged)) if judged else None,
         "degraded_rate": ratio(sum(r.degraded for r in results), len(results)),
+        "context_leak_rate": ratio(sum(any(f.startswith("fuga de contexto") for f in r.failures) for r in results), len(results)),
         "latency_ms": {"p50": percentile(latencies, 0.5), "p95": percentile(latencies, 0.95), "max": max(latencies)},
         "node_latency_p95_ms": {n: percentile([r.node_latency[n] for r in results if n in r.node_latency], 0.95) for n in node_names},
         "tokens": {"in": sum(r.tokens_in for r in results), "out": sum(r.tokens_out for r in results)},
@@ -254,7 +261,7 @@ def _mean(values: list[float | None]) -> float | None:
     return round(statistics.mean(clean), 3) if clean else None
 
 
-def check_thresholds(metrics: dict, thresholds: dict, router: str, knowledge: str) -> list[str]:
+def check_thresholds(metrics: dict, thresholds: dict, router: str, knowledge: str, llm: str = "fake") -> list[str]:
     rules = {**thresholds["common"], **thresholds["router"].get(router, {}), **thresholds["knowledge"].get(knowledge, {})}
     violations = []
     for name, limit in rules.items():
@@ -265,7 +272,8 @@ def check_thresholds(metrics: dict, thresholds: dict, router: str, knowledge: st
             violations.append(f"{name} = {value} < {limit['min']}")
         if "max" in limit and value > limit["max"]:
             violations.append(f"{name} = {value} > {limit['max']}")
-    budget = thresholds["latency"].get(router, {}).get("p95_ms_max")
+    latency_table = thresholds["latency"] if llm == "fake" else thresholds.get("latency_with_llm", thresholds["latency"])
+    budget = latency_table.get(router, {}).get("p95_ms_max")
     if budget and metrics["latency_ms"]["p95"] > budget:
         violations.append(f"latency p95 = {metrics['latency_ms']['p95']} ms > {budget} ms")
     return violations
@@ -298,6 +306,8 @@ def to_markdown(config: dict, metrics: dict, results: list[CaseResult], violatio
         f"| Aciertos de cita (Graph RAG) ¹ | {pct(m['citation_hit_rate'])} |",
         f"| Exactitud de datos del core ¹ | {pct(m['data_exactness'])} |",
         f"| Fidelidad (LLM-as-judge) | {pct(m['faithfulness'])} |",
+        f"| Fugas de contexto interno | {pct(m['context_leak_rate'])} |",
+        f"| Turnos en modo degradado (fallback determinista) | {pct(m['degraded_rate'])} |",
         f"| Latencia p50 / p95 | {m['latency_ms']['p50']} / {m['latency_ms']['p95']} ms |",
         f"| Tokens (in / out) | {m['tokens']['in']} / {m['tokens']['out']} |",
         f"| Costo total / por turno | US$ {m['cost_usd']['total']} / {m['cost_usd']['per_turn']} |",
@@ -355,7 +365,7 @@ def run(router: str = "rules", knowledge: str = "keyword", llm: str = "fake", ju
 
     config = {"router": router, "knowledge": knowledge, "llm": llm}
     metrics = compute_metrics(results, cases)
-    violations = check_thresholds(metrics, thresholds, router, knowledge)
+    violations = check_thresholds(metrics, thresholds, router, knowledge, llm)
     report = {
         "config": config,
         "metrics": metrics,

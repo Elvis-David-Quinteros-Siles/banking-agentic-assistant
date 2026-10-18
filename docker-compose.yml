@@ -22,5 +22,29 @@ services:
       timeout: 5s
       retries: 30
 
+  # LLM on-premise para la redacción de los agentes y el LLM-as-judge de los Evals.
+  #   docker compose up -d ollama
+  #   docker exec bank-ollama ollama pull qwen2.5:3b
+  # Requiere Docker con soporte NVIDIA (en Windows: Docker Desktop + WSL2). Sin GPU, quitar el
+  # bloque "deploy" y correrá en CPU (bastante más lento).
+  ollama:
+    image: ollama/ollama:latest
+    container_name: bank-ollama
+    ports:
+      - "11434:11434"
+    environment:
+      OLLAMA_KEEP_ALIVE: 30m          # mantiene el modelo cargado entre requests (sin arranque en frío)
+      OLLAMA_NUM_PARALLEL: 1          # una GPU de 4 GB no da para paralelismo
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
 volumes:
   neo4j_data:
+  ollama_data:

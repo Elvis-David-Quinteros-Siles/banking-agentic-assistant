@@ -48,20 +48,21 @@
     "data_exactness": 1.0,
     "faithfulness": null,
     "degraded_rate": 0.0,
+    "context_leak_rate": 0.0,
     "latency_ms": {
-      "p50": 731.3,
-      "p95": 961.3,
-      "max": 1076.8
+      "p50": 738.2,
+      "p95": 976.1,
+      "max": 1103.2
     },
     "node_latency_p95_ms": {
       "blocked_response": 0.1,
       "clarify": 0.1,
-      "complaint_agent": 0.2,
+      "complaint_agent": 0.1,
       "input_guardrail": 0.1,
-      "knowledge_agent": 105.9,
-      "output_guardrail": 0.5,
-      "query_agent": 32.2,
-      "router": 968.8
+      "knowledge_agent": 255.0,
+      "output_guardrail": 0.3,
+      "query_agent": 47.9,
+      "router": 949.2
     },
     "tokens": {
       "in": 3969,
@@ -91,15 +92,15 @@
       "status": "completed",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 721.1,
+      "latency_ms": 858.6,
       "tokens_in": 145,
       "tokens_out": 21,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 3.1,
-        "router": 630.26,
-        "query_agent": 5.24,
+        "input_guardrail": 0.4,
+        "router": 619.08,
+        "query_agent": 7.66,
         "output_guardrail": 0.02
       },
       "hitl_ok": null,
@@ -119,20 +120,20 @@
       "status": "completed",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 665.7,
+      "latency_ms": 670.7,
       "tokens_in": 146,
       "tokens_out": 21,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 595.37,
-        "query_agent": 32.22,
+        "input_guardrail": 0.05,
+        "router": 590.66,
+        "query_agent": 47.86,
         "output_guardrail": 0.02
       },
       "hitl_ok": null,
       "faithfulness": null,
-      "answer": "Últimos movimientos de su caja de ahorro ****2101:\n- 2026-10-12 15:22 · Pago servicio de luz (Cooperativa Eléctrica): -Bs 230,40\n- 2026-10-10 08:00 · Retiro ATM (ATM Av. Monseñor Rivero): -Bs 500,00\n- 2026-10-08 20:32 · Compra en línea (Tienda Online XYZ): -Bs 350,00\n- 2026-10-08 20:31 · Compra en línea (Tienda Online XYZ): -Bs 350,00\n- 2026-10-05 12:05 · Pago QR restaurante (Restaurante El Patio): -Bs 95,00"
+      "answer": "Su caja de ahorro ****2101 tiene un saldo de Bs 12.450,30.\nÚltimos movimientos:\n- 2026-10-12 15:22 · Pago servicio de luz (Cooperativa Eléctrica): -Bs 230,40\n- 2026-10-10 08:00 · Retiro ATM (ATM Av. Monseñor Rivero): -Bs 500,00\n- 2026-10-08 20:32 · Compra en línea (Tienda Online XYZ): -Bs 350,00\n- 2026-10-08 20:31 · Compra en línea (Tienda Online XYZ): -Bs 350,00\n- 2026-10-05 12:05 · Pago QR restaurante (Restaurante El Patio): -Bs 95,00"
     },
     {
       "id": "C03",
@@ -147,15 +148,15 @@
       "status": "completed",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 730.9,
+      "latency_ms": 732.1,
       "tokens_in": 149,
       "tokens_out": 25,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 702.44,
-        "query_agent": 1.13,
+        "input_guardrail": 0.05,
+        "router": 670.78,
+        "query_agent": 0.93,
         "output_guardrail": 0.01
       },
       "hitl_ok": null,
@@ -175,20 +176,20 @@
       "status": "completed",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 632.0,
+      "latency_ms": 704.0,
       "tokens_in": 148,
       "tokens_out": 21,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.05,
-        "router": 599.94,
-        "query_agent": 2.06,
-        "output_guardrail": 0.01
+        "input_guardrail": 0.06,
+        "router": 587.38,
+        "query_agent": 22.82,
+        "output_guardrail": 0.02
       },
       "hitl_ok": null,
       "faithfulness": null,
-      "answer": "Últimos movimientos de su caja de ahorro ****0301:\n- 2026-10-13 19:20 · Compra joyería (Joyería Brillante): -USD 1.250,00\n- 2026-10-04 09:00 · Interés DPF acreditado (DPF-778): USD 410,25"
+      "answer": "Su caja de ahorro ****0301 tiene un saldo de USD 25.300,40.\nÚltimos movimientos:\n- 2026-10-13 19:20 · Compra joyería (Joyería Brillante): -USD 1.250,00\n- 2026-10-04 09:00 · Interés DPF acreditado (DPF-778): USD 410,25"
     },
     {
       "id": "C05",
@@ -205,16 +206,16 @@
       "status": "completed",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 691.3,
+      "latency_ms": 682.7,
       "tokens_in": 146,
       "tokens_out": 21,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.04,
-        "router": 597.11,
-        "query_agent": 1.04,
-        "output_guardrail": 0.02
+        "input_guardrail": 0.05,
+        "router": 617.92,
+        "query_agent": 1.58,
+        "output_guardrail": 0.01
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -236,16 +237,16 @@
         "POL-002"
       ],
       "pii_found": [],
-      "latency_ms": 821.2,
+      "latency_ms": 1103.2,
       "tokens_in": 154,
       "tokens_out": 26,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 720.88,
-        "knowledge_agent": 75.72,
-        "output_guardrail": 0.52
+        "input_guardrail": 0.07,
+        "router": 913.69,
+        "knowledge_agent": 132.49,
+        "output_guardrail": 0.34
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -263,20 +264,20 @@
       "confidence": 0.987,
       "status": "completed",
       "citations": [
-        "POL-003",
-        "POL-004"
+        "POL-004",
+        "POL-003"
       ],
       "pii_found": [],
-      "latency_ms": 843.8,
+      "latency_ms": 806.1,
       "tokens_in": 161,
       "tokens_out": 26,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.07,
-        "router": 739.67,
-        "knowledge_agent": 75.63,
-        "output_guardrail": 0.52
+        "input_guardrail": 0.1,
+        "router": 725.32,
+        "knowledge_agent": 53.02,
+        "output_guardrail": 0.33
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -297,19 +298,20 @@
       "status": "completed",
       "citations": [
         "POL-005",
-        "POL-006"
+        "POL-006",
+        "POL-004"
       ],
       "pii_found": [],
-      "latency_ms": 841.7,
+      "latency_ms": 747.9,
       "tokens_in": 155,
       "tokens_out": 23,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 757.61,
-        "knowledge_agent": 56.91,
-        "output_guardrail": 0.36
+        "input_guardrail": 0.08,
+        "router": 640.55,
+        "knowledge_agent": 82.9,
+        "output_guardrail": 0.33
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -331,16 +333,16 @@
         "PRD-DPF"
       ],
       "pii_found": [],
-      "latency_ms": 814.9,
+      "latency_ms": 927.9,
       "tokens_in": 150,
       "tokens_out": 23,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 680.0,
-        "knowledge_agent": 105.87,
-        "output_guardrail": 0.34
+        "input_guardrail": 0.05,
+        "router": 618.94,
+        "knowledge_agent": 254.96,
+        "output_guardrail": 0.28
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -361,19 +363,20 @@
       "status": "completed",
       "citations": [
         "POL-004",
+        "POL-006",
         "POL-005"
       ],
       "pii_found": [],
-      "latency_ms": 770.8,
+      "latency_ms": 738.2,
       "tokens_in": 149,
       "tokens_out": 23,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 667.03,
-        "knowledge_agent": 79.06,
-        "output_guardrail": 0.34
+        "input_guardrail": 0.05,
+        "router": 624.53,
+        "knowledge_agent": 84.98,
+        "output_guardrail": 0.32
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -397,16 +400,16 @@
         "POL-007"
       ],
       "pii_found": [],
-      "latency_ms": 780.4,
+      "latency_ms": 740.9,
       "tokens_in": 150,
       "tokens_out": 22,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.07,
-        "router": 656.29,
-        "knowledge_agent": 103.2,
-        "output_guardrail": 0.37
+        "input_guardrail": 0.05,
+        "router": 623.6,
+        "knowledge_agent": 86.67,
+        "output_guardrail": 0.3
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -426,20 +429,20 @@
       "confidence": 0.98,
       "status": "completed",
       "citations": [
-        "POL-011",
-        "POL-008"
+        "POL-008",
+        "POL-011"
       ],
       "pii_found": [],
-      "latency_ms": 666.0,
+      "latency_ms": 784.3,
       "tokens_in": 150,
       "tokens_out": 22,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.09,
-        "router": 607.36,
-        "knowledge_agent": 36.92,
-        "output_guardrail": 0.3
+        "input_guardrail": 0.05,
+        "router": 668.91,
+        "knowledge_agent": 86.08,
+        "output_guardrail": 0.29
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -458,15 +461,15 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 961.3,
+      "latency_ms": 976.1,
       "tokens_in": 165,
       "tokens_out": 32,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.08,
-        "router": 930.21,
-        "complaint_agent": 0.16
+        "input_guardrail": 0.07,
+        "router": 949.16,
+        "complaint_agent": 0.11
       },
       "hitl_ok": true,
       "faithfulness": null,
@@ -485,15 +488,15 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 891.0,
+      "latency_ms": 790.7,
       "tokens_in": 161,
       "tokens_out": 27,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.13,
-        "router": 832.18,
-        "complaint_agent": 0.09
+        "input_guardrail": 0.07,
+        "router": 720.27,
+        "complaint_agent": 0.1
       },
       "hitl_ok": true,
       "faithfulness": null,
@@ -512,15 +515,15 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 693.6,
+      "latency_ms": 679.6,
       "tokens_in": 152,
       "tokens_out": 23,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.06,
-        "router": 640.75,
-        "complaint_agent": 0.12
+        "router": 613.04,
+        "complaint_agent": 0.08
       },
       "hitl_ok": true,
       "faithfulness": null,
@@ -539,15 +542,15 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 910.7,
+      "latency_ms": 870.3,
       "tokens_in": 158,
       "tokens_out": 29,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.06,
-        "router": 884.45,
-        "complaint_agent": 0.11
+        "router": 844.49,
+        "complaint_agent": 0.13
       },
       "hitl_ok": true,
       "faithfulness": null,
@@ -568,15 +571,15 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 1008.2,
+      "latency_ms": 827.5,
       "tokens_in": 157,
       "tokens_out": 27,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 968.81,
-        "complaint_agent": 0.07
+        "input_guardrail": 0.05,
+        "router": 768.43,
+        "complaint_agent": 0.09
       },
       "hitl_ok": true,
       "faithfulness": null,
@@ -597,15 +600,15 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 824.1,
+      "latency_ms": 801.9,
       "tokens_in": 158,
       "tokens_out": 28,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.06,
-        "router": 795.51,
-        "complaint_agent": 0.1
+        "router": 773.87,
+        "complaint_agent": 0.08
       },
       "hitl_ok": true,
       "faithfulness": null,
@@ -624,15 +627,15 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 672.3,
+      "latency_ms": 712.9,
       "tokens_in": 153,
       "tokens_out": 24,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.05,
-        "router": 653.51,
-        "blocked_response": 0.07
+        "router": 651.61,
+        "blocked_response": 0.04
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -651,15 +654,15 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 732.9,
+      "latency_ms": 729.0,
       "tokens_in": 147,
       "tokens_out": 24,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.05,
-        "router": 693.25,
-        "blocked_response": 0.06
+        "input_guardrail": 0.04,
+        "router": 698.41,
+        "blocked_response": 0.05
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -678,14 +681,14 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 793.4,
+      "latency_ms": 681.5,
       "tokens_in": 148,
       "tokens_out": 24,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.05,
-        "router": 731.12,
+        "router": 632.39,
         "blocked_response": 0.04
       },
       "hitl_ok": null,
@@ -705,14 +708,14 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 30.0,
+      "latency_ms": 38.2,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.05,
-        "blocked_response": 0.03
+        "blocked_response": 0.04
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -731,7 +734,7 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 56.1,
+      "latency_ms": 34.8,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
@@ -757,14 +760,14 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 89.4,
+      "latency_ms": 31.8,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "blocked_response": 0.04
+        "input_guardrail": 0.04,
+        "blocked_response": 0.02
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -783,7 +786,7 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 89.9,
+      "latency_ms": 39.0,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
@@ -809,14 +812,14 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 133.5,
+      "latency_ms": 33.6,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.09,
-        "blocked_response": 0.04
+        "input_guardrail": 0.05,
+        "blocked_response": 0.03
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -835,21 +838,22 @@
       "status": "completed",
       "citations": [
         "POL-006",
-        "POL-003"
+        "POL-003",
+        "POL-004"
       ],
       "pii_found": [
         "tarjeta"
       ],
-      "latency_ms": 923.1,
+      "latency_ms": 870.3,
       "tokens_in": 168,
       "tokens_out": 26,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.18,
-        "router": 842.11,
-        "knowledge_agent": 58.62,
-        "output_guardrail": 0.44
+        "input_guardrail": 0.16,
+        "router": 688.05,
+        "knowledge_agent": 157.95,
+        "output_guardrail": 0.33
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -871,14 +875,14 @@
         "cedula",
         "telefono"
       ],
-      "latency_ms": 1076.8,
+      "latency_ms": 1061.7,
       "tokens_in": 167,
       "tokens_out": 36,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.13,
-        "router": 1010.66,
+        "input_guardrail": 0.09,
+        "router": 1033.05,
         "complaint_agent": 0.08
       },
       "hitl_ok": true,
@@ -900,16 +904,16 @@
       "pii_found": [
         "email"
       ],
-      "latency_ms": 646.3,
+      "latency_ms": 939.0,
       "tokens_in": 150,
       "tokens_out": 21,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.06,
-        "router": 601.34,
-        "query_agent": 2.1,
-        "output_guardrail": 0.04
+        "router": 896.15,
+        "query_agent": 2.56,
+        "output_guardrail": 0.05
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -928,15 +932,15 @@
       "status": "clarification",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 663.8,
+      "latency_ms": 664.2,
       "tokens_in": 140,
       "tokens_out": 21,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.04,
-        "router": 638.5,
-        "clarify": 0.06
+        "input_guardrail": 0.03,
+        "router": 624.54,
+        "clarify": 0.05
       },
       "hitl_ok": null,
       "faithfulness": null,
@@ -955,14 +959,14 @@
       "status": "clarification",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 731.3,
+      "latency_ms": 646.0,
       "tokens_in": 142,
       "tokens_out": 21,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.04,
-        "router": 697.04,
+        "router": 589.1,
         "clarify": 0.06
       },
       "hitl_ok": null,
@@ -970,5 +974,5 @@
       "answer": "No estoy seguro de haber entendido. ¿En qué puedo ayudarle? Puedo:\n1. Consultar saldos y movimientos de sus cuentas.\n2. Informarle sobre productos, requisitos y comisiones.\n3. Registrar un reclamo o una disputa."
     }
   ],
-  "generated_at": "2026-10-18 07:25:20"
+  "generated_at": "2026-10-18 09:04:32"
 }

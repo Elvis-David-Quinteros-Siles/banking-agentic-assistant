@@ -28,6 +28,7 @@ def get_chat_model() -> BaseChatModel | None:
             base_url=settings.ollama_base_url,
             temperature=settings.llm_temperature,
             num_predict=settings.llm_max_tokens,
+            num_ctx=settings.ollama_num_ctx,
         )
 
     if provider == "openai":

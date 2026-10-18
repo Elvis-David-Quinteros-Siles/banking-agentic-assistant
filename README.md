@@ -19,21 +19,28 @@ es un **Qwen2.5-0.5B ajustado con LoRA** que corre on-premise, y todo el sistema
 
 ## Resultados
 
-| | Router por reglas + BM25 (baseline, CI) | **Router LoRA + Graph RAG** |
-|---|---|---|
-| Evals de punta a punta (31 casos) | 24/31 | **31/31** |
-| Precisión de enrutamiento · en paráfrasis | 80.8% · 28.6% | **100% · 100%** |
-| Reclamos detectados (si no se detecta, no pasa por HITL) | 71.4% | **100%** |
-| Citas a la política correcta | 66.7% | **100%** (híbrido vector + texto + grafo) |
-| Seguridad: ataques bloqueados · falsos positivos · PII enmascarada | 100% · 0% · 100% | 100% · 0% · 100% |
-| Latencia p50 / p95 por turno | 64 / 135 ms | 731 / 961 ms |
+| | Reglas + BM25 (baseline, CI) | LoRA + Graph RAG | **LoRA + Graph RAG + LLM real** |
+|---|---|---|---|
+| Evals de punta a punta (31 casos) | 24/31 | 31/31 | **31/31** (2 corridas) |
+| Precisión de enrutamiento · en paráfrasis | 80.8% · 28.6% | 100% · 100% | **100% · 100%** |
+| Reclamos detectados (si no se detecta, no pasa por HITL) | 71.4% | 100% | **100%** |
+| Citas a la política correcta | 66.7% | 100% | **100%** |
+| Fidelidad (LLM-as-judge) · fugas de contexto | — | — | **100% · 0%** |
+| Seguridad: ataques bloqueados · falsos positivos · PII | 100% · 0% · 100% | 100% · 0% · 100% | **100% · 0% · 100%** |
+| Latencia p50 / p95 por turno | 64 / 135 ms | 731 / 961 ms | 1.8–2.1 / 2.7–3.6 s |
+
+LLM real = qwen2.5:3b en Ollama (Docker, GPU de 4 GB, 100% on-premise). Las respuestas de los agentes
+las redacta el LLM; la columna del medio usa redacción determinista.
 
 - **Fine-tuning**: LoRA sobre Qwen2.5-0.5B, 5.6 min en una GPU de laptop (4 GB). Precisión en
   frases no vistas: **100%**, frente a 59.2% de las reglas y **36.7% del mismo modelo sin ajustar**.
 - **Costo**: ~US$ 12 por 100 000 turnos con un LLM cloud económico; −29% con el router local. Ver
   [Cost & Latency](docs/COST_LATENCY.md).
-- **Los Evals encontraron 4 problemas reales** (entre ellos un bug de fusión RRF) que se corrigieron
-  y quedaron con tests de regresión. Ver [ciclo de mejora](evals/README.md#ciclo-de-mejora-guiado-por-evals).
+- **Los Evals encontraron 10 problemas reales**, todos corregidos (los de código, con test de regresión):
+  4 con redacción determinista (entre ellos un bug de fusión RRF) y 6 al pasar a un LLM real (un
+  ReAct que pedía el número de cuenta, citas mal atribuidas, extractos parafraseados, el contexto
+  interno filtrado al cliente...). Primera medición con LLM: 28/31; final: 31/31.
+  Ver [ciclo de mejora](evals/README.md#ciclo-de-mejora-guiado-por-evals).
 
 ---
 
@@ -141,17 +148,24 @@ python finetune/train_lora.py                              # ~6 min en una GPU d
 cd backend; $env:ROUTER_BACKEND="lora"; $env:HF_HUB_OFFLINE="1"; uvicorn app.main:app --port 8000
 ```
 
-### 4. Con un LLM para redactar (opcional)
+### 4. Con un LLM on-premise para redactar (Ollama en Docker)
 
-`LLM_PROVIDER=ollama` (on-premise, por ejemplo `ollama pull qwen2.5:3b`), `openai` o `anthropic`, en
-`.env` (ver `.env.example`). Sin LLM, los agentes responden con plantillas y extractos citados.
+```powershell
+docker compose up -d ollama                                # usa la GPU NVIDIA si Docker la expone
+docker exec bank-ollama ollama pull qwen2.5:3b             # ~1.9 GB
+cd backend; $env:LLM_PROVIDER="ollama"; uvicorn app.main:app --port 8000
+```
+
+También acepta `openai` o `anthropic` con API key (ver `.env.example`). Sin LLM, los agentes
+responden con plantillas y extractos citados.
 
 ### Tests y Evals
 
 ```powershell
-pytest backend -q                                          # 76 tests
+pytest backend -q                                          # 86 tests
 python evals/run_evals.py --check                          # Evals de punta a punta con umbrales
-python evals/run_evals.py --router lora --knowledge neo4j  # configuración completa: 31/31
+python evals/run_evals.py --router lora --knowledge neo4j  # router LoRA + Graph RAG: 31/31
+python evals/run_evals.py --router lora --knowledge neo4j --llm ollama --judge   # + LLM real y juez: 31/31
 cd frontend; npm test; npm run build
 python frontend/e2e/smoke_test.py                          # E2E con clics reales (Playwright + Edge/Chrome)
 ```
@@ -170,9 +184,11 @@ Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi sa
   sesión: un prompt injection no puede leer cuentas ajenas, aunque pase el guardrail (hay test).
 - **La PII se enmascara antes de cualquier LLM** y reemplaza al mensaje original en el historial:
   la tarjeta nunca queda persistida en el checkpoint (hay test).
-- **El LLM propone y el código decide** lo crítico: la prioridad de un reclamo (define el plazo) es
-  determinista, los montos extraídos por regex prevalecen sobre los del modelo, y una cifra de la
-  respuesta que no está en el contexto anula la respuesta generada.
+- **El LLM decide y el código redacta los datos.** El LLM entiende qué pide el cliente y elige qué
+  consultar (por ejemplo, la cuenta y la cantidad de movimientos); el extracto, los saldos y la
+  prioridad de un reclamo los produce el código. Una cifra de la respuesta que no está en el contexto
+  anula la respuesta generada. Este patrón salió de los Evals con LLM real: el modelo de 3B
+  parafraseaba comercios y omitía cuentas.
 - **Abstenerse es una respuesta válida**: si ningún documento supera la similitud mínima, el agente
   de conocimiento dice que no tiene esa información en vez de generar.
 - **El router LoRA es on-premise** porque se ejecuta en cada turno y recibe el texto del cliente.
@@ -211,10 +227,8 @@ Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi sa
 
 ## Limitaciones conocidas
 
-- **Camino con LLM real**: los nodos con LLM (ReAct, RAG generativo, borrador de reclamo) y el
-  LLM-as-judge están probados con un modelo guionado en los tests, pero **no se ejecutaron contra un
-  LLM real** en este entorno (Ollama no estaba instalado). Los resultados publicados son con router
-  LoRA real y redacción determinista.
+- **LLM evaluado**: los resultados con LLM real son con qwen2.5:3b local. Otro modelo (más grande o
+  cloud) necesita su propia corrida de Evals; el CI corre sin LLM porque no tiene GPU.
 - **Datos sintéticos**: 600 ejemplos de entrenamiento generados con plantillas y 31 casos de Evals.
   El 100% en test mide generalización a frases nuevas del mismo dominio, no rendimiento en producción.
 - **Router por reglas** (configuración del CI, sin GPU): no entiende paráfrasis; pide aclaración en

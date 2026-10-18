@@ -68,3 +68,10 @@ def test_grounding_flags_invented_numbers():
     docs = [{"title": "Límites", "text": "El límite diario de retiro es de Bs 3.000."}]
     assert check_grounding("El límite diario de retiro es Bs 3000 [POL-003]", docs).unsupported_numbers == []
     assert check_grounding("El límite diario de retiro es Bs 5000", docs).unsupported_numbers == ["5000"]
+
+
+def test_grounding_ignores_masked_digits():
+    # Falso positivo observado con LLM real: repetía "[TARJETA ****1111]" de la pregunta
+    docs = [{"title": "Límites", "text": "El límite diario de retiro es de Bs 3.000."}]
+    answer = "El límite para la tarjeta [TARJETA ****1111] es de Bs 3.000 [POL-003]."
+    assert check_grounding(answer, docs).unsupported_numbers == []

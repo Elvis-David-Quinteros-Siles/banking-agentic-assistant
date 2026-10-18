@@ -15,7 +15,9 @@
 | Aciertos de cita (Graph RAG) ¹ | 100.0% |
 | Exactitud de datos del core ¹ | 100.0% |
 | Fidelidad (LLM-as-judge) | — |
-| Latencia p50 / p95 | 731.3 / 961.3 ms |
+| Fugas de contexto interno | 0.0% |
+| Turnos en modo degradado (fallback determinista) | 0.0% |
+| Latencia p50 / p95 | 738.2 / 976.1 ms |
 | Tokens (in / out) | 3969 / 637 |
 | Costo total / por turno | US$ 0.0 / 0.0 |
 
@@ -31,5 +33,5 @@ Precision / recall por intención:
 
 ¹ Métrica de mecanismo: se calcula sobre los casos que el router envió al agente correcto.
 
-Latencia p95 por nodo (ms): `blocked_response` 0.1, `clarify` 0.1, `complaint_agent` 0.2, `input_guardrail` 0.1, `knowledge_agent` 105.9, `output_guardrail` 0.5, `query_agent` 32.2, `router` 968.8
+Latencia p95 por nodo (ms): `blocked_response` 0.1, `clarify` 0.1, `complaint_agent` 0.1, `input_guardrail` 0.1, `knowledge_agent` 255.0, `output_guardrail` 0.3, `query_agent` 47.9, `router` 949.2
 

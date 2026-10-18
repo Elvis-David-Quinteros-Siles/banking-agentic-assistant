@@ -49,17 +49,57 @@ def state(text: str, **extra) -> dict:
     return {"messages": [HumanMessage(content=text, id="m1")], "customer_id": "CLI-001", "entities": {}, **extra}
 
 
-def test_react_loop_calls_tool_then_answers(monkeypatch, seeded_db):
+def test_llm_chooses_tool_args_and_code_renders_statement(monkeypatch, seeded_db):
+    # El LLM decide cuenta y cantidad; el extracto (comercios y montos) lo redacta el código
     model = ScriptedModel(script=[
-        AIMessage(content="", tool_calls=[{"name": "get_accounts", "args": {}, "id": "c1"}], usage_metadata=usage(300, 20)),
-        AIMessage(content="Su caja de ahorro ****2101 tiene Bs 12.450,30.", usage_metadata=usage(450, 30)),
+        AIMessage(content="", tool_calls=[{"name": "get_transactions", "args": {"account": "****2101", "limit": 3}, "id": "c1"}],
+                  usage_metadata=usage(300, 20)),
     ])
     use_model(monkeypatch, model, query_agent)
-    update = query_agent.query_agent_node(state("¿cuál es mi saldo?"))
-    assert model.calls == 2
-    assert "12.450,30" in update["final_answer"]
-    assert update["trace"][0]["tokens_in"] == 750
+    update = query_agent.query_agent_node(state("muéstrame mis movimientos"))
+    assert model.calls == 1  # sin segunda llamada para redactar
+    assert "Cooperativa Eléctrica" in update["final_answer"]
+    assert "-Bs 230,40" in update["final_answer"]
+    assert update["final_answer"].count("\n- ") == 3
+    assert update["trace"][0]["tokens_in"] == 300
     assert not update.get("degraded")
+
+
+def test_tool_call_for_foreign_account_is_rejected(monkeypatch, seeded_db):
+    # Si el LLM inventa una cuenta ajena, no se consulta; tras agotar vueltas, ruta determinista
+    call = {"name": "get_transactions", "args": {"account": "****1201"}, "id": "c1"}  # cuenta de CLI-002
+    model = ScriptedModel(script=[AIMessage(content="", tool_calls=[call])] * 4)
+    use_model(monkeypatch, model, query_agent)
+    update = query_agent.query_agent_node(state("muéstrame mis movimientos"))
+    assert update["degraded"] is True
+    assert "Planilla" not in update["final_answer"]  # movimiento de CLI-002
+    assert "Tienda Online XYZ" in update["final_answer"]
+
+
+def test_balance_answered_from_prefetched_accounts(monkeypatch, seeded_db):
+    # Las cuentas van precargadas en el contexto: el saldo se responde en UNA llamada, sin tools
+    seen = {}
+
+    class CapturingModel(ScriptedModel):
+        def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+            seen["system"] = messages[0].content
+            return super()._generate(messages, stop, run_manager, **kwargs)
+
+    model = CapturingModel(script=[AIMessage(content="Su caja de ahorro ****2101 tiene Bs 12.450,30.")])
+    use_model(monkeypatch, model, query_agent)
+    update = query_agent.query_agent_node(state("¿cuál es mi saldo?"))
+    assert model.calls == 1
+    assert '"saldo_texto": "Bs 12.450,30"' in seen["system"]
+    assert "1000452101" not in seen["system"]  # el LLM nunca ve el número completo
+
+
+def test_evasive_answer_falls_back_to_deterministic(monkeypatch, seeded_db):
+    # Falla real observada con qwen2.5:3b: pedía al cliente el número de cuenta en vez de responder
+    model = ScriptedModel(script=[AIMessage(content="Para darle su saldo necesito el número de cuenta. ¿Podría proporcionarlo?")])
+    use_model(monkeypatch, model, query_agent)
+    update = query_agent.query_agent_node(state("¿cuál es mi saldo?"))
+    assert update["degraded"] is True
+    assert "Bs 12.450,30" in update["final_answer"]
 
 
 def test_react_loop_falls_back_when_llm_fails(monkeypatch, seeded_db):
@@ -131,3 +171,63 @@ def test_grounded_llm_answer_is_kept(monkeypatch, question):
     result = output_guardrail_node(s)
     assert not result["guardrail"].get("grounding_fallback")
     assert s["citations"] == ["POL-008"]
+
+
+def test_empty_tool_response_retries_without_tools(monkeypatch, seeded_db):
+    # Falla real con qwen2.5:3b + Ollama: tool call malformada descartada -> contenido vacío
+    model = ScriptedModel(script=[
+        AIMessage(content=""),
+        AIMessage(content="Caja de ahorro ****2101: Bs 12.450,30\nCaja de ahorro ****2102: USD 860,00"),
+    ])
+    use_model(monkeypatch, model, query_agent)
+    update = query_agent.query_agent_node(state("¿cuál es mi saldo?"))
+    assert model.calls == 2
+    assert not update.get("degraded")
+    assert "USD 860,00" in update["final_answer"]
+
+
+def test_missing_account_is_appended_when_no_specific_account_requested(monkeypatch, seeded_db):
+    # Observado con qwen2.5:3b: mostraba la cuenta en Bs y omitía la de USD
+    model = ScriptedModel(script=[AIMessage(content="Su caja de ahorro ****2101 tiene Bs 12.450,30.")])
+    use_model(monkeypatch, model, query_agent)
+    update = query_agent.query_agent_node(state("¿cuál es mi saldo?"))
+    assert "Bs 12.450,30" in update["final_answer"]
+    assert "USD 860,00" in update["final_answer"]
+
+
+def test_account_mention_is_not_evasive():
+    assert not query_agent.EVASIVE_RE.search("Su caja de ahorro con número de cuenta ****2101 tiene Bs 12.450,30.")
+    assert query_agent.EVASIVE_RE.search("Para darle su saldo necesito el número de cuenta.")
+    assert query_agent.EVASIVE_RE.search("¿Podría proporcionarme su cuenta?")
+
+
+def test_citations_attributed_by_evidence():
+    docs = [
+        {"id": "PRD-DPF", "title": "Depósito a Plazo Fijo", "text": "Inversión a plazo fijo de 30 a 1080 días."},
+        {"id": "POL-008", "title": "Plazos y tasas del DPF", "text": "Plazos de 30 a 1080 días. Tasa 5,5% anual a 360 días."},
+    ]
+    # Respuesta real de qwen2.5:3b: datos de POL-008 pero citando la ficha del producto
+    answer = "[PRD-DPF] indica plazos de 30 a 1080 días con una tasa del 5,5% a 360 días."
+    assert "POL-008" in knowledge_agent.attribute_citations(answer, docs)
+    # ID inventado que contiene uno real
+    assert knowledge_agent.attribute_citations("[SOLICITUD-PRD-DPF] Sí, puede invertir.", docs) == ["PRD-DPF"]
+
+
+def test_internal_context_leak_falls_back(monkeypatch, seeded_db):
+    # Observado con qwen2.5:3b: devolvió literalmente su contexto ("CUENTAS: [{...}]")
+    leak = 'CUENTAS: [{"cuenta": "****2101", "saldo_texto": "Bs 12.450,30"}]'
+    use_model(monkeypatch, ScriptedModel(script=[AIMessage(content=leak)]), query_agent)
+    update = query_agent.query_agent_node(state("¿cuál es mi saldo?"))
+    assert update["degraded"] is True
+    assert "CUENTAS:" not in update["final_answer"]
+    assert "Bs 12.450,30" in update["final_answer"]
+
+
+def test_statement_header_includes_balance(monkeypatch, seeded_db):
+    # Observado: ante "saldo de mi cuenta corriente" el LLM eligió la tool de movimientos
+    call = {"name": "get_transactions", "args": {"account": "****1201"}, "id": "c1"}
+    use_model(monkeypatch, ScriptedModel(script=[AIMessage(content="", tool_calls=[call])]), query_agent)
+    s = state("quiero ver el saldo de mi cuenta corriente")
+    s["customer_id"] = "CLI-002"
+    update = query_agent.query_agent_node(s)
+    assert "Bs 48.210,75" in update["final_answer"]

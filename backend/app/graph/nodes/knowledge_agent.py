@@ -11,6 +11,7 @@ import re
 from langchain_core.messages import AIMessage, SystemMessage
 
 from app.config import get_settings
+from app.guardrails.grounding import numbers_in
 from app.graph.nodes.common import last_user_text, log_fallback
 from app.graph.state import AgentState
 from app.llm.pricing import usage_from_message
@@ -47,6 +48,26 @@ def format_context(docs: list[dict]) -> str:
             block += f"\n  ({label}: {', '.join(d['related'])})"
         blocks.append(block)
     return "\n\n".join(blocks)
+
+
+def attribute_citations(answer: str, docs: list[dict]) -> list[str]:
+    """Citas = IDs válidos que escribió el LLM + documentos de los que salen las cifras de la respuesta.
+
+    Con LLM real (qwen2.5:3b) se observó: respuesta correcta pero citando la ficha del producto
+    en lugar de la política de donde salen los datos, o inventando IDs ("[SOLICITUD-PRD-VIV]").
+    La cita por evidencia hace que la fuente mostrada al cliente sea la que respalda el dato.
+    """
+    retrieved_ids = {d["id"] for d in docs}
+    by_llm = [c for c in dict.fromkeys(CITATION_RE.findall(answer)) if c in retrieved_ids]
+    # IDs inventados que contienen uno real ("[SOLICITUD-PRD-VIV]" -> PRD-VIV)
+    for token in re.findall(r"\[([A-Z0-9-]+)\]", answer):
+        by_llm += [d_id for d_id in retrieved_ids if d_id in token and d_id not in by_llm]
+    answer_numbers = numbers_in(answer)
+    by_evidence = [
+        d["id"] for d in docs
+        if answer_numbers and len(answer_numbers & numbers_in(f"{d['title']} {d['text']}")) >= max(1, len(answer_numbers) // 2)
+    ]
+    return list(dict.fromkeys(by_evidence + by_llm))
 
 
 def extractive_answer(docs: list[dict]) -> str:
@@ -90,7 +111,6 @@ def knowledge_agent_node(state: AgentState) -> dict:
     else:
         answer = extractive_answer(docs)
 
-    retrieved_ids = {d["id"] for d in docs}
-    cited = [c for c in dict.fromkeys(CITATION_RE.findall(answer)) if c in retrieved_ids]
+    cited = attribute_citations(answer, docs)
     update.update({"final_answer": answer, "citations": cited, "messages": [AIMessage(content=answer)]})
     return update

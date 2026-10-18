@@ -21,6 +21,14 @@ def mask_account(account_id: str) -> str:
     return f"****{account_id[-4:]}"
 
 
+def format_money(amount: float, currency: str) -> str:
+    """Formato boliviano (punto miles, coma decimales). Se entrega YA formateado al LLM para que
+    lo copie: un modelo pequeño reformatea mal ("12,450.30 BOB") y rompe la exactitud del dato."""
+    symbol = "Bs" if currency == "BOB" else "USD"
+    text = f"{abs(amount):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"{'-' if amount < 0 else ''}{symbol} {text}"
+
+
 class BankingTools:
     """Operaciones de lectura del core bancario para UN cliente."""
 
@@ -53,6 +61,7 @@ class BankingTools:
                 "tipo": ACCOUNT_TYPE_LABELS.get(r["account_type"], r["account_type"]),
                 "moneda": r["currency"],
                 "saldo": float(r["balance"]),
+                "saldo_texto": format_money(float(r["balance"]), r["currency"]),
                 "estado": r["status"],
             }
             for r in rows
@@ -75,6 +84,7 @@ class BankingTools:
                 "fecha": r["posted_at"],
                 "descripcion": r["description"],
                 "monto": float(r["amount"]),
+                "monto_texto": format_money(float(r["amount"]), r["currency"]),
                 "moneda": r["currency"],
                 "canal": r["channel"],
                 "comercio": r["merchant"],

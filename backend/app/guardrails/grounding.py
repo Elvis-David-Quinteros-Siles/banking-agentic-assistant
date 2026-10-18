@@ -14,10 +14,19 @@ from app.tools.knowledge_base import tokenize
 NUMBER_RE = re.compile(r"\d+(?:[.,]\d+)*")
 LIST_MARKER_RE = re.compile(r"(?m)^\s*\d+[.)]\s")  # "1. ", "2) " no son datos
 CITATION_RE = re.compile(r"\[(?:POL|PRD)-[A-Z0-9-]+\]")
+# Dígitos enmascarados ("****1111") y marcadores de PII: no son datos del contexto
+# (falso positivo observado con LLM real: repetía "[TARJETA ****1111]" de la pregunta)
+MASKED_RE = re.compile(r"\[(?:TARJETA[^\]]*|CI|CELULAR|EMAIL)\]|\*{2,}\d{1,4}")
 
 
 def _canonical_number(raw: str) -> str:
     return raw.replace(".", "").replace(",", "")
+
+
+def numbers_in(text: str) -> set[str]:
+    """Cifras canónicas de un texto (sin separadores), excluyendo citas, enmascarados y viñetas."""
+    clean = LIST_MARKER_RE.sub(" ", MASKED_RE.sub(" ", CITATION_RE.sub(" ", text)))
+    return {_canonical_number(n) for n in NUMBER_RE.findall(clean)}
 
 
 @dataclass
@@ -31,7 +40,7 @@ def check_grounding(answer: str, context_docs: list[dict]) -> GroundingResult:
     context_tokens = set(tokenize(context))
     context_numbers = {_canonical_number(n) for n in NUMBER_RE.findall(context)}
 
-    clean = LIST_MARKER_RE.sub(" ", CITATION_RE.sub(" ", answer))
+    clean = LIST_MARKER_RE.sub(" ", MASKED_RE.sub(" ", CITATION_RE.sub(" ", answer)))
     numbers = [n for n in NUMBER_RE.findall(clean) if _canonical_number(n) not in context_numbers]
     words = [t for t in tokenize(clean) if len(t) > 3 and not t.isdigit()]
     support = 1.0 if not words else round(sum(w in context_tokens for w in words) / len(words), 2)

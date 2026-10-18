@@ -45,6 +45,12 @@ como **freno de regresión** sobre su línea base, no como meta de calidad.
 | rules + BM25 (CI) | 24/31 | 80.8% | 28.6% | 71.4% | 66.7% | 64 / 135 ms |
 | rules + Neo4j (CI) | 26/31 | 80.8% | 28.6% | 71.4% | 100% | 80 / 124 ms |
 | **LoRA v2 + Neo4j** | **31/31** | **100%** | **100%** | **100%** | **100%** | 731 / 961 ms |
+| **LoRA v2 + Neo4j + LLM real** (qwen2.5:3b en Ollama) | **31/31** ×2 | **100%** | **100%** | **100%** | **100%** | 1.8–2.1 / 2.7–3.6 s |
+
+Con LLM real, además: **fidelidad 100%** (LLM-as-judge), **0% de fugas de contexto**, exactitud de
+datos 100% y **6.5% de turnos degradados**: en cada corrida, 2 respuestas malas del LLM (una evasiva y
+una fuga de contexto) fueron detectadas y reemplazadas por la ruta determinista. Resultado estable en
+dos corridas consecutivas.
 
 Seguridad (interceptación, falsos positivos, PII) y mecanismos (HITL, exactitud de datos) están al
 100% en las tres configuraciones. Las diferencias son todas de **comprensión del lenguaje**: el
@@ -68,13 +74,36 @@ Lo que encontraron los Evals y cómo se corrigió, en orden:
 
 Las correcciones 2 y 3 tienen tests de regresión en `backend/tests/test_graph_rag.py`.
 
+### Segundo ciclo: con LLM real (qwen2.5:3b en Ollama, GPU de 4 GB)
+
+Pasar de redacción determinista a un LLM de 3B expuso fallas que ningún test con modelo guionado
+anticipaba. Primera medición: **28/31**; final: **31/31** (dos corridas).
+
+| # | Hallazgo con el LLM real | Corrección | Efecto |
+|---|---|---|---|
+| 5 | El agente ReAct **pedía el número de cuenta al cliente** en vez de usar la tool; con tools disponibles, a veces respondía **vacío** (tool call malformada que Ollama descarta) | Context engineering: cuentas precargadas en el contexto (siempre hacen falta), una sola tool para lo que requiere decidir, montos ya formateados; reintento sin tools si la respuesta llega vacía; control de respuestas evasivas | El ReAct responde; 1 vuelta menos de LLM en saldos |
+| 6 | Respuestas correctas **citando la fuente equivocada** (la ficha del producto en vez de la política) o con IDs inventados (`[SOLICITUD-PRD-VIV]`) | Citas por evidencia: se cita el documento del que salen las cifras de la respuesta | Citas 75% → **100%** |
+| 7 | El control de cifras descartaba respuestas correctas porque el LLM repetía `[TARJETA ****1111]` | Los dígitos enmascarados no cuentan como cifras | Falso positivo eliminado |
+| 8 | Saldos **incompletos** (omitía la cuenta en USD) | Si no se pidió una cuenta específica, las faltantes se agregan de forma determinista | Exactitud 83% → **100%** |
+| 9 | El LLM **parafraseaba el extracto** ("compra de joyería" en vez de "Joyería Brillante"); pedírselo en el prompt no alcanzó | El LLM decide cuenta y cantidad (argumentos de la tool); **el extracto lo redacta el código**, con el saldo en el encabezado | Extractos exactos; una llamada al LLM menos |
+| 10 | Una respuesta era el **contexto interno copiado tal cual** (`CUENTAS: [{...}]`) y **pasaba los Evals** porque contenía la cifra esperada | Control de fuga de contexto en el agente + verificación global en los Evals (`context_leak_rate`, umbral 0) | 0% de fugas; los Evals ya no aceptan esa respuesta |
+
+Patrón general: **el LLM decide, el código redacta los datos**. Un modelo de 3B es bueno para
+entender qué pide el cliente y para redactar explicaciones con contexto; no para copiar cifras y
+nombres de un extracto bancario sin alterarlos.
+
+El juez (el mismo modelo de 3B) también se equivocó una vez en la primera corrida: marcó como no
+respaldado un "24%" que sí estaba en el contexto. Por eso la fidelidad del juez es una señal
+informativa y no un umbral del CI.
+
 ## Cómo ejecutar
 
 ```powershell
 python evals/run_evals.py                                    # rules + BM25 + sin LLM (igual que el CI)
 python evals/run_evals.py --knowledge neo4j                  # Graph RAG (Neo4j levantado y cargado)
 python evals/run_evals.py --router lora --knowledge neo4j    # router fine-tuneado (GPU recomendada)
-python evals/run_evals.py --llm ollama --judge               # + LLM-as-judge de fidelidad
+python evals/run_evals.py --router lora --knowledge neo4j --llm ollama --judge   # configuración completa con LLM real
+#   requiere: docker compose up -d ollama  +  docker exec bank-ollama ollama pull qwen2.5:3b
 python evals/run_evals.py --check                            # exit 1 si algún umbral no se cumple
 pytest evals -q                                              # los Evals como tests (proceso aparte de pytest backend)
 ```
@@ -86,8 +115,8 @@ Cada corrida usa bases SQLite temporales y borra de Neo4j las quejas que crea: n
 - 31 casos detectan regresiones, pero no estiman la precisión real en producción. El siguiente paso
   sería muestrear y etiquetar conversaciones reales (anonimizadas) y medir sobre ellas.
 - En modo `fake` las respuestas de conocimiento son extractivas, así que la fidelidad es 100% por
-  construcción. La alucinación real se mide con `--llm ollama --judge`. Ese camino tiene tests con un
-  modelo guionado, pero no se ejecutó con un LLM real en este entorno.
+  construcción. La alucinación real se midió con `--llm ollama --judge` (qwen2.5:3b); el CI no corre
+  ese modo porque requiere GPU. Un modelo distinto (más grande o cloud) necesita su propia corrida.
 - El juez usa el mismo LLM que responde; en producción convendría un juez distinto, validado contra
   etiquetas humanas.
 - La confianza de LoRA sale ~0.99 casi siempre (sobreconfianza). El umbral de aclaración del router

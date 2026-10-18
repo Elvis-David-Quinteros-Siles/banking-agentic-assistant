@@ -32,12 +32,34 @@ Variantes del router medidas aparte (`finetune/infer.py`, 6 frases, misma máqui
 El modelo base sin ajustar es más lento que LoRA (genera salidas más largas y a veces JSON inválido)
 y además es el menos preciso.
 
+### Con un LLM real redactando (qwen2.5:3b en Ollama, Docker, misma GPU que el router LoRA)
+
+`ollama ps` reporta el modelo **100% en GPU** con contexto de 2048: router LoRA (~1 GB) y LLM de 3B
+(~2.1 GB) caben juntos en los 4 GB.
+
+| Nodo | p95 (dos corridas de Evals) |
+|---|---|
+| `router` (LoRA) | 0.9–1.0 s |
+| `query_agent` (1 llamada al LLM; el extracto lo redacta el código) | 2.9–3.0 s |
+| `knowledge_agent` (Graph RAG + generación con citas) | 2.0–2.7 s |
+| `complaint_agent` (borrador estructurado) | 2.1–3.1 s |
+| **Turno completo p50 / p95** | **1.8–2.1 s / 2.7–3.6 s** |
+
+Tokens medidos (no estimados): **360 de entrada y 52 de salida por turno** en promedio sobre los 31
+casos (incluye los bloqueos, que no consumen tokens). Es menos que la estimación de la sección 3
+(464 / 82), porque esa suponía dos vueltas de ReAct y ahora las cuentas van precargadas y el extracto
+lo redacta el código, lo que ahorra una llamada.
+
+Bajar el contexto de Ollama de 4096 (default) a 2048 no cambia la calidad (el prompt más largo ronda
+600 tokens) y libera VRAM para que los dos modelos convivan en GPU.
+
 ## 2. Arranques en frío detectados y corregidos
 
 | Síntoma | Causa | Corrección | Resultado |
 |---|---|---|---|
 | Primera pregunta de conocimiento: 3.1 s | Carga del modelo de embeddings en el primer request | Precarga en el `lifespan` de FastAPI | ~95 ms desde la primera pregunta |
 | Primera pregunta con router LoRA lenta | Carga de pesos + compilación de kernels CUDA | `classify("hola")` de calentamiento al arrancar | sin penalización en el primer cliente |
+| Primera respuesta con Ollama: **90 s** | Carga del modelo de 3B en la GPU desde el volumen de Docker | Llamada de calentamiento en el `lifespan` + `OLLAMA_KEEP_ALIVE=30m` | ~1.5–3 s desde la primera consulta |
 | Primer `/approve` tras arrancar: > 5 s (una vez) | Primera escritura en Neo4j (réplica del reclamo) | **Pendiente**: hacer una escritura de calentamiento o mover la réplica a una cola asíncrona (outbox) | los siguientes: 100–170 ms |
 
 ## 3. Costo por turno si los agentes usaran un LLM cloud

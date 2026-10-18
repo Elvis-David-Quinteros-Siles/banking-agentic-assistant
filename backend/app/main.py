@@ -35,6 +35,15 @@ async def lifespan(app: FastAPI):
         get_retriever().search("precarga")
     except Exception as error:  # noqa: BLE001
         logger.warning("No se pudo precargar el retriever: %s", error)
+    if settings.llm_provider != "fake":
+        # Con Ollama, la primera llamada carga el modelo en la GPU (medido: ~90 s desde el volumen
+        # de Docker). Se paga al arrancar, no en la primera consulta de un cliente.
+        try:
+            from app.llm.provider import get_chat_model
+
+            get_chat_model().invoke("Responde solo: ok")
+        except Exception as error:  # noqa: BLE001
+            logger.warning("No se pudo precalentar el LLM (%s): los nodos usarán su ruta determinista", error)
     if settings.router_backend == "lora":
         try:
             from app.llm.lora_router import get_lora_classifier

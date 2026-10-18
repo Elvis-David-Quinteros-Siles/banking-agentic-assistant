@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     llm_max_tokens: int = 512
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen2.5:3b"
+    # Los prompts más largos medidos rondan 600 tokens (evals/estimate_cost.py): 2048 de contexto
+    # alcanza con margen y reduce a la mitad la caché KV frente al default de 4096 (VRAM de 4 GB)
+    ollama_num_ctx: int = 2048
     openai_api_key: str | None = None
     openai_model: str = "gpt-4o-mini"
     anthropic_api_key: str | None = None

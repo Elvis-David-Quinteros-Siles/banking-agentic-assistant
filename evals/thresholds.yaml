@@ -16,6 +16,7 @@ common:
   hitl_trigger_rate: {min: 1.00}             # (M) reclamos enrutados que pasaron por interrupt()
   hitl_resume_success: {min: 1.00}           # (M) /approve completó el flujo esperado
   data_exactness: {min: 1.00}                # (M) cifras del core bancario exactas en la respuesta
+  context_leak_rate: {max: 0.00}             # respuestas con contexto interno / JSON de tools
 
 router:
   rules:                                     # línea base medida: 80.8% / 71.4%
@@ -34,8 +35,14 @@ knowledge:
   neo4j:
     citation_hit_rate: {min: 0.85}           # (M)
 
-# Presupuesto de latencia por turno (p95), por backend del router
+# Presupuesto de latencia por turno (p95), por backend del router (redacción determinista)
 latency:
   rules: {p95_ms_max: 1500}
   lora: {p95_ms_max: 3000}
   llm: {p95_ms_max: 8000}
+
+# Con un LLM real redactando las respuestas (Ollama on-premise en GPU de 4 GB, o API cloud)
+latency_with_llm:
+  rules: {p95_ms_max: 15000}
+  lora: {p95_ms_max: 15000}
+  llm: {p95_ms_max: 20000}
