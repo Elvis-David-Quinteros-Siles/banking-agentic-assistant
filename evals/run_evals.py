@@ -64,6 +64,7 @@ class CaseResult:
     action_ok: bool | None = None
     faithfulness: dict | None = None
     answer: str = ""
+    thread_id: str | None = None
 
     def fail(self, reason: str) -> None:
         self.passed = False
@@ -87,6 +88,11 @@ def configure_env(args: argparse.Namespace, tmp: Path) -> None:
             "ANALYTICS_PATH": str(tmp / "analytics.db"),
         }
     )
+    if getattr(args, "langfuse", False):
+        # Cada caso queda como una sesión trazada en Langfuse (orchestration/observability/)
+        os.environ["LANGFUSE_ENABLED"] = "true"
+        os.environ.setdefault("LANGFUSE_PUBLIC_KEY", "pk-lf-banking-demo")
+        os.environ.setdefault("LANGFUSE_SECRET_KEY", "sk-lf-banking-demo-local")
     if args.router == "lora":
         # El modelo LoRA ya está en caché local: evita consultas a Hugging Face en cada corrida
         os.environ.setdefault("HF_HUB_OFFLINE", "1")
@@ -129,6 +135,7 @@ def run_case(client, case: dict, judge=None) -> CaseResult:
     body = response.json()
 
     result.intent = body["intent"]
+    result.thread_id = body["thread_id"]
     result.confidence = body["intent_confidence"]
     result.status = body["status"]
     result.citations = body["citations"]
@@ -423,10 +430,11 @@ def run(
     verbose: bool = True,
     core: str = "sqlite",
     reports_dir: Path | None = None,
+    langfuse: bool = False,
 ) -> dict:
     if "app.main" in sys.modules:
         raise RuntimeError("La app ya fue importada con otra configuración: ejecutar los Evals en un proceso aparte")
-    args = argparse.Namespace(router=router, knowledge=knowledge, llm=llm, core=core)
+    args = argparse.Namespace(router=router, knowledge=knowledge, llm=llm, core=core, langfuse=langfuse)
     if core == "sqlserver":
         # SQL Server persiste entre corridas (SQLite va a un temporal): init_sqlserver.py es idempotente
         # y devuelve las tarjetas de la demo a 'activa' para que los casos de bloqueo sean repetibles
@@ -460,6 +468,8 @@ def run(
                 )
 
     _cleanup_graph_complaints(knowledge, results)
+    if langfuse:
+        _score_sessions_in_langfuse(results)
 
     config = {"router": router, "knowledge": knowledge, "llm": llm, "core": core}
     metrics = compute_metrics(results, cases)
@@ -482,6 +492,26 @@ def run(
     if verbose:
         print("\n" + markdown)
     return report
+
+
+def _score_sessions_in_langfuse(results: list[CaseResult]) -> None:
+    """Score eval_passed por sesión (= caso): en la UI se filtran los casos fallidos y se abre su traza."""
+    from app.observability.langfuse_tracing import flush, get_langfuse
+
+    client = get_langfuse()
+    if client is None:
+        print("Aviso: --langfuse sin servidor/claves válidas; no se registraron scores")
+        return
+    for r in results:
+        if r.thread_id:
+            client.create_score(
+                session_id=r.thread_id,
+                name="eval_passed",
+                value=1.0 if r.passed else 0.0,
+                data_type="BOOLEAN",
+                comment=f"{r.id}: " + ("; ".join(r.failures) or "OK"),
+            )
+    flush()
 
 
 def _cleanup_graph_complaints(knowledge: str, results: list[CaseResult]) -> None:
@@ -507,6 +537,7 @@ def main() -> None:
     )
     parser.add_argument("--check", action="store_true", help="Exit 1 si algún umbral no se cumple")
     parser.add_argument("--quiet", action="store_true")
+    parser.add_argument("--langfuse", action="store_true", help="Trazas y scores por caso en Langfuse")
     parser.add_argument("--reports-dir", type=Path, default=None, help="Carpeta de salida (por defecto evals/reports)")
     args = parser.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
@@ -521,6 +552,7 @@ def main() -> None:
         verbose=not args.quiet,
         core=args.core,
         reports_dir=args.reports_dir,
+        langfuse=args.langfuse,
     )
     if args.check and report["violations"]:
         print("UMBRALES NO CUMPLIDOS:\n  " + "\n  ".join(report["violations"]))

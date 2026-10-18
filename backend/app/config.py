@@ -92,6 +92,11 @@ class Settings(BaseSettings):
     # Servidor MCP: cliente de la sesión. MCP_CUSTOMER_ID solo con AUTH_MODE=off (desarrollo)
     mcp_customer_id: str = "CLI-001"
     mcp_access_token: str | None = None  # con AUTH_MODE=jwt: token del cliente (demo-token o IdP)
+    # Observabilidad con Langfuse self-hosted (orchestration/observability/). Desactivado por defecto
+    langfuse_enabled: bool = False
+    langfuse_base_url: str = "http://localhost:3100"
+    langfuse_public_key: str | None = None
+    langfuse_secret_key: str | None = None
     # Turnos por minuto por cliente en /chat, /chat/stream y /approve (0 = sin límite)
     rate_limit_per_minute: int = 0
     seed_dir: Path = REPO_DIR / "data" / "seed"

@@ -113,6 +113,7 @@ flowchart TD
 | Airflow | DAG semanal en Docker: reindexar pgvector → **Evals como compuerta** → informe CrewAI → resumen; un venv por tarea; test de integridad del DAG en CI | [orchestration/](orchestration/README.md) |
 | MCP | Servidor MCP (SDK oficial): 7 tools + resource `policy://`, identidad fijada en el servidor, bloqueo en dos pasos, el grafo completo como tool | [docs/MCP.md](docs/MCP.md) |
 | API | `/chat`, `/chat/stream` (SSE), `/approve/{thread_id}`, `/confirm/{thread_id}`, `/operator/queue`, `/metrics/summary`, `/health` | `backend/app/api/` |
+| Observabilidad | **Langfuse 4 self-hosted**: traza por turno con los nodos del grafo, cada llamada al LLM (tokens, latencia), sesión, usuario seudonimizado y scores; los Evals registran un score por caso. Sin PII hacia el servidor de trazas (dos capas de enmascarado, verificado sobre 403 observaciones exportadas) | [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) |
 | Analítica | Métricas por turno (intención, estado, latencia por nodo, tokens, costo) y cola HITL; el cliente se guarda seudonimizado y nunca el texto | `backend/app/analytics/` |
 | Frontend | React 18 + Vite + TypeScript: streaming, recorrido del grafo en vivo, tarjeta HITL | [frontend/](frontend/README.md) |
 | Evals + CI | 39 casos (incluye multi-turno y acciones), umbrales por métrica; CI con calidad (ruff + mypy), cobertura mínima, Neo4j, SQL Server y pgvector como servicios | [evals/](evals/README.md) |
@@ -127,7 +128,7 @@ El sistema empeora en redacción, no en exactitud ni seguridad.
 |---|---|
 | Traducir necesidades de negocio en flujos agénticos | Tabla de negocio de arriba → nodos del grafo, cada uno con su KPI |
 | Flujos agénticos complejos | Grafo de 15 nodos con aristas condicionales, ReAct, dos pausas `interrupt()` (HITL del operador y confirmación del cliente), conversación multi-turno |
-| KPIs por caso de uso y monitoreo | **Dashboard en vivo** (`#/kpis`): contención, latencia p50/p95, degradación, bloqueos, costo y, por intención, % resuelto / a HITL / aclaración; HITL: aprobados sin editar y tiempo de decisión del operador. Sin guardar texto de clientes |
+| KPIs por caso de uso y monitoreo | **Dashboard en vivo** (`#/kpis`): contención, latencia p50/p95, degradación, bloqueos, costo y, por intención, % resuelto / a HITL / aclaración; HITL: aprobados sin editar y tiempo de decisión del operador. Sin guardar texto de clientes · **Trazas en Langfuse** self-hosted, sin PII ([docs/OBSERVABILITY.md](docs/OBSERVABILITY.md)) |
 | Optimizar agentes en producción | [Ciclo de mejora](evals/README.md#ciclo-de-mejora-guiado-por-evals): falla detectada → diagnóstico → corrección → re-medición |
 | Evals: precisión/recall, alucinación, KPIs | `evals/`: precision/recall por intención, grounding de cifras, LLM-as-judge opcional, umbrales en CI |
 | LLMs, prompt y context engineering | Prompts cortos por nodo, presupuesto de contexto (top-4, 6 mensajes), vecinos del grafo en el contexto |
@@ -317,9 +318,9 @@ frontend/       React + Vite: chat SSE, tarjeta HITL, recorrido del grafo · e2e
 finetune/       dataset sintético, entrenamiento LoRA/QLoRA, inferencia, evaluación del router
 evals/          39 casos, umbrales, runner de punta a punta, LLM-as-judge, reportes
 crew/           CrewAI: informe ejecutivo de reclamos (batch, Ollama), verificaciones deterministas
-orchestration/  Airflow 3: DAG semanal (reindexar → Evals como compuerta → informe)
+orchestration/  Airflow 3 (DAG semanal: reindexar → Evals como compuerta → informe) y Langfuse self-hosted
 data/seed/      clientes, cuentas, movimientos, productos, políticas y quejas (ficticios)
-docs/           ARCHITECTURE.md (diseño, Fase 0), COST_LATENCY.md, DEPLOY.md, MCP.md, capturas y demo.gif
+docs/           ARCHITECTURE.md (diseño, Fase 0), COST_LATENCY.md, DEPLOY.md, MCP.md, OBSERVABILITY.md, RESUMEN.md, capturas y demo.gif
 Dockerfile      imagen de la demo pública (frontend + API, modo liviano)
 start-demo.ps1  levanta la demo completa en Windows con un comando
 .github/        CI: calidad (ruff, mypy, cobertura), backend, Evals (BM25, Neo4j, LlamaIndex, SQL Server + pgvector), DAG de Airflow, frontend, imagen de la demo

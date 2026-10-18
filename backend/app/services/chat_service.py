@@ -16,6 +16,7 @@ from langgraph.types import Command
 
 from app.api.schemas import ChatResponse, GuardrailInfo, InterruptInfo, Metrics, NodeMetric, ResponseStatus
 from app.graph.state import turn_reset
+from app.observability.langfuse_tracing import turn_trace
 
 # Nodos cuyos tokens de LLM se reenvían al cliente por SSE (el router y el borrador de queja no)
 STREAMABLE_NODES = {"query_agent", "knowledge_agent"}
@@ -147,8 +148,10 @@ async def run_turn(
 ) -> ChatResponse:
     previous_len = await _trace_len(graph, thread_id)
     started = time.perf_counter()
-    await graph.ainvoke(graph_input, config=_config(thread_id))
-    response = await build_response(graph, thread_id, previous_len, started)
+    with turn_trace(thread_id, customer_id, kind, graph_input) as turn:
+        await graph.ainvoke(graph_input, config=turn.config(_config(thread_id)))
+        response = await build_response(graph, thread_id, previous_len, started)
+        turn.record(response)
     record_analytics(response, kind, customer_id, decision, source)
     return response
 
@@ -167,29 +170,31 @@ async def stream_turn(graph, thread_id: str, graph_input: Any, customer_id: str 
     yield sse("meta", {"thread_id": thread_id})
 
     try:
-        async for mode, chunk in graph.astream(
-            graph_input, config=_config(thread_id), stream_mode=["tasks", "messages"]
-        ):
-            if mode == "tasks":
-                if "result" not in chunk:  # inicio de nodo
-                    yield sse("node", {"node": chunk["name"], "status": "start"})
-                else:  # fin de nodo (el resultado trae el trace con la latencia)
-                    trace = (chunk.get("result") or {}).get("trace") or [{}]
-                    yield sse(
-                        "node", {"node": chunk["name"], "status": "end", "latency_ms": trace[0].get("latency_ms")}
-                    )
-            elif mode == "messages":
-                message, metadata = chunk
-                if (
-                    metadata.get("langgraph_node") in STREAMABLE_NODES
-                    and isinstance(message, AIMessageChunk)
-                    and message.content
-                    and not message.tool_call_chunks
-                ):
-                    streamed_tokens = True
-                    yield sse("token", {"delta": message.content})
+        with turn_trace(thread_id, customer_id, "chat", graph_input) as turn:
+            async for mode, chunk in graph.astream(
+                graph_input, config=turn.config(_config(thread_id)), stream_mode=["tasks", "messages"]
+            ):
+                if mode == "tasks":
+                    if "result" not in chunk:  # inicio de nodo
+                        yield sse("node", {"node": chunk["name"], "status": "start"})
+                    else:  # fin de nodo (el resultado trae el trace con la latencia)
+                        trace = (chunk.get("result") or {}).get("trace") or [{}]
+                        yield sse(
+                            "node", {"node": chunk["name"], "status": "end", "latency_ms": trace[0].get("latency_ms")}
+                        )
+                elif mode == "messages":
+                    message, metadata = chunk
+                    if (
+                        metadata.get("langgraph_node") in STREAMABLE_NODES
+                        and isinstance(message, AIMessageChunk)
+                        and message.content
+                        and not message.tool_call_chunks
+                    ):
+                        streamed_tokens = True
+                        yield sse("token", {"delta": message.content})
 
-        response = await build_response(graph, thread_id, previous_len, started)
+            response = await build_response(graph, thread_id, previous_len, started)
+            turn.record(response)
         record_analytics(response, "chat", customer_id)
         if not streamed_tokens:
             # Sin LLM (modo fake o plantillas): se emite la respuesta en trozos para una UX uniforme
