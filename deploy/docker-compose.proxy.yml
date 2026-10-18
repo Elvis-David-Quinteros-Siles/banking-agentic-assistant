@@ -1,0 +1,27 @@
+# Variante para un VPS que YA tiene un Nginx (u otro proxy) en los puertos 80/443.
+# Solo levanta la demo, sin publicar puertos, conectada a la red Docker del proxy.
+# El proxy enruta el subdominio al contenedor "banking-demo:7860" (ver nginx-site.conf.example).
+#
+#   docker compose -f docker-compose.proxy.yml pull
+#   docker compose -f docker-compose.proxy.yml up -d
+
+services:
+  demo:
+    image: ${IMAGE:-ghcr.io/elvis-david-quinteros-siles/banking-agentic-assistant:latest}
+    container_name: banking-demo
+    restart: unless-stopped
+    environment:
+      PORT: "7860"
+    mem_limit: 768m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:7860/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    name: ${PROXY_NETWORK:-proxy}
+    external: true

@@ -1,0 +1,11 @@
+# Caddy obtiene el certificado HTTPS para {$DOMAIN} y redirige http → https automáticamente.
+# Sin "encode": comprimir podría retener los eventos SSE del chat en streaming.
+{$DOMAIN} {
+	reverse_proxy demo:7860
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}

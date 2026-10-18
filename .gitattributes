@@ -1,0 +1,2 @@
+# Los scripts de shell deben llegar con LF al VPS aunque se editen en Windows
+*.sh text eol=lf

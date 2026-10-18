@@ -1,0 +1,42 @@
+# Despliegue de la demo pública en un VPS: demo (frontend + API, modo liviano) detrás de Caddy,
+# que obtiene y renueva el certificado HTTPS del dominio automáticamente (Let's Encrypt).
+#
+# Uso en el VPS:  DOMAIN=demo.tudominio.com ./deploy.sh
+# La imagen la publica el CI en GitHub Container Registry en cada push a main.
+
+services:
+  demo:
+    image: ${IMAGE:-ghcr.io/elvis-david-quinteros-siles/banking-agentic-assistant:latest}
+    container_name: banking-demo
+    restart: unless-stopped
+    environment:
+      PORT: "7860"
+    expose:
+      - "7860"
+    # Modo liviano: ~300 MB en uso. El límite protege al resto de servicios del VPS.
+    mem_limit: 768m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:7860/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  caddy:
+    image: caddy:2
+    container_name: banking-demo-caddy
+    restart: unless-stopped
+    depends_on:
+      - demo
+    environment:
+      DOMAIN: ${DOMAIN:?Falta DOMAIN, por ejemplo DOMAIN=demo.tudominio.com}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data        # certificados: se conservan entre reinicios
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

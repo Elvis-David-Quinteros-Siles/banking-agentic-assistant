@@ -16,6 +16,9 @@ RUN npm run build
 
 # --- 2. Backend que sirve la API y el frontend compilado ---------------------
 FROM python:3.12-slim
+# Vincula la imagen publicada en GHCR con el repositorio (hereda su visibilidad pública)
+LABEL org.opencontainers.image.source="https://github.com/Elvis-David-Quinteros-Siles/banking-agentic-assistant" \
+      org.opencontainers.image.description="Demo pública del asistente bancario agéntico (modo liviano, datos ficticios)"
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     APP_ENV=prod \
