@@ -194,6 +194,15 @@ def product_id_for_tag(tag: str | None) -> str | None:
 def get_retriever() -> Retriever:
     """Backend configurado en KNOWLEDGE_BACKEND; si es neo4j y no responde, cae a keyword."""
     settings = get_settings()
+    if settings.knowledge_backend == "llamaindex":
+        # Índice en memoria (se construye al primer uso, ~8 s); LlamaIndex es una dependencia opcional
+        try:
+            from app.rag.llamaindex_retriever import get_llamaindex_retriever
+
+            return get_llamaindex_retriever()
+        except ImportError:
+            logger.warning("KNOWLEDGE_BACKEND=llamaindex sin llama-index instalado: se usa BM25 en memoria")
+            return get_keyword_retriever()
     if settings.knowledge_backend == "pgvector":
         from app.rag.embeddings import get_embedder
         from app.rag.pgvector_retriever import PgVectorHybridRetriever, pgvector_available

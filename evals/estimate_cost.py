@@ -54,6 +54,7 @@ def main() -> None:
     from app.config import get_settings
     from app.db.sqlite import SQLiteRepository, init_db
     from app.graph.nodes import complaint_agent, knowledge_agent, query_agent, router
+    from app.rag import langchain_adapter
     from app.tools.knowledge_base import get_retriever
     from app.tools.sql_tools import BankingTools
 
@@ -83,7 +84,8 @@ def main() -> None:
         if intent == "conocimiento_producto":
             docs = get_retriever().search(knowledge_agent.retrieval_query(msg), k=settings.knowledge_top_k)
             prompt = (
-                knowledge_agent.SYSTEM_PROMPT + f"CONTEXTO:\n{knowledge_agent.format_context(docs)}\n\nPREGUNTA: {msg}"
+                langchain_adapter.SYSTEM_PROMPT
+                + f"CONTEXTO:\n{knowledge_agent.format_context(docs)}\n\nPREGUNTA: {msg}"
             )
             turn["knowledge_agent"] = count(prompt)
             per_node["knowledge_agent"].append(turn["knowledge_agent"])

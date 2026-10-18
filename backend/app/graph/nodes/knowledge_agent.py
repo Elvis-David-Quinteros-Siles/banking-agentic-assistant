@@ -8,7 +8,7 @@ Reglas anti-alucinación:
 
 import re
 
-from langchain_core.messages import AIMessage, SystemMessage
+from langchain_core.messages import AIMessage
 
 from app.config import get_settings
 from app.graph.nodes.common import effective_user_text, last_user_text, log_fallback
@@ -18,16 +18,13 @@ from app.guardrails.grounding import numbers_in
 from app.llm.pricing import usage_from_message
 from app.llm.provider import get_chat_model, model_name
 from app.observability.tracing import traced
+from app.rag.langchain_adapter import ANSWER_PROMPT
 from app.tools.knowledge_base import get_keyword_retriever, get_retriever
 
 ABSTAIN_MESSAGE = (
     "No encontré información sobre eso en nuestras políticas y productos. "
     "Le sugiero consultar con un ejecutivo en agencia o en la línea gratuita."
 )
-
-SYSTEM_PROMPT = """Eres el agente de conocimiento de un banco. Responde en español, breve y claro.
-Usa ÚNICAMENTE la información del CONTEXTO. Si el contexto no responde la pregunta, di que no tienes esa información.
-Cita cada dato con el id del documento entre corchetes, por ejemplo [POL-003]. No inventes montos, tasas ni plazos."""
 
 CITATION_RE = re.compile(r"\[((?:POL|PRD)-[A-Z0-9-]+)\]")
 # Marcadores que deja el input_guardrail al enmascarar PII. No aportan significado a la búsqueda
@@ -115,12 +112,8 @@ def knowledge_agent_node(state: AgentState) -> dict:
     llm = get_chat_model()
     if llm is not None:
         try:
-            response = llm.invoke(
-                [
-                    SystemMessage(content=SYSTEM_PROMPT),
-                    ("human", f"CONTEXTO:\n{format_context(docs)}\n\nPREGUNTA: {question}"),
-                ]
-            )
+            # Cadena LCEL: prompt | modelo (se conserva el AIMessage para medir tokens y costo)
+            response = (ANSWER_PROMPT | llm).invoke({"context": format_context(docs), "question": question})
             answer = str(response.content)
             update["_usage"] = usage_from_message(response, model_name())
         except Exception as error:  # noqa: BLE001

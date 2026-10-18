@@ -20,7 +20,7 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: backend/requirements.txt
-      - run: pip install -r backend/requirements.txt
+      - run: pip install -r backend/requirements.txt -r backend/requirements-frameworks.txt
       # Los tests de integración (Neo4j, SQL Server, pgvector) se saltan solos aquí; corren en sus jobs.
       # Cobertura mínima exigida: 80% (medida sin servicios externos, como en este job)
       - run: pytest backend -q --cov --cov-report=term --cov-fail-under=80
@@ -54,11 +54,13 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: backend/requirements.txt
-      - run: pip install -r backend/requirements.txt
+      - run: pip install -r backend/requirements.txt -r backend/requirements-frameworks.txt
       - name: Evals de punta a punta (falla si una métrica baja del umbral)
         run: python evals/run_evals.py --check
       - name: Evals como tests
         run: pytest evals -q
+      - name: Evals con LlamaIndex como backend de conocimiento
+        run: python evals/run_evals.py --knowledge llamaindex --check
       - name: Publicar reporte en el resumen del job
         if: always()
         run: cat evals/reports/rules_keyword_fake.md >> "$GITHUB_STEP_SUMMARY"

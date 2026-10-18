@@ -38,6 +38,10 @@ def _check_core() -> str:
 def _check_knowledge_store() -> str:
     """Base de conocimiento externa (Neo4j o pgvector); "down" = el agente usa BM25 en memoria."""
     backend = get_settings().knowledge_backend
+    if backend == "llamaindex":
+        import importlib.util
+
+        return "ok" if importlib.util.find_spec("llama_index") else "down"
     if backend == "pgvector":
         from app.rag.pgvector_retriever import pgvector_available
 

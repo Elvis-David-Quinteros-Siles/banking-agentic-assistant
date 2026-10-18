@@ -86,18 +86,24 @@ Las correcciones 2 y 3 tienen tests de regresión en `backend/tests/test_graph_r
 | 14 | BM25 favorecía las fichas de producto (cortas) sobre las políticas, que tienen las respuestas | Peso 0,75 a las fichas de producto en BM25 | Citas BM25 66.7% → 77.8% |
 | 15 | Pedido de bloqueo: con reglas, "bloquear" sumaba puntos a conocimiento; "perdí mi tarjeta, ¿qué hago?" es una pregunta, no un pedido | Intención `accion_tarjeta` solo con formas imperativas ("bloquea", "quiero bloquear"); LoRA v3 con plantillas de contraste. El runner verifica **en la base** que la tarjeta siga activa antes del "sí" | Acciones 100%, 0 sin confirmación |
 
-### Neo4j frente a pgvector (mismo algoritmo híbrido, mismos embeddings)
+### Neo4j, pgvector y LlamaIndex (mismos embeddings, misma abstención)
 
-| | Neo4j | pgvector |
-|---|---|---|
-| Citas correctas (Evals, rules) | 100% | 100% |
-| Router LoRA + RAG (Evals) | 39/39 | 31/31 ² |
-| `knowledge_agent` p95 | 105 ms | **42–60 ms** |
-| Expansión producto → política | relación del grafo | tabla de unión (1 salto) |
+| | Neo4j | pgvector | LlamaIndex |
+|---|---|---|---|
+| Citas correctas (Evals, rules) | 100% | 100% | 100% |
+| Multi-turno (Evals, rules) | 100% | 100% | 100% |
+| Router LoRA + RAG (Evals) | 39/39 | 31/31 ² | 39/39 |
+| `knowledge_agent` p95 (rules) | 189 ms | 75 ms | **21 ms** |
+| Fusión | RRF propio (5 canales) | RRF propio (5 canales) | `QueryFusionRetriever` (reciprocal_rerank, 3 canales) |
+| Expansión producto → política | relación del grafo | tabla de unión (1 salto) | — (filtro por metadatos) |
+| Dónde vive el índice | servidor Neo4j | PostgreSQL | memoria del proceso (~8 s al arrancar) |
 
 ² Medido con los 31 casos previos a multi-turno.
 
-Con este dataset rinden igual en calidad y pgvector es ~2× más rápido. Neo4j se justifica cuando las
+Con este dataset (25 documentos) los tres rinden igual en calidad. LlamaIndex es el más rápido porque el
+índice vive en memoria, pero se reconstruye en cada arranque y no se comparte entre réplicas; con una
+base de conocimiento real iría sobre un vector store persistente (el mismo pgvector, por ejemplo).
+pgvector es ~2× más rápido que Neo4j. Neo4j se justifica cuando las
 preguntas necesitan varios saltos o relaciones heterogéneas (cliente → productos → quejas → políticas);
 pgvector, cuando el banco ya opera PostgreSQL y basta un salto.
 

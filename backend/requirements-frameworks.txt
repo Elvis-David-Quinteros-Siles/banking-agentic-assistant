@@ -1,0 +1,4 @@
+# Frameworks opcionales (no van en la imagen de la demo):
+# LlamaIndex como cuarto backend de conocimiento (KNOWLEDGE_BACKEND=llamaindex)
+llama-index-core>=0.14,<0.15
+llama-index-retrievers-bm25>=0.6,<1.0

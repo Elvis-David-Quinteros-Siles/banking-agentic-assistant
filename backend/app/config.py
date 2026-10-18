@@ -44,7 +44,7 @@ class Settings(BaseSettings):
 
     # --- Agentes ----------------------------------------------------------
     react_max_iterations: int = 4  # tope de vueltas del loop ReAct (control de costo/latencia)
-    knowledge_backend: Literal["keyword", "neo4j", "pgvector"] = "keyword"
+    knowledge_backend: Literal["keyword", "neo4j", "pgvector", "llamaindex"] = "keyword"
     knowledge_top_k: int = 4
     knowledge_min_score: float = 0.15  # BM25 normalizado: por debajo, el agente se abstiene
 

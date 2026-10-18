@@ -491,7 +491,7 @@ def _cleanup_graph_complaints(knowledge: str, results: list[CaseResult]) -> None
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evals de punta a punta del asistente bancario")
     parser.add_argument("--router", choices=["rules", "lora", "llm"], default="rules")
-    parser.add_argument("--knowledge", choices=["keyword", "neo4j", "pgvector"], default="keyword")
+    parser.add_argument("--knowledge", choices=["keyword", "neo4j", "pgvector", "llamaindex"], default="keyword")
     parser.add_argument("--core", choices=["sqlite", "sqlserver"], default="sqlite", help="Motor del core bancario")
     parser.add_argument("--llm", choices=["fake", "ollama", "openai", "anthropic"], default="fake")
     parser.add_argument(
