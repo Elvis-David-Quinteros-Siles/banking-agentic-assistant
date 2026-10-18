@@ -1,0 +1,42 @@
+{
+  "tokenizer": "Qwen2.5 (±20% frente a otros tokenizers)",
+  "knowledge_backend": "neo4j",
+  "input_tokens_per_node": {
+    "router": {
+      "mean": 175,
+      "max": 200
+    },
+    "query_agent": {
+      "mean": 582,
+      "max": 601
+    },
+    "knowledge_agent": {
+      "mean": 480,
+      "max": 508
+    },
+    "complaint_agent": {
+      "mean": 355,
+      "max": 372
+    }
+  },
+  "output_tokens_assumed": {
+    "router": 25,
+    "query_agent": 60,
+    "knowledge_agent": 120,
+    "complaint_agent": 80
+  },
+  "mean_tokens_per_turn": {
+    "in": 464,
+    "out": 82
+  },
+  "price_reference": {
+    "model": "gpt-4o-mini",
+    "usd_per_mtok_in": 0.15,
+    "usd_per_mtok_out": 0.6
+  },
+  "cost_per_turn_usd": 0.000119,
+  "cost_per_turn_usd_lora_router": 8.4e-05,
+  "cost_per_100k_turns_usd": 11.86,
+  "cost_per_100k_turns_usd_lora_router": 8.39,
+  "router_share_of_input_tokens": 0.317
+}

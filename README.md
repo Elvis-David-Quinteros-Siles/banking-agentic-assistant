@@ -1,1 +1,237 @@
-# banking-agentic-assistant
+# Asistente bancario agéntico
+
+[![CI](https://github.com/Elvis-David-Quinteros-Siles/banking-agentic-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/Elvis-David-Quinteros-Siles/banking-agentic-assistant/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.12-blue)
+![LangGraph](https://img.shields.io/badge/LangGraph-1.2-purple)
+![Neo4j](https://img.shields.io/badge/Neo4j-5.26-green)
+![React](https://img.shields.io/badge/React-18-61dafb)
+
+Sistema multi-agente de **atención al cliente bancaria**: responde saldos y movimientos desde el
+core (SQL), explica productos y políticas con **Graph RAG** sobre Neo4j, gestiona reclamos con
+**aprobación humana (HITL)** y bloquea fuera de alcance, prompt injection y fugas de PII. El router
+es un **Qwen2.5-0.5B ajustado con LoRA** que corre on-premise, y todo el sistema se mide con
+**Evals de punta a punta** que corren en CI.
+
+![Reclamo esperando aprobación del operador](docs/img/ui-hitl.png)
+
+> Todos los clientes, cuentas, productos y políticas son **ficticios**. No representan la oferta ni la
+> normativa de ninguna entidad financiera real.
+
+## Resultados
+
+| | Router por reglas + BM25 (baseline, CI) | **Router LoRA + Graph RAG** |
+|---|---|---|
+| Evals de punta a punta (31 casos) | 24/31 | **31/31** |
+| Precisión de enrutamiento · en paráfrasis | 80.8% · 28.6% | **100% · 100%** |
+| Reclamos detectados (si no se detecta, no pasa por HITL) | 71.4% | **100%** |
+| Citas a la política correcta | 66.7% | **100%** (híbrido vector + texto + grafo) |
+| Seguridad: ataques bloqueados · falsos positivos · PII enmascarada | 100% · 0% · 100% | 100% · 0% · 100% |
+| Latencia p50 / p95 por turno | 64 / 135 ms | 731 / 961 ms |
+
+- **Fine-tuning**: LoRA sobre Qwen2.5-0.5B, 5.6 min en una GPU de laptop (4 GB). Precisión en
+  frases no vistas: **100%**, frente a 59.2% de las reglas y **36.7% del mismo modelo sin ajustar**.
+- **Costo**: ~US$ 12 por 100 000 turnos con un LLM cloud económico; −29% con el router local. Ver
+  [Cost & Latency](docs/COST_LATENCY.md).
+- **Los Evals encontraron 4 problemas reales** (entre ellos un bug de fusión RRF) que se corrigieron
+  y quedaron con tests de regresión. Ver [ciclo de mejora](evals/README.md#ciclo-de-mejora-guiado-por-evals).
+
+---
+
+## El problema de negocio
+
+Un call center bancario recibe tres tipos de consulta que exigen tratamientos opuestos:
+
+| Necesidad | Riesgo si se automatiza mal | Tratamiento en este sistema | KPI |
+|---|---|---|---|
+| "¿Cuánto tengo?", "mis movimientos" | Dato incorrecto o de **otro cliente** | Agente ReAct con SQL parametrizado; el `customer_id` sale de la sesión, nunca del LLM | Exactitud de datos 100% |
+| "¿Qué comisión cobran?", "¿qué necesito para un crédito?" | **Alucinar** una tasa o un requisito | Graph RAG con citas obligatorias, abstención y verificación de cifras | Citas correctas 100% |
+| "Me cobraron dos veces", "no reconozco esta compra" | Registrar mal un reclamo (riesgo regulatorio) | El agente arma el borrador; **un operador aprueba, edita o rechaza** | 100% de reclamos pasan por HITL |
+| Temas ajenos, ataques, datos sensibles | Fuga de PII, manipulación del asistente | Guardrails deterministas antes y después del LLM | 0 fugas, 0 falsos positivos |
+
+## Arquitectura
+
+```mermaid
+flowchart TD
+    U([Cliente]) --> API[FastAPI<br/>/chat · /chat/stream SSE]
+    API --> GIN[input_guardrail<br/>PII · injection · datos ajenos]
+    GIN -- bloqueado --> BLK[respuesta fija]
+    GIN --> R[router<br/>Qwen2.5-0.5B + LoRA · fallback reglas]
+    R -- consulta --> QA[query_agent<br/>ReAct + SQL parametrizado]
+    R -- conocimiento --> KA[knowledge_agent<br/>Graph RAG Neo4j]
+    R -- reclamo --> CA[complaint_agent<br/>borrador estructurado]
+    R -- fuera de alcance --> BLK
+    R -- ambiguo --> CL[pregunta aclaratoria]
+    CA --> H{{hitl_review<br/>interrupt}}
+    OP([Operador]) -- /approve --> H
+    H -- aprobar / editar --> REG[registrar<br/>SQLite + Neo4j]
+    H -- rechazar --> REJ[respuesta al cliente]
+    QA & KA & REG & REJ --> GOUT[output_guardrail<br/>cifras vs contexto · enmascarado]
+    GOUT --> U
+    QA -.-> SQL[(SQLite<br/>≈ SQL Server)]
+    KA -.-> NEO[(Neo4j<br/>vector + full-text + grafo)]
+```
+
+| Componente | Implementación | Detalle |
+|---|---|---|
+| Orquestación | LangGraph `StateGraph`, checkpointer SQLite, `interrupt()` + `Command(resume=…)` | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| Router | Qwen2.5-0.5B + LoRA (JSON: intención + producto + monto + moneda), con fallback a reglas | [finetune/](finetune/README.md) |
+| Consultas | Loop ReAct escrito a mano (máx. 4 vueltas), tools SQL con el cliente fijado por sesión | `backend/app/graph/nodes/query_agent.py` |
+| Conocimiento | Recuperación híbrida: 2 índices vectoriales + full-text en español + entidad + expansión `(Producto)-[:TIENE_POLITICA]->(Politica)`, fusionados con RRF | `backend/app/rag/neo4j_retriever.py` |
+| HITL | El grafo se pausa; el estado sobrevive entre requests y reinicios; approve / edit / reject | `backend/app/graph/nodes/hitl.py` |
+| Guardrails | PII (tarjeta con Luhn, CI boliviano, celular, email), injection, acceso ajeno, grounding de cifras | `backend/app/guardrails/` |
+| API | `/chat`, `/chat/stream` (SSE), `/approve/{thread_id}`, `/health` | `backend/app/api/` |
+| Frontend | React 18 + Vite + TypeScript: streaming, recorrido del grafo en vivo, tarjeta HITL | [frontend/](frontend/README.md) |
+| Evals + CI | 31 casos, umbrales por métrica, 4 jobs en GitHub Actions (incluye Neo4j como servicio) | [evals/](evals/README.md) |
+
+**Degradación controlada**: si el LLM, el modelo LoRA o Neo4j fallan, cada nodo usa su ruta
+determinista (reglas, BM25 en memoria, respuesta extractiva) y la respuesta lleva `degraded: true`.
+El sistema empeora en redacción, no en exactitud ni seguridad.
+
+## Competencias que demuestra
+
+| Competencia | Dónde se ve |
+|---|---|
+| Traducir necesidades de negocio en flujos agénticos | Tabla de negocio de arriba → nodos del grafo, cada uno con su KPI |
+| Flujos agénticos complejos | Grafo de 11 nodos con aristas condicionales, ReAct, HITL con pausa y reanudación |
+| KPIs por caso de uso y monitoreo | Métricas por nodo (latencia, tokens, costo) en cada respuesta; KPIs por agente en Evals |
+| Optimizar agentes en producción | [Ciclo de mejora](evals/README.md#ciclo-de-mejora-guiado-por-evals): falla detectada → diagnóstico → corrección → re-medición |
+| Evals: precisión/recall, alucinación, KPIs | `evals/`: precision/recall por intención, grounding de cifras, LLM-as-judge opcional, umbrales en CI |
+| LLMs, prompt y context engineering | Prompts cortos por nodo, presupuesto de contexto (top-4, 6 mensajes), vecinos del grafo en el contexto |
+| Fine-tuning | LoRA/QLoRA, dataset sintético con split por plantilla, comparación con el modelo base |
+| Guardrails y HITL | Entrada y salida deterministas; HITL obligatorio en reclamos, con edición del operador |
+| SQL (SQL Server on-premise) | SQLite con SQL estándar y parámetros; la capa de acceso está aislada para cambiar a `pyodbc` |
+| Hybrid retrieval, vector DB, multi-agente, ReAct | Neo4j (vector + Lucene + Cypher + RRF), router + 3 subagentes, ReAct propio |
+| Cost & latency awareness | [docs/COST_LATENCY.md](docs/COST_LATENCY.md) con cifras medidas |
+
+## Cómo ejecutarlo
+
+Requisitos: Python 3.11+, Node 20+. Opcional: Docker (Neo4j), GPU NVIDIA (router LoRA), Ollama.
+
+### 1. Mínimo: sin Docker, sin GPU, sin API keys (unos 2 minutos)
+
+```powershell
+git clone https://github.com/Elvis-David-Quinteros-Siles/banking-agentic-assistant.git
+cd banking-agentic-assistant
+python -m venv .venv; .\.venv\Scripts\Activate.ps1        # Linux/macOS: source .venv/bin/activate
+pip install -r backend/requirements.txt
+
+cd backend; uvicorn app.main:app --port 8000               # terminal 1
+cd frontend; npm install; npm run dev                      # terminal 2 → http://localhost:5173
+```
+
+Usa router por reglas, BM25 en memoria y ningún LLM. SQLite se crea y se carga solo al arrancar.
+
+### 2. Con Graph RAG (Neo4j)
+
+```powershell
+docker compose up -d neo4j
+cd backend; python scripts/seed_neo4j.py                   # la primera vez descarga el modelo de embeddings
+$env:KNOWLEDGE_BACKEND="neo4j"; uvicorn app.main:app --port 8000
+```
+
+Neo4j Browser: http://localhost:7474 (`neo4j` / `bankdemo123`). Prueba:
+`MATCH path = (c:Cliente {cliente_id:'CLI-001'})-[*1..2]-() RETURN path`
+
+### 3. Con el router LoRA (GPU recomendada)
+
+```powershell
+pip install torch --index-url https://download.pytorch.org/whl/cu126   # primero torch con CUDA
+pip install -r finetune/requirements.txt
+python finetune/train_lora.py                              # ~6 min en una GPU de 4 GB
+cd backend; $env:ROUTER_BACKEND="lora"; $env:HF_HUB_OFFLINE="1"; uvicorn app.main:app --port 8000
+```
+
+### 4. Con un LLM para redactar (opcional)
+
+`LLM_PROVIDER=ollama` (on-premise, por ejemplo `ollama pull qwen2.5:3b`), `openai` o `anthropic`, en
+`.env` (ver `.env.example`). Sin LLM, los agentes responden con plantillas y extractos citados.
+
+### Tests y Evals
+
+```powershell
+pytest backend -q                                          # 76 tests
+python evals/run_evals.py --check                          # Evals de punta a punta con umbrales
+python evals/run_evals.py --router lora --knowledge neo4j  # configuración completa: 31/31
+cd frontend; npm test; npm run build
+python frontend/e2e/smoke_test.py                          # E2E con clics reales (Playwright + Edge/Chrome)
+```
+
+Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi saldo?"`.
+
+## Capturas
+
+| Recorrido del grafo en vivo y aprobación | Guardrails: PII e injection | Móvil |
+|---|---|---|
+| ![aprobado](docs/img/ui-approved.png) | ![guardrails](docs/img/ui-guardrails.png) | ![móvil](docs/img/ui-mobile.png) |
+
+## Decisiones de diseño
+
+- **Sin text-to-SQL.** Las consultas usan tools con SQL parametrizado y el `customer_id` de la
+  sesión: un prompt injection no puede leer cuentas ajenas, aunque pase el guardrail (hay test).
+- **La PII se enmascara antes de cualquier LLM** y reemplaza al mensaje original en el historial:
+  la tarjeta nunca queda persistida en el checkpoint (hay test).
+- **El LLM propone y el código decide** lo crítico: la prioridad de un reclamo (define el plazo) es
+  determinista, los montos extraídos por regex prevalecen sobre los del modelo, y una cifra de la
+  respuesta que no está en el contexto anula la respuesta generada.
+- **Abstenerse es una respuesta válida**: si ningún documento supera la similitud mínima, el agente
+  de conocimiento dice que no tiene esa información en vez de generar.
+- **El router LoRA es on-premise** porque se ejecuta en cada turno y recibe el texto del cliente.
+- **Las métricas de mecanismo y las de modelo van separadas** en los Evals, para que cada umbral
+  mida una sola cosa.
+
+## Qué haría distinto en producción
+
+**Datos e integración**
+- SQL Server real vía `pyodbc` con un usuario de solo lectura, vistas o procedimientos por caso de
+  uso y réplica de lectura. Neo4j alimentado desde la fuente oficial de políticas con versionado y
+  fecha de vigencia. Evaluaría **pgvector** si el banco ya opera PostgreSQL: el componente de grafo
+  es la parte que justifica Neo4j.
+- Checkpointer en PostgreSQL o SQL Server en lugar de SQLite (concurrencia y alta disponibilidad).
+- Réplica de reclamos a Neo4j vía *outbox* asíncrono: hoy es best-effort en el camino del `/approve`.
+
+**Seguridad y gobierno**
+- Autenticación OIDC del canal; `/approve` en un back-office separado con RBAC y auditoría
+  (quién aprobó qué y cuándo); cola de HITL con SLA y escalamiento.
+- NER (p. ej. Presidio) además de las regex de PII; PII fuera de los logs; política de retención.
+- Red teaming periódico con un set de ataques más amplio que los 5 casos actuales.
+
+**Calidad y operación**
+- Evals sobre conversaciones reales anonimizadas y etiquetadas por humanos; los 31 casos sintéticos
+  detectan regresiones, pero no estiman la precisión real.
+- Trazas con OpenTelemetry / LangSmith / Langfuse; dashboards de KPIs por caso de uso y alertas de
+  deriva (subida de `degraded`, de aclaraciones o de reclamos rechazados).
+- Calibrar la confianza del LoRA (hoy sale ~0.99 casi siempre) para que el umbral de aclaración y
+  una cascada reglas → LoRA funcionen.
+- Pipeline de reentrenamiento (Airflow / Metaflow): datos nuevos del monitoreo → reentrenar →
+  Evals como compuerta → despliegue del adaptador versionado.
+- Servir el LoRA con vLLM o llama.cpp y generar solo las claves no nulas para bajar la latencia
+  del router, que hoy es el 95% del turno.
+- Exponer las tools bancarias vía **MCP** para reutilizarlas desde otros agentes con un único
+  punto de control de permisos.
+
+## Limitaciones conocidas
+
+- **Camino con LLM real**: los nodos con LLM (ReAct, RAG generativo, borrador de reclamo) y el
+  LLM-as-judge están probados con un modelo guionado en los tests, pero **no se ejecutaron contra un
+  LLM real** en este entorno (Ollama no estaba instalado). Los resultados publicados son con router
+  LoRA real y redacción determinista.
+- **Datos sintéticos**: 600 ejemplos de entrenamiento generados con plantillas y 31 casos de Evals.
+  El 100% en test mide generalización a frases nuevas del mismo dominio, no rendimiento en producción.
+- **Router por reglas** (configuración del CI, sin GPU): no entiende paráfrasis; pide aclaración en
+  lugar de responder mal, pero pierde el 29% de los reclamos expresados con otras palabras.
+- El primer `/approve` tras arrancar puede tardar unos segundos (primera escritura en Neo4j).
+
+## Estructura
+
+```
+backend/        FastAPI + LangGraph: api/, graph/nodes/, guardrails/, rag/, tools/, llm/ · tests/
+frontend/       React + Vite: chat SSE, tarjeta HITL, recorrido del grafo · e2e/
+finetune/       dataset sintético, entrenamiento LoRA/QLoRA, inferencia, evaluación del router
+evals/          31 casos, umbrales, runner de punta a punta, LLM-as-judge, reportes
+data/seed/      clientes, cuentas, movimientos, productos, políticas y quejas (ficticios)
+docs/           ARCHITECTURE.md (diseño, Fase 0), COST_LATENCY.md, capturas
+.github/        CI: backend, Evals, Graph RAG con Neo4j, frontend
+```
+
+El proyecto se construyó por fases (diseño → backend → multi-agente → Graph RAG → LoRA → frontend →
+Evals → documentación); cada fase es un commit en el historial.

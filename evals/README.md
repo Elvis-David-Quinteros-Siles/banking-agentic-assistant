@@ -42,14 +42,16 @@ como **freno de regresión** sobre su línea base, no como meta de calidad.
 
 | Configuración | Casos OK | Enrutamiento | Paráfrasis | Recall reclamos | Citas ¹ | p50 / p95 |
 |---|---|---|---|---|---|---|
-| rules + BM25 (CI) | 24/31 | 80.8% | 28.6% | 71.4% | 66.7% | 38 / 68 ms |
-| rules + Neo4j (CI) | 26/31 | 80.8% | 28.6% | 71.4% | 100% | 51 / 126 ms |
+| rules + BM25 (CI) | 24/31 | 80.8% | 28.6% | 71.4% | 66.7% | 64 / 135 ms |
+| rules + Neo4j (CI) | 26/31 | 80.8% | 28.6% | 71.4% | 100% | 80 / 124 ms |
 | **LoRA v2 + Neo4j** | **31/31** | **100%** | **100%** | **100%** | **100%** | 731 / 961 ms |
 
 Seguridad (interceptación, falsos positivos, PII) y mecanismos (HITL, exactitud de datos) están al
 100% en las tres configuraciones. Las diferencias son todas de **comprensión del lenguaje**: el
 router por reglas no entiende "me clavaron un cobro" ni "comprar una casa". El precio de LoRA es
 latencia: ~0.7 s de router por turno en una GPU de laptop, frente a < 1 ms de las reglas.
+
+Latencias medidas en una laptop (RTX 3050, en proceso, sin red); varían ±50% entre corridas.
 
 Reportes completos en `reports/` (`<router>_<knowledge>_<llm>.md` y `.json`, con cada caso).
 
