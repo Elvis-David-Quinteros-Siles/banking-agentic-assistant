@@ -12,6 +12,10 @@ core (SQL), explica productos y políticas con **Graph RAG** sobre Neo4j, gestio
 es un **Qwen2.5-0.5B ajustado con LoRA** que corre on-premise, y todo el sistema se mide con
 **Evals de punta a punta** que corren en CI.
 
+**[▶ Probar la demo en vivo](https://banking-agentic-assistant.edqs.online)** · [ver directamente un reclamo con aprobación humana](https://banking-agentic-assistant.edqs.online/?q=Me%20cobraron%20Bs%20350%20dos%20veces%20en%20la%20tarjeta%20de%20d%C3%A9bito)
+
+<sub>La demo pública corre en modo liviano (router por reglas, búsqueda BM25, respuestas por plantilla) porque no requiere GPU. Los resultados con router LoRA, Graph RAG y LLM real están más abajo y en el GIF.</sub>
+
 ![Demo: saldo, paráfrasis resuelta con Graph RAG, reclamo aprobado por el operador y ataque bloqueado](docs/img/demo.gif)
 
 <sub>Recorrido real de 45 s con router LoRA + Graph RAG + qwen2.5:3b en Ollama: saldo, una paráfrasis sin palabras clave, un reclamo que el operador edita y aprueba, y un prompt injection bloqueado. [Video en MP4](docs/img/demo.mp4).</sub>
