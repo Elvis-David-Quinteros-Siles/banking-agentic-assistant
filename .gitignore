@@ -31,3 +31,4 @@ Thumbs.db
 evals/reports/latest.*
 frontend/*.tsbuildinfo
 .venv-crew/
+orchestration/airflow/output/

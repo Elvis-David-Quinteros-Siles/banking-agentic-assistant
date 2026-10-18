@@ -39,9 +39,9 @@ jobs:
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r backend/requirements.txt -r backend/requirements-frameworks.txt ruff mypy
       - name: Lint (estilo, bugs probables, seguridad)
-        run: ruff check backend evals finetune crew
+        run: ruff check backend evals finetune crew orchestration
       - name: Formato
-        run: ruff format --check backend evals finetune crew
+        run: ruff format --check backend evals finetune crew orchestration
       - name: Tipos
         run: mypy
 
@@ -211,6 +211,20 @@ jobs:
           docker push "$IMAGE:latest"
           docker push "$IMAGE:${GITHUB_SHA::7}"
           echo "Publicada $IMAGE:${GITHUB_SHA::7}" >> "$GITHUB_STEP_SUMMARY"
+
+  airflow:
+    name: Airflow · integridad del DAG
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Airflow se instala con su archivo de restricciones oficial (versiones probadas juntas)
+      - run: >-
+          pip install "apache-airflow==3.1.3" pytest
+          --constraint https://raw.githubusercontent.com/apache/airflow/constraints-3.1.3/constraints-3.12.txt
+      - run: pytest orchestration/airflow/tests -q
 
   frontend:
     name: Frontend · tests y build

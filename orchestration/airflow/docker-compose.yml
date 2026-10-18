@@ -1,0 +1,45 @@
+# Airflow 3 en modo standalone (scheduler + API/UI + triggerer en un contenedor) para la demo local.
+#
+#   docker compose up -d pgvector ollama                       # desde la raíz del repo
+#   docker compose -f orchestration/airflow/docker-compose.yml up -d --build
+#   UI: http://localhost:8088  (sin login en local: SIMPLE_AUTH_MANAGER_ALL_ADMINS)
+#
+# Se une a la red del docker-compose principal para llegar a bank-pgvector y bank-ollama.
+services:
+  airflow:
+    build:
+      context: ../..
+      dockerfile: orchestration/airflow/Dockerfile
+    container_name: bank-airflow
+    command: standalone
+    ports:
+      - "127.0.0.1:8088:8080"   # solo local: la UI no se expone a la red
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: "true"
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: America/La_Paz
+      # Configuración de las tareas (mismas variables que la app)
+      BANK_PROJECT_DIR: /opt/project
+      BANK_OUTPUT_DIR: /opt/airflow/output
+      PGVECTOR_DSN: postgresql://bank:${PGVECTOR_PASSWORD:-bankdemo123}@bank-pgvector:5432/conocimiento
+      OLLAMA_BASE_URL: http://bank-ollama:11434
+      HF_HOME: /opt/airflow/hf-cache
+      PYTHONIOENCODING: utf-8
+      CREWAI_TRACING_ENABLED: "false"
+      OTEL_SDK_DISABLED: "true"
+    volumes:
+      - ./dags:/opt/airflow/dags:ro
+      - ../..:/opt/project:ro
+      - ./output:/opt/airflow/output
+      - airflow_hf_cache:/opt/airflow/hf-cache
+    networks:
+      - bank
+
+networks:
+  bank:
+    external: true
+    name: banking-agentic-assistant_default
+
+volumes:
+  airflow_hf_cache:

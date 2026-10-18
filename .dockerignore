@@ -12,3 +12,5 @@ evals
 docs
 .env
 *.log
+.venv-crew
+orchestration/airflow/output

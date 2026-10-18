@@ -415,6 +415,7 @@ def run(
     cases_path: Path = ROOT / "cases.yaml",
     verbose: bool = True,
     core: str = "sqlite",
+    reports_dir: Path | None = None,
 ) -> dict:
     if "app.main" in sys.modules:
         raise RuntimeError("La app ya fue importada con otra configuración: ejecutar los Evals en un proceso aparte")
@@ -464,8 +465,8 @@ def run(
         "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
     }
 
-    reports = ROOT / "reports"
-    reports.mkdir(exist_ok=True)
+    reports = reports_dir or ROOT / "reports"
+    reports.mkdir(parents=True, exist_ok=True)
     name = f"{router}_{knowledge}_{llm}" + ("" if core == "sqlite" else f"_{core}")
     markdown = to_markdown(config, metrics, results, violations)
     for stem in (name, "latest"):
@@ -499,12 +500,21 @@ def main() -> None:
     )
     parser.add_argument("--check", action="store_true", help="Exit 1 si algún umbral no se cumple")
     parser.add_argument("--quiet", action="store_true")
+    parser.add_argument("--reports-dir", type=Path, default=None, help="Carpeta de salida (por defecto evals/reports)")
     args = parser.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
     if args.judge and args.llm == "fake":
         parser.error("--judge requiere un LLM real (--llm ollama|openai|anthropic)")
 
-    report = run(args.router, args.knowledge, args.llm, args.judge, verbose=not args.quiet, core=args.core)
+    report = run(
+        args.router,
+        args.knowledge,
+        args.llm,
+        args.judge,
+        verbose=not args.quiet,
+        core=args.core,
+        reports_dir=args.reports_dir,
+    )
     if args.check and report["violations"]:
         print("UMBRALES NO CUMPLIDOS:\n  " + "\n  ".join(report["violations"]))
         sys.exit(1)
