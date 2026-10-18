@@ -222,7 +222,14 @@ migrar a SQL Server sea cambiar el driver (`pyodbc`) y la cadena de conexión.
 
 ## 4. Contrato de API (FastAPI)
 
-Autenticación simulada: el `customer_id` llega en el body (en producción vendría de un JWT/OIDC del canal).
+Autenticación (`backend/app/api/auth.py`): cada pedido lleva `Authorization: Bearer <JWT>`. El cliente
+sale del claim `sub` (rol `customer`); `/approve`, `/operator/*` y `/metrics/*` exigen rol `operator`.
+El `customer_id` del body es opcional y, si viene, debe coincidir con el token (si no, 403). Una
+conversación existente solo la continúa su dueño (403 `THREAD_FORBIDDEN`).
+
+- Demo: `POST /auth/demo-token {"customer_id": "CLI-001"}` o `{"role": "operator"}` → token HS256 (30 min).
+- Producción: `OIDC_JWKS_URL`, `OIDC_ISSUER`, `OIDC_AUDIENCE` → tokens RS256 del IdP del banco; el emisor de demo se apaga.
+- `AUTH_MODE=off`: contrato anterior (customer_id obligatorio en el body), solo para desarrollo y tests.
 
 ### `POST /chat`
 

@@ -15,7 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.api import routes_chat, routes_confirm, routes_health, routes_hitl, routes_operator
+from app.api import auth, routes_chat, routes_confirm, routes_health, routes_hitl, routes_operator
 from app.api.rate_limit import RateLimitMiddleware, SlidingWindowLimiter
 from app.config import get_settings
 from app.db.sqlite import init_db
@@ -90,6 +90,7 @@ if settings.rate_limit_per_minute > 0:
     app.add_middleware(RateLimitMiddleware, limiter=SlidingWindowLimiter(settings.rate_limit_per_minute))
 
 for api_router in (
+    auth.router,
     routes_chat.router,
     routes_hitl.router,
     routes_confirm.router,

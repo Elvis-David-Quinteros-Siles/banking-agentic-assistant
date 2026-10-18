@@ -15,6 +15,8 @@ os.environ.update(
         "APP_ENV": "test",
         "LLM_PROVIDER": "fake",
         "ROUTER_BACKEND": "rules",
+        # Los tests heredados envían customer_id en el cuerpo; test_auth.py activa JWT explícitamente
+        "AUTH_MODE": "off",
         "SQLITE_PATH": str(_TMP / "bank.db"),
         "CHECKPOINTS_PATH": str(_TMP / "checkpoints.db"),
         "ANALYTICS_PATH": str(_TMP / "analytics.db"),

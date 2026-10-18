@@ -63,7 +63,7 @@ Un call center bancario recibe tres tipos de consulta que exigen tratamientos op
 
 | Necesidad | Riesgo si se automatiza mal | Tratamiento en este sistema | KPI |
 |---|---|---|---|
-| "¿Cuánto tengo?", "mis movimientos" | Dato incorrecto o de **otro cliente** | Agente ReAct con SQL parametrizado; el `customer_id` sale de la sesión, nunca del LLM | Exactitud de datos 100% |
+| "¿Cuánto tengo?", "mis movimientos" | Dato incorrecto o de **otro cliente** | Agente ReAct con SQL parametrizado; el `customer_id` sale del **token JWT**, nunca del LLM ni del cuerpo del pedido | Exactitud de datos 100% |
 | "¿Qué comisión cobran?", "¿qué necesito para un crédito?" | **Alucinar** una tasa o un requisito | Graph RAG con citas obligatorias, abstención y verificación de cifras | Citas correctas 100% |
 | "Me cobraron dos veces", "no reconozco esta compra" | Registrar mal un reclamo (riesgo regulatorio) | El agente arma el borrador; **un operador aprueba, edita o rechaza** | 100% de reclamos pasan por HITL |
 | "Bloquea mi tarjeta, me la robaron" | Ejecutar una acción irreversible que el cliente no pidió, o sobre una tarjeta ajena | Acción preparada por código (sin LLM); **el cliente confirma** (`/confirm`); el procedimiento valida la pertenencia y deja auditoría | 0 acciones sin confirmación |
@@ -103,8 +103,9 @@ flowchart TD
 | Router | Qwen2.5-0.5B + LoRA (JSON: intención + producto + monto + moneda), con fallback a reglas | [finetune/](finetune/README.md) |
 | Consultas | Loop ReAct escrito a mano (máx. 4 vueltas), tools SQL con el cliente fijado por sesión | `backend/app/graph/nodes/query_agent.py` |
 | Conocimiento | Recuperación híbrida: 2 índices vectoriales + full-text en español + entidad + expansión `(Producto)-[:TIENE_POLITICA]->(Politica)`, fusionados con RRF | `backend/app/rag/neo4j_retriever.py` |
-| HITL | El grafo se pausa; el estado sobrevive entre requests y reinicios; approve / edit / reject. **Back-office** (`#/operador`) con la cola ordenada por prioridad y espera; token de operador opcional | `backend/app/graph/nodes/hitl.py`, `backend/app/api/routes_operator.py` |
+| HITL | El grafo se pausa; el estado sobrevive entre requests y reinicios; approve / edit / reject. **Back-office** (`#/operador`) con la cola ordenada por prioridad y espera; exige rol de operador | `backend/app/graph/nodes/hitl.py`, `backend/app/api/routes_operator.py` |
 | Acciones | Bloqueo de tarjeta con confirmación del cliente: pausa en `action_confirmation`, `/confirm` valida que quien confirma sea el dueño de la conversación; `usp_BlockCard` valida pertenencia, es idempotente y audita en una transacción | `backend/app/graph/nodes/card_action.py`, `backend/app/api/routes_confirm.py` |
+| Autenticación | **JWT**: la identidad sale del token, no del cuerpo. Roles `customer` (chat, `/confirm`) y `operator` (`/approve`, cola, KPIs); una conversación solo la continúa su dueño. Emisor de demo HS256 en `/auth/demo-token`; en producción, tokens RS256 del IdP del banco verificados contra su JWKS (OIDC). 11 tests de ataque: sin token, vencido, firma falsa, `alg: none`, suplantación por cuerpo, robo de conversación, rol equivocado | `backend/app/api/auth.py` |
 | Guardrails | PII (tarjeta con Luhn, CI boliviano, celular, email), injection, acceso ajeno, grounding de cifras | `backend/app/guardrails/` |
 | LangChain | Generación RAG como cadena LCEL (`prompt | llm`); adaptador `BaseRetriever` que expone cualquier backend de conocimiento a cadenas y agentes de LangChain | `backend/app/rag/langchain_adapter.py` |
 | LlamaIndex | Cuarto backend de conocimiento: `VectorStoreIndex` + `BM25Retriever` + filtro por producto, fusionados con `QueryFusionRetriever`; comparado con Neo4j y pgvector en los Evals (39/39 con LoRA) | `backend/app/rag/llamaindex_retriever.py` |
@@ -251,6 +252,10 @@ Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi sa
   prioridad de un reclamo los produce el código. Una cifra de la respuesta que no está en el contexto
   anula la respuesta generada. Este patrón salió de los Evals con LLM real: el modelo de 3B
   parafraseaba comercios y omitía cuentas.
+- **La identidad sale del token, nunca del pedido ni del modelo.** El cuerpo puede repetir el
+  `customer_id`, pero si no coincide con el token es un 403. Al implementarlo apareció otro hueco:
+  nadie verificaba que un `thread_id` existente fuera del mismo cliente, así que conociendo el id
+  de una conversación ajena se podía continuarla con su historial en el contexto. Ahora es un 403.
 - **Las acciones con efecto real no pasan por el LLM.** El router decide que el cliente pide un
   bloqueo; la tarjeta y el motivo los identifica el código, y nada se ejecuta sin un "sí" explícito.
   Dos pausas distintas en el mismo grafo: el reclamo lo aprueba un **operador** (`/approve`), el
@@ -273,8 +278,9 @@ Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi sa
 - Réplica de reclamos a Neo4j vía *outbox* asíncrono: hoy es best-effort en el camino del `/approve`.
 
 **Seguridad y gobierno**
-- Autenticación OIDC del canal; `/approve` en un back-office separado con RBAC y auditoría
-  (quién aprobó qué y cuándo); cola de HITL con SLA y escalamiento.
+- Conectar el IdP real del banco (la verificación OIDC/JWKS ya está; falta el login del canal) y
+  `/approve` en un back-office separado con auditoría (quién aprobó qué y cuándo); cola de HITL con
+  SLA y escalamiento. Refresh tokens y revocación.
 - NER (p. ej. Presidio) además de las regex de PII; PII fuera de los logs; política de retención.
 - Red teaming periódico con un set de ataques más amplio que los 5 casos actuales.
 

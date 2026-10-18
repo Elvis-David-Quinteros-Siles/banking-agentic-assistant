@@ -36,6 +36,15 @@ async def _trace_len(graph, thread_id: str) -> int:
     return len(snapshot.values.get("trace", [])) if snapshot.values else 0
 
 
+async def ensure_thread_owner(graph, thread_id: str, customer_id: str) -> None:
+    """Una conversación existente solo la puede continuar su dueño: si no, el historial de otro
+    cliente entraría al contexto del nuevo turno (IDOR por thread_id)."""
+    snapshot = await graph.aget_state(_config(thread_id))
+    owner = (snapshot.values or {}).get("customer_id")
+    if owner and owner != customer_id:
+        raise ThreadError(403, "THREAD_FORBIDDEN", "La conversación pertenece a otra sesión de cliente.")
+
+
 async def ensure_not_pending(graph, thread_id: str) -> None:
     """Un thread pausado en HITL no acepta mensajes nuevos hasta que el operador decida."""
     snapshot = await graph.aget_state(_config(thread_id))

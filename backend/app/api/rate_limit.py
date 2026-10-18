@@ -13,7 +13,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
-LIMITED_PATHS = ("/chat", "/api/chat", "/approve", "/api/approve", "/confirm", "/api/confirm")
+LIMITED_PATHS = ("/chat", "/api/chat", "/approve", "/api/approve", "/confirm", "/api/confirm", "/auth", "/api/auth")
 
 
 def client_key(request: Request) -> str:

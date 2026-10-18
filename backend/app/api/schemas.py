@@ -7,7 +7,8 @@ from pydantic import BaseModel, Field, model_validator
 
 class ChatRequest(BaseModel):
     thread_id: str | None = Field(default=None, description="Si se omite, se crea una conversación nueva")
-    customer_id: str = Field(pattern=r"^CLI-\d{3}$", examples=["CLI-001"])
+    # Con AUTH_MODE=jwt sobra (el cliente sale del token); si se envía, debe coincidir con el token
+    customer_id: str | None = Field(default=None, pattern=r"^CLI-\d{3}$", examples=["CLI-001"])
     message: str = Field(min_length=1, max_length=2000)
 
 

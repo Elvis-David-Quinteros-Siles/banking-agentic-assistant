@@ -1,29 +1,22 @@
 """Back-office: cola de reclamos para el operador y KPIs por caso de uso.
 
-Separado del canal del cliente. Si OPERATOR_TOKEN está configurado, estas rutas (y /approve)
-exigen la cabecera X-Operator-Token. En un banco sería SSO del back-office con rol "operador".
+Separado del canal del cliente: con AUTH_MODE=jwt exige un token con rol "operator" (en un banco,
+el SSO del back-office). Con AUTH_MODE=off, el token compartido opcional OPERATOR_TOKEN.
 """
 
-import secrets
-
-from fastapi import APIRouter, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, Query
 
 from app.analytics.store import get_analytics
-from app.config import get_settings
+from app.api.auth import Identity, get_identity, require_operator
 
 router = APIRouter(tags=["back-office"])
 
 
-def require_operator(x_operator_token: str | None = Header(default=None)) -> None:
-    """Dependencia de autorización del back-office (no-op si OPERATOR_TOKEN no está definido)."""
-    expected = get_settings().operator_token
-    if expected and not (x_operator_token and secrets.compare_digest(x_operator_token, expected)):
-        raise HTTPException(status_code=401, detail="Se requiere el token de operador (X-Operator-Token)")
-
-
 @router.get("/operator/queue")
-async def operator_queue(x_operator_token: str | None = Header(default=None)) -> dict:
-    require_operator(x_operator_token)
+async def operator_queue(
+    identity: Identity | None = Depends(get_identity), x_operator_token: str | None = Header(default=None)
+) -> dict:
+    require_operator(identity, x_operator_token)
     items = get_analytics().pending_queue()
     return {"pending": len(items), "items": items}
 
@@ -31,7 +24,8 @@ async def operator_queue(x_operator_token: str | None = Header(default=None)) ->
 @router.get("/metrics/summary")
 async def metrics_summary(
     hours: int = Query(default=24, ge=1, le=24 * 30),
+    identity: Identity | None = Depends(get_identity),
     x_operator_token: str | None = Header(default=None),
 ) -> dict:
-    require_operator(x_operator_token)
+    require_operator(identity, x_operator_token)
     return get_analytics().summary(hours)

@@ -20,8 +20,9 @@ MCP (Claude Code, Claude Desktop, un IDE u otro agente) puede usarlos sin integr
 ## Las mismas garantías que el chat
 
 - **Identidad fijada en el servidor.** Ninguna herramienta recibe `customer_id` (hay un test que lo
-  verifica en el esquema de cada tool). El cliente sale de `MCP_CUSTOMER_ID`; en producción saldría
-  del token OAuth de la sesión MCP. El modelo del host no puede pedir datos de otro cliente.
+  verifica en el esquema de cada tool). Con `AUTH_MODE=jwt` (por defecto) el cliente sale de
+  `MCP_ACCESS_TOKEN`, verificado igual que en la API (firma, vencimiento, emisor, rol `customer`);
+  `MCP_CUSTOMER_ID` solo vale con `AUTH_MODE=off`. El modelo del host no puede pedir datos de otro cliente.
 - **Guardrails antes de buscar.** `search_policies` bloquea prompt injection y referencias a otros
   clientes, y enmascara PII antes de que el texto llegue al retriever.
 - **Acciones en dos pasos.** Un solo tool call no puede bloquear una tarjeta: el host tiene que
@@ -34,8 +35,13 @@ MCP (Claude Code, Claude Desktop, un IDE u otro agente) puede usarlos sin integr
 Claude Code (desde la raíz del repo):
 
 ```bash
-claude mcp add banco --env MCP_CUSTOMER_ID=CLI-001 -- .venv/Scripts/python.exe -m app.mcp_server
+# 1) Token del cliente: la API y el servidor MCP deben compartir JWT_SECRET (o el mismo IdP OIDC)
+#    POST http://localhost:8000/auth/demo-token  {"customer_id": "CLI-001"}  → access_token
+# 2) Registrar el servidor con ese token
+claude mcp add banco --env JWT_SECRET=<el-de-la-api> --env MCP_ACCESS_TOKEN=<access_token> \
+  -- .venv/Scripts/python.exe -m app.mcp_server
 # El servidor se ejecuta con cwd = backend/ (o PYTHONPATH=backend)
+# Desarrollo sin tokens: --env AUTH_MODE=off --env MCP_CUSTOMER_ID=CLI-001
 ```
 
 Claude Desktop (`claude_desktop_config.json`):
@@ -47,7 +53,7 @@ Claude Desktop (`claude_desktop_config.json`):
       "command": "C:\\dtic\\banking-agentic-assistant\\.venv\\Scripts\\python.exe",
       "args": ["-m", "app.mcp_server"],
       "cwd": "C:\\dtic\\banking-agentic-assistant\\backend",
-      "env": { "MCP_CUSTOMER_ID": "CLI-001" }
+      "env": { "JWT_SECRET": "<el-de-la-api>", "MCP_ACCESS_TOKEN": "<token del cliente>" }
     }
   }
 }

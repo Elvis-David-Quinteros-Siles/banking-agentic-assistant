@@ -19,9 +19,19 @@ def print_json(data: dict) -> None:
     print(json.dumps(data, ensure_ascii=False, indent=2))
 
 
-def stream(url: str, payload: dict) -> int:
+def auth_headers(url: str, role: str, customer: str | None = None) -> dict:
+    """Token del emisor de demo (AUTH_MODE=jwt). Si el servidor no usa JWT (404), sin cabecera."""
+    body = {"role": role, "customer_id": customer} if role == "customer" else {"role": role}
+    response = httpx.post(f"{url}/auth/demo-token", json=body, timeout=30)
+    if response.status_code == 404:
+        return {}
+    response.raise_for_status()
+    return {"Authorization": f"Bearer {response.json()['access_token']}"}
+
+
+def stream(url: str, payload: dict, headers: dict) -> int:
     """Muestra los eventos SSE a medida que llegan."""
-    with httpx.stream("POST", f"{url}/chat/stream", json=payload, timeout=120) as response:
+    with httpx.stream("POST", f"{url}/chat/stream", json=payload, headers=headers, timeout=120) as response:
         if response.status_code != 200:
             response.read()
             print_json(response.json())
@@ -63,16 +73,18 @@ def main() -> int:
     try:
         if args.approve:
             body = {"decision": args.decision, "reviewer_id": args.reviewer, "comment": args.comment}
-            response = httpx.post(f"{args.url}/approve/{args.approve}", json=body, timeout=120)
+            headers = auth_headers(args.url, "operator")
+            response = httpx.post(f"{args.url}/approve/{args.approve}", json=body, headers=headers, timeout=120)
             print_json(response.json())
             return 0 if response.is_success else 1
 
         if not args.message:
             parser.error("falta el mensaje")
         payload = {"customer_id": args.customer, "message": args.message, "thread_id": args.thread}
+        headers = auth_headers(args.url, "customer", args.customer)
         if args.stream:
-            return stream(args.url, payload)
-        response = httpx.post(f"{args.url}/chat", json=payload, timeout=120)
+            return stream(args.url, payload, headers)
+        response = httpx.post(f"{args.url}/chat", json=payload, headers=headers, timeout=120)
         print_json(response.json())
         return 0 if response.is_success else 1
     except httpx.ConnectError:

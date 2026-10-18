@@ -4,6 +4,8 @@ uvicorn[standard]>=0.54,<1.0
 pydantic>=2.14,<3.0
 pydantic-settings>=2.16,<3.0
 httpx>=0.28,<1.0
+# JWT (HS256 de la demo y RS256/JWKS de un IdP OIDC)
+pyjwt[crypto]>=2.10,<3.0
 langgraph>=1.2,<2.0
 langgraph-checkpoint-sqlite>=3.1,<4.0
 langchain-core>=1.6,<2.0

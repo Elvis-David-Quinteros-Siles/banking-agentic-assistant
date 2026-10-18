@@ -82,6 +82,8 @@ def configure_env(args: argparse.Namespace, tmp: Path) -> None:
             "CORE_BACKEND": args.core,
             "SQLITE_PATH": str(tmp / "bank.db"),
             "CHECKPOINTS_PATH": str(tmp / "checkpoints.db"),
+            # Los Evals recorren la API autenticada, igual que el canal real
+            "AUTH_MODE": "jwt",
             "ANALYTICS_PATH": str(tmp / "analytics.db"),
         }
     )
@@ -93,6 +95,13 @@ def configure_env(args: argparse.Namespace, tmp: Path) -> None:
 # ---------------------------------------------------------------------------
 # Ejecución de un caso
 # ---------------------------------------------------------------------------
+def auth(subject: str, role: str = "customer") -> dict:
+    """Cabecera Authorization con un token del emisor de la app (cliente u operador)."""
+    from app.api.auth import issue_token
+
+    return {"Authorization": f"Bearer {issue_token(subject, role)}"}  # type: ignore[arg-type]
+
+
 def run_case(client, case: dict, judge=None) -> CaseResult:
     expected = case.get("expected", {})
     result = CaseResult(
@@ -106,14 +115,12 @@ def run_case(client, case: dict, judge=None) -> CaseResult:
     # Multi-turno: los mensajes previos van a la MISMA conversación antes del mensaje evaluado
     thread_id = None
     for previous in case.get("history", []):
-        prior = client.post(
-            "/chat", json={"customer_id": case["customer"], "message": previous, "thread_id": thread_id}
-        )
+        prior = client.post("/chat", json={"message": previous, "thread_id": thread_id}, headers=auth(case["customer"]))
         thread_id = prior.json().get("thread_id")
 
     started = time.perf_counter()
     response = client.post(
-        "/chat", json={"customer_id": case["customer"], "message": case["message"], "thread_id": thread_id}
+        "/chat", json={"message": case["message"], "thread_id": thread_id}, headers=auth(case["customer"])
     )
     result.latency_ms = round((time.perf_counter() - started) * 1000, 1)
     if response.status_code != 200:
@@ -177,7 +184,7 @@ def run_case(client, case: dict, judge=None) -> CaseResult:
             "comment": hitl.get("comment"),
             "edited_draft": hitl.get("edited_draft"),
         }
-        resumed = client.post(f"/approve/{body['thread_id']}", json=decision)
+        resumed = client.post(f"/approve/{body['thread_id']}", json=decision, headers=auth("EVAL-OP", "operator"))
         final = resumed.json() if resumed.status_code == 200 else {}
         result.hitl_ok = (
             resumed.status_code == 200
@@ -199,7 +206,7 @@ def run_case(client, case: dict, judge=None) -> CaseResult:
         if before.get(last4) != "activa":
             result.fail("acción ejecutada sin confirmación del cliente")
         resumed = client.post(
-            f"/confirm/{body['thread_id']}", json={"customer_id": case["customer"], "confirm": confirm["confirm"]}
+            f"/confirm/{body['thread_id']}", json={"confirm": confirm["confirm"]}, headers=auth(case["customer"])
         )
         final = resumed.json() if resumed.status_code == 200 else {}
         after = {c["last4"]: c["status"] for c in get_repository().list_cards(case["customer"])}

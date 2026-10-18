@@ -75,12 +75,23 @@ class Settings(BaseSettings):
     checkpoints_path: Path = BACKEND_DIR / "data" / "checkpoints.db"
     # Analítica operativa (KPIs por caso de uso + cola HITL). Sin texto de clientes.
     analytics_path: Path = BACKEND_DIR / "data" / "analytics.db"
-    # Si se define, /operator/* y /approve exigen la cabecera X-Operator-Token (back-office)
+    # Autenticación del canal (app/api/auth.py). "jwt": la identidad sale del token; "off": contrato
+    # anterior con customer_id en el cuerpo (solo desarrollo y tests)
+    auth_mode: Literal["jwt", "off"] = "jwt"
+    jwt_secret: str | None = None  # sin definir: secreto aleatorio por proceso (demo)
+    jwt_ttl_minutes: int = 30
+    demo_auth_enabled: bool = True  # POST /auth/demo-token para los clientes ficticios
+    # Producción: IdP del banco (OIDC). Con JWKS se verifican tokens RS256 y se apaga el emisor de demo
+    oidc_jwks_url: str | None = None
+    oidc_issuer: str | None = None
+    oidc_audience: str | None = None
+    # Con AUTH_MODE=off: si se define, /operator/* y /approve exigen la cabecera X-Operator-Token
     operator_token: str | None = None
     # Demo pública: al arrancar con analítica vacía, genera tráfico de ejemplo para el dashboard
     demo_seed_traffic: bool = False
-    # Servidor MCP: cliente de la sesión (en producción saldría del token OAuth del host MCP)
+    # Servidor MCP: cliente de la sesión. MCP_CUSTOMER_ID solo con AUTH_MODE=off (desarrollo)
     mcp_customer_id: str = "CLI-001"
+    mcp_access_token: str | None = None  # con AUTH_MODE=jwt: token del cliente (demo-token o IdP)
     # Turnos por minuto por cliente en /chat, /chat/stream y /approve (0 = sin límite)
     rate_limit_per_minute: int = 0
     seed_dir: Path = REPO_DIR / "data" / "seed"

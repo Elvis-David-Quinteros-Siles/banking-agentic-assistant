@@ -50,7 +50,24 @@ _pending: dict[str, dict] = {}
 
 
 def session_customer() -> str:
-    customer = get_settings().mcp_customer_id
+    """Cliente de la sesión MCP. Con AUTH_MODE=jwt sale de MCP_ACCESS_TOKEN (verificado igual que en la
+    API: firma, vencimiento, emisor y rol); MCP_CUSTOMER_ID solo vale con AUTH_MODE=off (desarrollo)."""
+    from fastapi import HTTPException
+
+    from app.api.auth import decode_token
+
+    settings = get_settings()
+    if settings.auth_mode == "jwt":
+        if not settings.mcp_access_token:
+            raise ValueError("Con AUTH_MODE=jwt el servidor MCP necesita MCP_ACCESS_TOKEN")
+        try:
+            identity = decode_token(settings.mcp_access_token)
+        except HTTPException as error:
+            raise ValueError(f"MCP_ACCESS_TOKEN rechazado: {error.detail}") from error
+        if identity.role != "customer":
+            raise ValueError("MCP_ACCESS_TOKEN debe ser de un cliente")
+        return identity.subject
+    customer = settings.mcp_customer_id
     if not CUSTOMER_RE.match(customer):
         raise ValueError("MCP_CUSTOMER_ID inválido")
     return customer
