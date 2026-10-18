@@ -187,8 +187,13 @@ jobs:
           docker run -d --name demo -p 7860:7860 banking-agent-demo
           for i in $(seq 1 30); do curl -sf localhost:7860/health && break; sleep 2; done
           curl -sf localhost:7860/ | grep -q "<title>Asistente Bancario</title>"
-          curl -sf -X POST localhost:7860/api/chat -H "Content-Type: application/json" \
-            -d '{"customer_id":"CLI-001","message":"¿Cuál es mi saldo?"}' | grep -q "12.450,30"
+          # Sin token: 401 (la identidad sale del JWT, no del cuerpo)
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST localhost:7860/api/chat \
+            -H 'Content-Type: application/json' -d '{"customer_id":"CLI-001","message":"hola"}')" = 401
+          TOKEN=$(curl -sf -X POST localhost:7860/api/auth/demo-token -H "Content-Type: application/json" \
+            -d '{"customer_id":"CLI-001"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+          curl -sf -X POST localhost:7860/api/chat -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" \
+            -d '{"message":"¿Cuál es mi saldo?"}' | grep -q "12.450,30"
           echo "Imagen de demo OK"
 
   publish-demo:
