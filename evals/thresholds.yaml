@@ -34,6 +34,8 @@ knowledge:
     citation_hit_rate: {min: 0.60}           # (M)
   neo4j:
     citation_hit_rate: {min: 0.85}           # (M)
+  pgvector:
+    citation_hit_rate: {min: 0.85}           # (M) mismo algoritmo híbrido que Neo4j, en SQL
 
 # Presupuesto de latencia por turno (p95), por backend del router (redacción determinista)
 latency:

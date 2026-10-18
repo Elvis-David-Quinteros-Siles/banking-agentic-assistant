@@ -44,6 +44,7 @@ como **freno de regresión** sobre su línea base, no como meta de calidad.
 |---|---|---|---|---|---|---|
 | rules + BM25 (CI) | 24/31 | 80.8% | 28.6% | 71.4% | 66.7% | 64 / 135 ms |
 | rules + Neo4j (CI) | 26/31 | 80.8% | 28.6% | 71.4% | 100% | 80 / 124 ms |
+| rules + **pgvector** + core en **SQL Server** (CI) | 26/31 | 80.8% | 28.6% | 71.4% | 100% | 79 / 128 ms |
 | **LoRA v2 + Neo4j** | **31/31** | **100%** | **100%** | **100%** | **100%** | 731 / 961 ms |
 | **LoRA v2 + Neo4j + LLM real** (qwen2.5:3b en Ollama) | **31/31** ×2 | **100%** | **100%** | **100%** | **100%** | 1.8–2.1 / 2.7–3.6 s |
 
@@ -73,6 +74,24 @@ Lo que encontraron los Evals y cómo se corrigió, en orden:
 | 4 | "¿cuánta plata me queda?" se bloqueaba con LoRA v1 | "plata" solo aparecía en plantillas de quejas del dataset | 8 plantillas coloquiales nuevas **solo en entrenamiento**; test sin cambios; reentrenar (5 min) | Router 95.8% → **100%** en test; Evals 31/31 |
 
 Las correcciones 2 y 3 tienen tests de regresión en `backend/tests/test_graph_rag.py`.
+
+### Neo4j frente a pgvector (mismo algoritmo híbrido, mismos embeddings)
+
+| | Neo4j | pgvector |
+|---|---|---|
+| Citas correctas (Evals, rules) | 100% | 100% |
+| Router LoRA + RAG (Evals) | 31/31 | 31/31 |
+| `knowledge_agent` p95 | 105 ms | **42–60 ms** |
+| Expansión producto → política | relación del grafo | tabla de unión (1 salto) |
+
+Con este dataset rinden igual en calidad y pgvector es ~2× más rápido. Neo4j se justifica cuando las
+preguntas necesitan varios saltos o relaciones heterogéneas (cliente → productos → quejas → políticas);
+pgvector, cuando el banco ya opera PostgreSQL y basta un salto.
+
+**Hallazgo 11**: la primera medición con pgvector dio **50% de citas**. El ranking era correcto, pero
+Neo4j reporta la similitud coseno normalizada `(1 + cos) / 2` y pgvector el coseno crudo: el umbral de
+abstención (0.65), calibrado en Neo4j, descartaba respuestas válidas. Normalizado a la misma escala:
+100%. Es un error típico al migrar entre bases vectoriales; tiene test de regresión.
 
 ### Segundo ciclo: con LLM real (qwen2.5:3b en Ollama, GPU de 4 GB)
 

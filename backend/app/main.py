@@ -28,8 +28,10 @@ logger = logging.getLogger(settings.app_name)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 1. Core bancario simulado: crea el esquema y carga los datos semilla si está vacío
-    init_db(settings.sqlite_path, settings.seed_dir / "customers.json")
+    # 1. Core bancario: en SQLite se crea y carga solo; SQL Server se inicializa aparte con
+    #    scripts/init_sqlserver.py (un administrador crea la base; la app solo ejecuta procedimientos)
+    if settings.core_backend == "sqlite":
+        init_db(settings.sqlite_path, settings.seed_dir / "customers.json")
     # 2. Precarga del retriever (y del modelo de embeddings): sin esto, la primera pregunta
     #    del día paga ~3 s de arranque en frío
     try:
@@ -57,8 +59,8 @@ async def lifespan(app: FastAPI):
     async with AsyncSqliteSaver.from_conn_string(str(settings.checkpoints_path)) as checkpointer:
         app.state.graph = build_graph(checkpointer)
         logger.info(
-            "Grafo compilado (llm=%s, router=%s, knowledge=%s)",
-            settings.llm_provider, settings.router_backend, settings.knowledge_backend,
+            "Grafo compilado (llm=%s, router=%s, knowledge=%s, core=%s)",
+            settings.llm_provider, settings.router_backend, settings.knowledge_backend, settings.core_backend,
         )
         yield
 

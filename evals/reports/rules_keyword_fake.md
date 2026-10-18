@@ -1,4 +1,4 @@
-# Evals · router=rules · knowledge=keyword · llm=fake
+# Evals · router=rules · knowledge=keyword · llm=fake · core=sqlite
 
 **24/31 casos OK** (77.4%) · ✅ todos los umbrales cumplidos
 
@@ -17,7 +17,7 @@
 | Fidelidad (LLM-as-judge) | — |
 | Fugas de contexto interno | 0.0% |
 | Turnos en modo degradado (fallback determinista) | 0.0% |
-| Latencia p50 / p95 | 69.5 / 99.1 ms |
+| Latencia p50 / p95 | 67.7 / 140.8 ms |
 | Tokens (in / out) | 0 / 0 |
 | Costo total / por turno | US$ 0.0 / 0.0 |
 
@@ -33,7 +33,7 @@ Precision / recall por intención:
 
 ¹ Métrica de mecanismo: se calcula sobre los casos que el router envió al agente correcto.
 
-Latencia p95 por nodo (ms): `blocked_response` 0.0, `clarify` 0.1, `complaint_agent` 0.1, `input_guardrail` 0.1, `knowledge_agent` 0.4, `output_guardrail` 0.2, `query_agent` 1.8, `router` 0.6
+Latencia p95 por nodo (ms): `blocked_response` 0.1, `clarify` 0.0, `complaint_agent` 0.1, `input_guardrail` 0.1, `knowledge_agent` 0.4, `output_guardrail` 0.5, `query_agent` 2.0, `router` 0.6
 
 ## Casos fallidos
 

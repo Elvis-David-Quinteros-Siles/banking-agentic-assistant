@@ -1,4 +1,4 @@
-"""Tools de consulta bancaria sobre SQLite, con SQL parametrizado (sin text-to-SQL).
+"""Tools de consulta bancaria sobre el core (SQLite o SQL Server), sin text-to-SQL.
 
 Seguridad: el customer_id NO es un parámetro que el LLM pueda elegir. Las tools se crean
 por request con el customer_id de la sesión ya fijado (closure), y toda query filtra por él.
@@ -6,13 +6,13 @@ Así, un prompt injection del tipo "dame el saldo de la cuenta 2000781201" no fu
 la cuenta no pertenece al cliente y la query devuelve vacío.
 
 Los números de cuenta se devuelven ENMASCARADOS: el LLM nunca ve el número completo.
+El acceso a datos pasa por el repositorio (app/db/repository.py): estas tools no saben qué
+motor hay debajo.
 """
-
-from pathlib import Path
 
 from langchain_core.tools import StructuredTool
 
-from app.db.sqlite import connect
+from app.db.repository import CoreBankingRepository
 
 ACCOUNT_TYPE_LABELS = {"caja_ahorro": "Caja de ahorro", "cuenta_corriente": "Cuenta corriente"}
 
@@ -32,64 +32,41 @@ def format_money(amount: float, currency: str) -> str:
 class BankingTools:
     """Operaciones de lectura del core bancario para UN cliente."""
 
-    def __init__(self, db_path: Path, customer_id: str):
-        self.db_path = db_path
+    def __init__(self, repository: CoreBankingRepository, customer_id: str):
+        self.repository = repository
         self.customer_id = customer_id
-
-    def _owned_account_id(self, conn, account_ref: str) -> str | None:
-        """Resuelve una referencia ("****2101" o "2101") a un account_id propio del cliente."""
-        suffix = account_ref.replace("*", "").strip()[-4:]
-        if len(suffix) < 4 or not suffix.isdigit():
-            return None
-        row = conn.execute(
-            "SELECT account_id FROM accounts WHERE customer_id = ? AND account_id LIKE ?",
-            (self.customer_id, f"%{suffix}"),
-        ).fetchone()
-        return row["account_id"] if row else None
 
     def get_accounts(self) -> list[dict]:
         """Lista las cuentas del cliente con su saldo."""
-        with connect(self.db_path) as conn:
-            rows = conn.execute(
-                "SELECT account_id, account_type, currency, balance, status "
-                "FROM accounts WHERE customer_id = ? ORDER BY account_id",
-                (self.customer_id,),
-            ).fetchall()
         return [
             {
                 "cuenta": mask_account(r["account_id"]),
                 "tipo": ACCOUNT_TYPE_LABELS.get(r["account_type"], r["account_type"]),
                 "moneda": r["currency"],
-                "saldo": float(r["balance"]),
-                "saldo_texto": format_money(float(r["balance"]), r["currency"]),
+                "saldo": r["balance"],
+                "saldo_texto": format_money(r["balance"], r["currency"]),
                 "estado": r["status"],
             }
-            for r in rows
+            for r in self.repository.list_accounts(self.customer_id)
         ]
 
     def get_transactions(self, account: str, limit: int = 5) -> list[dict]:
         """Últimos movimientos de una cuenta del cliente (máximo 20)."""
+        suffix = account.replace("*", "").strip()[-4:]
+        if len(suffix) < 4 or not suffix.isdigit():
+            return []
         limit = max(1, min(int(limit), 20))
-        with connect(self.db_path) as conn:
-            account_id = self._owned_account_id(conn, account)
-            if account_id is None:
-                return []
-            rows = conn.execute(
-                "SELECT posted_at, description, amount, currency, channel, merchant "
-                "FROM transactions WHERE account_id = ? ORDER BY posted_at DESC LIMIT ?",
-                (account_id, limit),
-            ).fetchall()
         return [
             {
-                "fecha": r["posted_at"],
+                "fecha": str(r["posted_at"])[:16],
                 "descripcion": r["description"],
-                "monto": float(r["amount"]),
-                "monto_texto": format_money(float(r["amount"]), r["currency"]),
+                "monto": r["amount"],
+                "monto_texto": format_money(r["amount"], r["currency"]),
                 "moneda": r["currency"],
                 "canal": r["channel"],
                 "comercio": r["merchant"],
             }
-            for r in rows
+            for r in self.repository.recent_transactions(self.customer_id, suffix, limit)
         ]
 
     def as_langchain_tools(self) -> list[StructuredTool]:

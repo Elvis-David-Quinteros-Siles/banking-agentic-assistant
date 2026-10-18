@@ -93,3 +93,49 @@ def init_db(db_path: Path, seed_file: Path, reset: bool = False) -> None:
                 f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({placeholders})",
                 [tuple(row[c] for c in columns) for row in rows],
             )
+
+
+class SQLiteRepository:
+    """Core bancario simulado en SQLite (desarrollo, tests y CI)."""
+
+    backend = "sqlite"
+
+    def __init__(self, db_path: Path):
+        self.db_path = db_path
+
+    def list_accounts(self, customer_id: str) -> list[dict]:
+        with connect(self.db_path) as conn:
+            rows = conn.execute(
+                "SELECT account_id, account_type, currency, balance, status "
+                "FROM accounts WHERE customer_id = ? ORDER BY account_id",
+                (customer_id,),
+            ).fetchall()
+        return [{**dict(r), "balance": float(r["balance"])} for r in rows]
+
+    def recent_transactions(self, customer_id: str, account_suffix: str, limit: int) -> list[dict]:
+        # El JOIN con accounts filtra por cliente: una cuenta ajena devuelve vacío
+        with connect(self.db_path) as conn:
+            rows = conn.execute(
+                "SELECT t.posted_at, t.description, t.amount, t.currency, t.channel, t.merchant "
+                "FROM transactions t JOIN accounts a ON a.account_id = t.account_id "
+                "WHERE a.customer_id = ? AND substr(a.account_id, -4) = ? "
+                "ORDER BY t.posted_at DESC LIMIT ?",
+                (customer_id, account_suffix, limit),
+            ).fetchall()
+        return [{**dict(r), "amount": float(r["amount"])} for r in rows]
+
+    def insert_complaint(self, complaint: dict) -> None:
+        columns = list(complaint.keys())
+        with connect(self.db_path) as conn:
+            conn.execute(
+                f"INSERT INTO complaints ({', '.join(columns)}) VALUES ({', '.join('?' for _ in columns)})",
+                tuple(complaint[c] for c in columns),
+            )
+
+    def ping(self) -> bool:
+        try:
+            with connect(self.db_path) as conn:
+                conn.execute("SELECT 1 FROM accounts LIMIT 1")
+            return True
+        except Exception:  # noqa: BLE001
+            return False

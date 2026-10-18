@@ -5,7 +5,6 @@ from fastapi import APIRouter, Request
 
 from app.api.schemas import HealthResponse
 from app.config import get_settings
-from app.db.sqlite import connect
 
 router = APIRouter(tags=["health"])
 
@@ -27,17 +26,21 @@ async def _check_llm() -> str:
     return "ok" if key else "missing_api_key"
 
 
-def _check_sqlite() -> str:
-    try:
-        with connect(get_settings().sqlite_path) as conn:
-            conn.execute("SELECT 1 FROM accounts LIMIT 1")
-        return "ok"
-    except Exception:  # noqa: BLE001
-        return "down"
+def _check_core() -> str:
+    """Core bancario (SQLite o SQL Server) a través del repositorio."""
+    from app.db.repository import get_repository
+
+    return "ok" if get_repository().ping() else "down"
 
 
-def _check_neo4j() -> str:
-    if get_settings().knowledge_backend != "neo4j":
+def _check_knowledge_store() -> str:
+    """Base de conocimiento externa (Neo4j o pgvector); "down" = el agente usa BM25 en memoria."""
+    backend = get_settings().knowledge_backend
+    if backend == "pgvector":
+        from app.rag.pgvector_retriever import pgvector_available
+
+        return "ok" if pgvector_available() else "down"
+    if backend != "neo4j":
         return "disabled"
     from app.rag.neo4j_client import neo4j_available
 
@@ -59,17 +62,18 @@ async def health(request: Request) -> HealthResponse:
     settings = get_settings()
     components = {
         "graph": "ok" if getattr(request.app.state, "graph", None) is not None else "down",
-        "sqlite": _check_sqlite(),
+        "core": _check_core(),
+        "core_backend": settings.core_backend,
         "llm": await _check_llm(),
         "llm_provider": settings.llm_provider,
         "router": settings.router_backend,
         "knowledge": settings.knowledge_backend,
-        "neo4j": _check_neo4j(),
+        "knowledge_store": _check_knowledge_store(),
         "lora_router": _check_lora(),
     }
-    if components["graph"] != "ok" or components["sqlite"] != "ok":
+    if components["graph"] != "ok" or components["core"] != "ok":
         status = "down"
-    elif components["llm"] not in ("ok", "disabled") or components["neo4j"] not in ("ok", "disabled"):
+    elif components["llm"] not in ("ok", "disabled") or components["knowledge_store"] not in ("ok", "disabled"):
         status = "degraded"  # el sistema responde con rutas deterministas
     else:
         status = "ok"

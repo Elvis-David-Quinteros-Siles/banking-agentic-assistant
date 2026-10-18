@@ -122,6 +122,16 @@ def product_id_for_tag(tag: str | None) -> str | None:
 def get_retriever() -> Retriever:
     """Backend configurado en KNOWLEDGE_BACKEND; si es neo4j y no responde, cae a keyword."""
     settings = get_settings()
+    if settings.knowledge_backend == "pgvector":
+        from app.rag.embeddings import get_embedder
+        from app.rag.pgvector_retriever import PgVectorHybridRetriever, pgvector_available
+
+        if pgvector_available():
+            return PgVectorHybridRetriever(
+                settings.pgvector_dsn, get_embedder(), settings.neo4j_min_similarity, settings.rrf_k
+            )
+        logger.warning("KNOWLEDGE_BACKEND=pgvector pero PostgreSQL no responde o está vacío: se usa BM25 en memoria")
+        return get_keyword_retriever()
     if settings.knowledge_backend == "neo4j":
         from app.rag.embeddings import get_embedder
         from app.rag.neo4j_client import get_driver, neo4j_available

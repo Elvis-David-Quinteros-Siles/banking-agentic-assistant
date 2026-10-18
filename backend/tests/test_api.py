@@ -19,7 +19,8 @@ def node_names(body: dict) -> list[str]:
 def test_health(client):
     body = client.get("/health").json()
     assert body["status"] == "ok"
-    assert body["components"]["sqlite"] == "ok"
+    assert body["components"]["core"] == "ok"
+    assert body["components"]["core_backend"] == "sqlite"
     assert body["components"]["llm"] == "disabled"
 
 

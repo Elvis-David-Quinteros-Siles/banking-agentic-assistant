@@ -23,6 +23,7 @@ from app.llm.pricing import add_usage, usage_from_message
 from app.llm.provider import get_chat_model, model_name
 from app.observability.tracing import traced
 from app.text import normalize
+from app.db.repository import get_repository
 from app.tools.sql_tools import BankingTools, format_money
 
 SYSTEM_PROMPT = """Eres el agente de consultas de un banco boliviano. Respondes en español, de forma breve y cordial.
@@ -163,8 +164,7 @@ def react_answer(tools: BankingTools, state: AgentState) -> tuple[str, dict]:
 
 @traced("query_agent")
 def query_agent_node(state: AgentState) -> dict:
-    settings = get_settings()
-    tools = BankingTools(settings.sqlite_path, state["customer_id"])
+    tools = BankingTools(get_repository(), state["customer_id"])
     update: dict = {"status": "completed"}
 
     if get_chat_model() is not None:

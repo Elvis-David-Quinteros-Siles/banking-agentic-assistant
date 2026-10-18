@@ -76,6 +76,7 @@ def configure_env(args: argparse.Namespace, tmp: Path) -> None:
         "LLM_PROVIDER": args.llm,
         "ROUTER_BACKEND": args.router,
         "KNOWLEDGE_BACKEND": args.knowledge,
+        "CORE_BACKEND": args.core,
         "SQLITE_PATH": str(tmp / "bank.db"),
         "CHECKPOINTS_PATH": str(tmp / "checkpoints.db"),
     })
@@ -288,7 +289,7 @@ def to_markdown(config: dict, metrics: dict, results: list[CaseResult], violatio
 
     m = metrics
     lines = [
-        f"# Evals · router={config['router']} · knowledge={config['knowledge']} · llm={config['llm']}",
+        f"# Evals · router={config['router']} · knowledge={config['knowledge']} · llm={config['llm']} · core={config.get('core', 'sqlite')}",
         "",
         f"**{m['passed']}/{m['cases']} casos OK** ({pct(m['end_to_end_success'])}) · "
         f"{'✅ todos los umbrales cumplidos' if not violations else '❌ ' + '; '.join(violations)}",
@@ -331,10 +332,10 @@ def to_markdown(config: dict, metrics: dict, results: list[CaseResult], violatio
 
 
 def run(router: str = "rules", knowledge: str = "keyword", llm: str = "fake", judge: bool = False,
-        cases_path: Path = ROOT / "cases.yaml", verbose: bool = True) -> dict:
+        cases_path: Path = ROOT / "cases.yaml", verbose: bool = True, core: str = "sqlite") -> dict:
     if "app.main" in sys.modules:
         raise RuntimeError("La app ya fue importada con otra configuración: ejecutar los Evals en un proceso aparte")
-    args = argparse.Namespace(router=router, knowledge=knowledge, llm=llm)
+    args = argparse.Namespace(router=router, knowledge=knowledge, llm=llm, core=core)
     tmp = Path(tempfile.mkdtemp(prefix="bank-evals-"))
     configure_env(args, tmp)
 
@@ -363,7 +364,7 @@ def run(router: str = "rules", knowledge: str = "keyword", llm: str = "fake", ju
 
     _cleanup_graph_complaints(knowledge, results)
 
-    config = {"router": router, "knowledge": knowledge, "llm": llm}
+    config = {"router": router, "knowledge": knowledge, "llm": llm, "core": core}
     metrics = compute_metrics(results, cases)
     violations = check_thresholds(metrics, thresholds, router, knowledge, llm)
     report = {
@@ -376,7 +377,7 @@ def run(router: str = "rules", knowledge: str = "keyword", llm: str = "fake", ju
 
     reports = ROOT / "reports"
     reports.mkdir(exist_ok=True)
-    name = f"{router}_{knowledge}_{llm}"
+    name = f"{router}_{knowledge}_{llm}" + ("" if core == "sqlite" else f"_{core}")
     markdown = to_markdown(config, metrics, results, violations)
     for stem in (name, "latest"):
         (reports / f"{stem}.json").write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -401,7 +402,8 @@ def _cleanup_graph_complaints(knowledge: str, results: list[CaseResult]) -> None
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evals de punta a punta del asistente bancario")
     parser.add_argument("--router", choices=["rules", "lora", "llm"], default="rules")
-    parser.add_argument("--knowledge", choices=["keyword", "neo4j"], default="keyword")
+    parser.add_argument("--knowledge", choices=["keyword", "neo4j", "pgvector"], default="keyword")
+    parser.add_argument("--core", choices=["sqlite", "sqlserver"], default="sqlite", help="Motor del core bancario")
     parser.add_argument("--llm", choices=["fake", "ollama", "openai", "anthropic"], default="fake")
     parser.add_argument("--judge", action="store_true", help="LLM-as-judge de fidelidad (requiere --llm distinto de fake)")
     parser.add_argument("--check", action="store_true", help="Exit 1 si algún umbral no se cumple")
@@ -411,7 +413,7 @@ def main() -> None:
     if args.judge and args.llm == "fake":
         parser.error("--judge requiere un LLM real (--llm ollama|openai|anthropic)")
 
-    report = run(args.router, args.knowledge, args.llm, args.judge, verbose=not args.quiet)
+    report = run(args.router, args.knowledge, args.llm, args.judge, verbose=not args.quiet, core=args.core)
     if args.check and report["violations"]:
         print("UMBRALES NO CUMPLIDOS:\n  " + "\n  ".join(report["violations"]))
         sys.exit(1)

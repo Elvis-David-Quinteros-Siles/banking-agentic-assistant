@@ -15,7 +15,7 @@ from langchain_core.messages import AIMessage
 from langgraph.types import interrupt
 
 from app.config import get_settings
-from app.db.sqlite import connect
+from app.db.repository import get_repository
 from app.graph.state import AgentState
 from app.observability.tracing import traced
 
@@ -70,16 +70,21 @@ def register_complaint_node(state: AgentState, config) -> dict:
     draft = {**state["complaint_draft"], **(decision.get("edited_draft") or {})}
     complaint_id = f"QJ-{uuid.uuid4().hex[:6].upper()}"
 
-    with connect(get_settings().sqlite_path) as conn:
-        conn.execute(
-            "INSERT INTO complaints (complaint_id, customer_id, thread_id, category, product, amount, currency, "
-            "priority, summary, status, reviewer_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (
-                complaint_id, state["customer_id"], config["configurable"]["thread_id"], draft["categoria"],
-                draft.get("producto"), draft.get("monto"), draft.get("moneda"), draft["prioridad"],
-                draft["resumen"], "registrada", decision["reviewer_id"], datetime.now().isoformat(timespec="seconds"),
-            ),
-        )
+    # Sistema de registro: SQLite o SQL Server (procedimiento usp_RegisterComplaint), según CORE_BACKEND
+    get_repository().insert_complaint({
+        "complaint_id": complaint_id,
+        "customer_id": state["customer_id"],
+        "thread_id": config["configurable"]["thread_id"],
+        "category": draft["categoria"],
+        "product": draft.get("producto"),
+        "amount": draft.get("monto"),
+        "currency": draft.get("moneda"),
+        "priority": draft["prioridad"],
+        "summary": draft["resumen"],
+        "status": "registrada",
+        "reviewer_id": decision["reviewer_id"],
+        "created_at": datetime.now().isoformat(timespec="seconds"),
+    })
 
     mirror_complaint_to_graph(complaint_id, state["customer_id"], draft, decision["reviewer_id"])
 

@@ -42,7 +42,7 @@ las redacta el LLM; la columna del medio usa redacción determinista.
   frases no vistas: **100%**, frente a 59.2% de las reglas y **36.7% del mismo modelo sin ajustar**.
 - **Costo**: ~US$ 12 por 100 000 turnos con un LLM cloud económico; −29% con el router local. Ver
   [Cost & Latency](docs/COST_LATENCY.md).
-- **Los Evals encontraron 10 problemas reales**, todos corregidos (los de código, con test de regresión):
+- **Los Evals encontraron 11 problemas reales**, todos corregidos (los de código, con test de regresión):
   4 con redacción determinista (entre ellos un bug de fusión RRF) y 6 al pasar a un LLM real (un
   ReAct que pedía el número de cuenta, citas mal atribuidas, extractos parafraseados, el contexto
   interno filtrado al cliente...). Primera medición con LLM: 28/31; final: 31/31.
@@ -80,8 +80,8 @@ flowchart TD
     H -- rechazar --> REJ[respuesta al cliente]
     QA & KA & REG & REJ --> GOUT[output_guardrail<br/>cifras vs contexto · enmascarado]
     GOUT --> U
-    QA -.-> SQL[(SQLite<br/>≈ SQL Server)]
-    KA -.-> NEO[(Neo4j<br/>vector + full-text + grafo)]
+    QA -.-> SQL[(SQL Server<br/>o SQLite)]
+    KA -.-> NEO[(Neo4j o pgvector<br/>vector + full-text + relaciones)]
 ```
 
 | Componente | Implementación | Detalle |
@@ -112,8 +112,8 @@ El sistema empeora en redacción, no en exactitud ni seguridad.
 | LLMs, prompt y context engineering | Prompts cortos por nodo, presupuesto de contexto (top-4, 6 mensajes), vecinos del grafo en el contexto |
 | Fine-tuning | LoRA/QLoRA, dataset sintético con split por plantilla, comparación con el modelo base |
 | Guardrails y HITL | Entrada y salida deterministas; HITL obligatorio en reclamos, con edición del operador |
-| SQL (SQL Server on-premise) | SQLite con SQL estándar y parámetros; la capa de acceso está aislada para cambiar a `pyodbc` |
-| Hybrid retrieval, vector DB, multi-agente, ReAct | Neo4j (vector + Lucene + Cypher + RRF), router + 3 subagentes, ReAct propio |
+| SQL (SQL Server on-premise) | **SQL Server 2022** en Docker: procedimientos almacenados que validan la pertenencia de cada cuenta y un login de aplicación con **mínimo privilegio** (sin `SELECT` sobre tablas). SQLite para desarrollo y CI, detrás del mismo repositorio |
+| Hybrid retrieval, vector DB (pgvector), multi-agente, ReAct | Recuperación híbrida en **Neo4j y en pgvector** (HNSW + tsvector + RRF), comparadas con los Evals; router + 3 subagentes; ReAct propio |
 | Cost & latency awareness | [docs/COST_LATENCY.md](docs/COST_LATENCY.md) con cifras medidas |
 
 ## Cómo ejecutarlo
@@ -179,10 +179,23 @@ cd backend; $env:LLM_PROVIDER="ollama"; uvicorn app.main:app --port 8000
 También acepta `openai` o `anthropic` con API key (ver `.env.example`). Sin LLM, los agentes
 responden con plantillas y extractos citados.
 
+### 5. Con el stack empresarial: SQL Server + pgvector
+
+```powershell
+docker compose up -d sqlserver pgvector
+cd backend
+python scripts/init_sqlserver.py     # base, procedimientos, login de aplicación (mínimo privilegio) y datos
+python scripts/seed_pgvector.py      # productos y políticas con embeddings (HNSW) y tsvector en español
+$env:CORE_BACKEND="sqlserver"; $env:KNOWLEDGE_BACKEND="pgvector"; uvicorn app.main:app --port 8000
+```
+
+Se combinan con lo anterior (por ejemplo `ROUTER_BACKEND=lora` y `LLM_PROVIDER=ollama`). Comparación
+Neo4j vs pgvector en [evals/README.md](evals/README.md#neo4j-frente-a-pgvector-mismo-algoritmo-híbrido-mismos-embeddings).
+
 ### Tests y Evals
 
 ```powershell
-pytest backend -q                                          # 86 tests
+pytest backend -q                                          # 98 tests (los de integración se saltan si falta el servicio)
 python evals/run_evals.py --check                          # Evals de punta a punta con umbrales
 python evals/run_evals.py --router lora --knowledge neo4j  # router LoRA + Graph RAG: 31/31
 python evals/run_evals.py --router lora --knowledge neo4j --llm ollama --judge   # + LLM real y juez: 31/31
@@ -219,10 +232,11 @@ Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi sa
 ## Qué haría distinto en producción
 
 **Datos e integración**
-- SQL Server real vía `pyodbc` con un usuario de solo lectura, vistas o procedimientos por caso de
-  uso y réplica de lectura. Neo4j alimentado desde la fuente oficial de políticas con versionado y
-  fecha de vigencia. Evaluaría **pgvector** si el banco ya opera PostgreSQL: el componente de grafo
-  es la parte que justifica Neo4j.
+- SQL Server con `pyodbc` + ODBC Driver 18, TLS obligatorio, pool de conexiones (hoy cada consulta abre
+  una conexión: ~80 ms) y réplica de lectura. Los procedimientos y el login de mínimo privilegio ya están.
+- Base de conocimiento alimentada desde la fuente oficial de políticas, con versionado y fecha de
+  vigencia. Entre Neo4j y pgvector, medí calidad igual y pgvector ~2× más rápido con un salto de
+  relación: elegiría pgvector si el banco ya opera PostgreSQL y Neo4j si aparecen consultas de varios saltos.
 - Checkpointer en PostgreSQL o SQL Server en lugar de SQLite (concurrencia y alta disponibilidad).
 - Réplica de reclamos a Neo4j vía *outbox* asíncrono: hoy es best-effort en el camino del `/approve`.
 

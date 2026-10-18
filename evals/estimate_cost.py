@@ -49,6 +49,7 @@ def main() -> None:
     from app.db.sqlite import init_db
     from app.graph.nodes import complaint_agent, knowledge_agent, query_agent, router
     from app.tools.knowledge_base import get_retriever
+    from app.db.sqlite import SQLiteRepository
     from app.tools.sql_tools import BankingTools
 
     settings = get_settings()
@@ -59,7 +60,7 @@ def main() -> None:
         return len(tokenizer(text, add_special_tokens=False)["input_ids"])
 
     cases = yaml.safe_load((ROOT / "cases.yaml").read_text(encoding="utf-8"))["cases"]
-    tool_schema = json.dumps([t.args_schema.model_json_schema() for t in BankingTools(settings.sqlite_path, "CLI-001").as_langchain_tools()])
+    tool_schema = json.dumps([t.args_schema.model_json_schema() for t in BankingTools(SQLiteRepository(settings.sqlite_path), "CLI-001").as_langchain_tools()])
     per_node: dict[str, list[int]] = {k: [] for k in OUTPUT_TOKENS}
     per_turn: list[dict] = []
 
@@ -75,7 +76,7 @@ def main() -> None:
             turn["knowledge_agent"] = count(prompt)
             per_node["knowledge_agent"].append(turn["knowledge_agent"])
         elif intent == "consulta_cuenta":
-            tools = BankingTools(settings.sqlite_path, case["customer"])
+            tools = BankingTools(SQLiteRepository(settings.sqlite_path), case["customer"])
             observation = json.dumps(tools.get_accounts(), ensure_ascii=False)
             base = count(query_agent.SYSTEM_PROMPT) + count(tool_schema) + count(msg)
             # 1ª llamada: decide la tool; 2ª: ve el resultado y redacta

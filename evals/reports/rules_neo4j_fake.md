@@ -1,4 +1,4 @@
-# Evals · router=rules · knowledge=neo4j · llm=fake
+# Evals · router=rules · knowledge=neo4j · llm=fake · core=sqlite
 
 **26/31 casos OK** (83.9%) · ✅ todos los umbrales cumplidos
 
@@ -17,7 +17,7 @@
 | Fidelidad (LLM-as-judge) | — |
 | Fugas de contexto interno | 0.0% |
 | Turnos en modo degradado (fallback determinista) | 0.0% |
-| Latencia p50 / p95 | 61.4 / 150.8 ms |
+| Latencia p50 / p95 | 63.6 / 138.1 ms |
 | Tokens (in / out) | 0 / 0 |
 | Costo total / por turno | US$ 0.0 / 0.0 |
 
@@ -33,7 +33,7 @@ Precision / recall por intención:
 
 ¹ Métrica de mecanismo: se calcula sobre los casos que el router envió al agente correcto.
 
-Latencia p95 por nodo (ms): `blocked_response` 0.1, `clarify` 0.1, `complaint_agent` 0.1, `input_guardrail` 0.1, `knowledge_agent` 292.1, `output_guardrail` 0.5, `query_agent` 2.2, `router` 0.6
+Latencia p95 por nodo (ms): `blocked_response` 0.1, `clarify` 0.1, `complaint_agent` 0.1, `input_guardrail` 0.1, `knowledge_agent` 104.7, `output_guardrail` 0.6, `query_agent` 2.1, `router` 0.8
 
 ## Casos fallidos
 

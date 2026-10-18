@@ -53,6 +53,16 @@ lo redacta el código, lo que ahorra una llamada.
 Bajar el contexto de Ollama de 4096 (default) a 2048 no cambia la calidad (el prompt más largo ronda
 600 tokens) y libera VRAM para que los dos modelos convivan en GPU.
 
+### Motores de datos (Evals, router por reglas)
+
+| Componente | SQLite / Neo4j | SQL Server / pgvector |
+|---|---|---|
+| `query_agent` p95 (core bancario) | 2 ms (SQLite, en proceso) | 80 ms (SQL Server por TCP, conexión nueva por consulta) |
+| `knowledge_agent` p95 (RAG híbrido) | 105 ms (Neo4j) | 42–60 ms (pgvector, HNSW + GIN) |
+
+Los ~80 ms de SQL Server son casi todos de abrir la conexión (login TDS) en cada llamada; con un pool
+de conexiones bajarían a pocos milisegundos. En producción iría con pool y TLS.
+
 ## 2. Arranques en frío detectados y corregidos
 
 | Síntoma | Causa | Corrección | Resultado |

@@ -44,7 +44,7 @@ class Settings(BaseSettings):
 
     # --- Agentes ----------------------------------------------------------
     react_max_iterations: int = 4  # tope de vueltas del loop ReAct (control de costo/latencia)
-    knowledge_backend: Literal["keyword", "neo4j"] = "keyword"
+    knowledge_backend: Literal["keyword", "neo4j", "pgvector"] = "keyword"
     knowledge_top_k: int = 4
     knowledge_min_score: float = 0.15  # BM25 normalizado: por debajo, el agente se abstiene
 
@@ -56,7 +56,19 @@ class Settings(BaseSettings):
     embeddings_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     neo4j_min_similarity: float = 0.65  # coseno mínimo del mejor documento para no abstenerse
     rrf_k: int = 60  # constante de Reciprocal Rank Fusion
+
+    # --- RAG con pgvector (alternativa relacional a Neo4j) ------------------
+    pgvector_dsn: str = "postgresql://bank:bankdemo123@localhost:5434/conocimiento"
     complaint_high_priority_amount: float = 1000.0  # monto (Bs) desde el cual la queja es prioridad alta
+
+    # --- Core bancario: sqlite (desarrollo/CI) | sqlserver (on-premise) --------
+    core_backend: Literal["sqlite", "sqlserver"] = "sqlite"
+    sqlserver_host: str = "localhost"
+    sqlserver_port: int = 1433
+    sqlserver_database: str = "CoreBancario"
+    # Login de APLICACIÓN (solo EXECUTE sobre procedimientos), no el administrador
+    sqlserver_user: str = "bank_app"
+    sqlserver_password: str = "BankApp#2026"
 
     # --- Persistencia -----------------------------------------------------
     sqlite_path: Path = BACKEND_DIR / "data" / "bank.db"
