@@ -20,7 +20,8 @@
 | Fidelidad (LLM-as-judge) | — |
 | Fugas de contexto interno | 0.0% |
 | Turnos en modo degradado (fallback determinista) | 0.0% |
-| Latencia p50 / p95 | 771.7 / 1058.5 ms |
+| Turnos clasificados por reglas (sin modelo) | 0.0% |
+| Latencia p50 / p95 | 900.5 / 1144.5 ms |
 | Tokens (in / out) | 5381 / 820 |
 | Costo total / por turno | US$ 0.0 / 0.0 |
 
@@ -36,5 +37,5 @@ Precision / recall por intención:
 
 ¹ Métrica de mecanismo: se calcula sobre los casos que el router envió al agente correcto.
 
-Latencia p95 por nodo (ms): `blocked_response` 0.1, `card_action_agent` 5.3, `clarify` 0.1, `complaint_agent` 0.1, `input_guardrail` 0.1, `knowledge_agent` 351.9, `output_guardrail` 0.4, `query_agent` 28.4, `router` 867.0
+Latencia p95 por nodo (ms): `blocked_response` 0.1, `card_action_agent` 7.2, `clarify` 0.1, `complaint_agent` 0.1, `input_guardrail` 0.1, `knowledge_agent` 393.1, `output_guardrail` 0.4, `query_agent` 24.8, `router` 917.4
 

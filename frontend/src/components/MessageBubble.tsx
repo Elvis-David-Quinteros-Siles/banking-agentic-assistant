@@ -1,6 +1,9 @@
 import type { Message } from "../hooks/useChat";
 import { INTENT_LABELS } from "../labels";
 
+// Etapa del router que clasificó el turno (en cascada: reglas para lo obvio, LoRA para el resto)
+const STAGE_LABELS: Record<string, string> = { rules: " (reglas)", lora: " (modelo LoRA)", llm: " (LLM)" };
+
 const STATUS_LABELS: Record<string, string> = {
   blocked: "Bloqueado por guardrail",
   interrupted: "Pendiente de aprobación",
@@ -26,7 +29,7 @@ export function MessageBubble({ message }: { message: Message }) {
       {r && (
         <div className="bubble__meta">
           {r.intent && (
-            <span className="tag" title="Intención detectada por el router">
+            <span className="tag" title={`Intención detectada por el router${STAGE_LABELS[r.router_stage ?? ""] ?? ""}`}>
               {INTENT_LABELS[r.intent] ?? r.intent}
               {r.intent_confidence != null && ` · ${Math.round(r.intent_confidence * 100)}%`}
             </span>

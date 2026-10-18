@@ -97,6 +97,7 @@ async def build_response(graph, thread_id: str, previous_len: int, started: floa
         answer=values.get("final_answer") or "",
         intent=values.get("intent"),
         intent_confidence=values.get("intent_confidence"),
+        router_stage=values.get("router_stage"),
         citations=values.get("citations") or [],
         interrupt=interrupt,
         guardrail=GuardrailInfo(

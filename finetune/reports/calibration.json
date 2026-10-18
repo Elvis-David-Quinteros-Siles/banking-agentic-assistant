@@ -1,0 +1,555 @@
+{
+  "n_val": 80,
+  "n_test": 143,
+  "greedy": {
+    "accuracy": 0.965,
+    "mean_confidence": 0.953,
+    "ece": 0.024,
+    "brier": 0.0226,
+    "error_auroc": 0.971,
+    "reliability": [
+      {
+        "bin": "0.4-0.5",
+        "n": 2,
+        "accuracy": 0.5,
+        "confidence": 0.4685
+      },
+      {
+        "bin": "0.5-0.6",
+        "n": 2,
+        "accuracy": 0.5,
+        "confidence": 0.56
+      },
+      {
+        "bin": "0.6-0.7",
+        "n": 4,
+        "accuracy": 0.5,
+        "confidence": 0.6625
+      },
+      {
+        "bin": "0.7-0.8",
+        "n": 4,
+        "accuracy": 1.0,
+        "confidence": 0.766
+      },
+      {
+        "bin": "0.8-0.9",
+        "n": 6,
+        "accuracy": 0.8333333333333334,
+        "confidence": 0.8418333333333333
+      },
+      {
+        "bin": "0.9-1.0",
+        "n": 125,
+        "accuracy": 1.0,
+        "confidence": 0.9873439999999999
+      }
+    ]
+  },
+  "labels_T1": {
+    "accuracy": 0.965,
+    "mean_confidence": 0.961,
+    "ece": 0.02,
+    "brier": 0.0252,
+    "error_auroc": 0.959,
+    "reliability": [
+      {
+        "bin": "0.5-0.6",
+        "n": 5,
+        "accuracy": 0.6,
+        "confidence": 0.5598720798201662
+      },
+      {
+        "bin": "0.6-0.7",
+        "n": 3,
+        "accuracy": 1.0,
+        "confidence": 0.6800237813826162
+      },
+      {
+        "bin": "0.7-0.8",
+        "n": 5,
+        "accuracy": 0.6,
+        "confidence": 0.7481404975388178
+      },
+      {
+        "bin": "0.8-0.9",
+        "n": 4,
+        "accuracy": 0.75,
+        "confidence": 0.8456143980818898
+      },
+      {
+        "bin": "0.9-1.0",
+        "n": 126,
+        "accuracy": 1.0,
+        "confidence": 0.9955235147326625
+      }
+    ]
+  },
+  "argmax_agrees_with_greedy": 1.0,
+  "T_val": 1.0,
+  "labels_Tval_on_test": {
+    "accuracy": 0.965,
+    "mean_confidence": 0.961,
+    "ece": 0.02,
+    "brier": 0.0252,
+    "error_auroc": 0.959,
+    "reliability": [
+      {
+        "bin": "0.5-0.6",
+        "n": 5,
+        "accuracy": 0.6,
+        "confidence": 0.5598720798201662
+      },
+      {
+        "bin": "0.6-0.7",
+        "n": 3,
+        "accuracy": 1.0,
+        "confidence": 0.6800237813826162
+      },
+      {
+        "bin": "0.7-0.8",
+        "n": 5,
+        "accuracy": 0.6,
+        "confidence": 0.7481404975388178
+      },
+      {
+        "bin": "0.8-0.9",
+        "n": 4,
+        "accuracy": 0.75,
+        "confidence": 0.8456143980818898
+      },
+      {
+        "bin": "0.9-1.0",
+        "n": 126,
+        "accuracy": 1.0,
+        "confidence": 0.9955235147326625
+      }
+    ]
+  },
+  "T_cv_folds": [
+    0.8,
+    0.9
+  ],
+  "labels_Tcv_out_of_fold": {
+    "accuracy": 0.965,
+    "mean_confidence": 0.967,
+    "ece": 0.008,
+    "brier": 0.0255,
+    "error_auroc": 0.961,
+    "reliability": [
+      {
+        "bin": "0.5-0.6",
+        "n": 5,
+        "accuracy": 0.6,
+        "confidence": 0.577698093903457
+      },
+      {
+        "bin": "0.7-0.8",
+        "n": 7,
+        "accuracy": 0.7142857142857143,
+        "confidence": 0.7514433337799556
+      },
+      {
+        "bin": "0.8-0.9",
+        "n": 4,
+        "accuracy": 0.75,
+        "confidence": 0.8539260210680053
+      },
+      {
+        "bin": "0.9-1.0",
+        "n": 127,
+        "accuracy": 1.0,
+        "confidence": 0.9975859944584838
+      }
+    ]
+  },
+  "T_final": 0.8,
+  "risk_coverage": {
+    "greedy": [
+      {
+        "threshold": 0.5,
+        "coverage": 0.986,
+        "accuracy_answered": 0.972,
+        "errors_answered": 4
+      },
+      {
+        "threshold": 0.6,
+        "coverage": 0.972,
+        "accuracy_answered": 0.978,
+        "errors_answered": 3
+      },
+      {
+        "threshold": 0.7,
+        "coverage": 0.944,
+        "accuracy_answered": 0.993,
+        "errors_answered": 1
+      },
+      {
+        "threshold": 0.8,
+        "coverage": 0.916,
+        "accuracy_answered": 0.992,
+        "errors_answered": 1
+      },
+      {
+        "threshold": 0.9,
+        "coverage": 0.874,
+        "accuracy_answered": 1.0,
+        "errors_answered": 0
+      },
+      {
+        "threshold": 0.95,
+        "coverage": 0.853,
+        "accuracy_answered": 1.0,
+        "errors_answered": 0
+      }
+    ],
+    "calibrated_out_of_fold": [
+      {
+        "threshold": 0.5,
+        "coverage": 1.0,
+        "accuracy_answered": 0.965,
+        "errors_answered": 5
+      },
+      {
+        "threshold": 0.6,
+        "coverage": 0.965,
+        "accuracy_answered": 0.978,
+        "errors_answered": 3
+      },
+      {
+        "threshold": 0.7,
+        "coverage": 0.965,
+        "accuracy_answered": 0.978,
+        "errors_answered": 3
+      },
+      {
+        "threshold": 0.8,
+        "coverage": 0.916,
+        "accuracy_answered": 0.992,
+        "errors_answered": 1
+      },
+      {
+        "threshold": 0.9,
+        "coverage": 0.888,
+        "accuracy_answered": 1.0,
+        "errors_answered": 0
+      },
+      {
+        "threshold": 0.95,
+        "coverage": 0.874,
+        "accuracy_answered": 1.0,
+        "errors_answered": 0
+      }
+    ]
+  },
+  "rules_precision_train_val": {
+    "accion_tarjeta": {
+      "support": 72,
+      "correct": 72,
+      "errors": [],
+      "precision": 1.0
+    },
+    "conocimiento_producto": {
+      "support": 157,
+      "correct": 96,
+      "errors": [
+        {
+          "text": "me clonaron mi tarjeta, hay compras que no hice",
+          "gold": "queja_disputa"
+        },
+        {
+          "text": "se me perdió la tarjeta de credito, bloquéenla",
+          "gold": "accion_tarjeta"
+        },
+        {
+          "text": "quiero bolquear mi tarjeta de débito",
+          "gold": "accion_tarjeta"
+        }
+      ],
+      "precision": 0.611
+    },
+    "consulta_cuenta": {
+      "support": 66,
+      "correct": 66,
+      "errors": [],
+      "precision": 1.0
+    },
+    "fuera_de_alcance": {
+      "support": 79,
+      "correct": 79,
+      "errors": [],
+      "precision": 1.0
+    },
+    "queja_disputa": {
+      "support": 63,
+      "correct": 61,
+      "errors": [
+        {
+          "text": "¿en cuanto tiempo responden un reclamo?",
+          "gold": "conocimiento_producto"
+        },
+        {
+          "text": "¿en cuánto tiempo responden un reclamo?",
+          "gold": "conocimiento_producto"
+        }
+      ],
+      "precision": 0.968
+    }
+  },
+  "trusted_rule_intents": [
+    "accion_tarjeta",
+    "consulta_cuenta",
+    "fuera_de_alcance"
+  ],
+  "rules_precision_test": {
+    "accion_tarjeta": {
+      "support": 18,
+      "correct": 18,
+      "errors": [],
+      "precision": 1.0
+    },
+    "conocimiento_producto": {
+      "support": 17,
+      "correct": 13,
+      "errors": [
+        {
+          "text": "dejá bloqueada mi tarjeta de crédito",
+          "gold": "accion_tarjeta"
+        },
+        {
+          "text": "blouqéame la tarjeta de débito, creo que la perdí",
+          "gold": "accion_tarjeta"
+        },
+        {
+          "text": "porfa dejá bloqueada mi tarjeta de debito",
+          "gold": "accion_tarjeta"
+        }
+      ],
+      "precision": 0.765
+    },
+    "consulta_cuenta": {
+      "support": 15,
+      "correct": 15,
+      "errors": [],
+      "precision": 1.0
+    },
+    "fuera_de_alcance": {
+      "support": 13,
+      "correct": 13,
+      "errors": [],
+      "precision": 1.0
+    },
+    "queja_disputa": {
+      "support": 6,
+      "correct": 6,
+      "errors": [],
+      "precision": 1.0
+    }
+  },
+  "cascade_test": [
+    {
+      "clarify_threshold": 0.5,
+      "rules_share": 0.322,
+      "accuracy": 0.986,
+      "clarified": 1,
+      "errors_answered": 2,
+      "latency_p50_ms": 776.0,
+      "latency_mean_ms": 598.6,
+      "errors": [
+        {
+          "text": "cobran manteinmiento en la cuenta de ahorro",
+          "gold": "conocimiento_producto",
+          "pred": "consulta_cuenta",
+          "stage": "lora"
+        },
+        {
+          "text": "blouqéame la tarjeta de débito, creo que la perdí",
+          "gold": "accion_tarjeta",
+          "pred": "conocimiento_producto",
+          "stage": "lora"
+        }
+      ]
+    },
+    {
+      "clarify_threshold": 0.6,
+      "rules_share": 0.322,
+      "accuracy": 0.986,
+      "clarified": 2,
+      "errors_answered": 1,
+      "latency_p50_ms": 776.0,
+      "latency_mean_ms": 598.6,
+      "errors": [
+        {
+          "text": "blouqéame la tarjeta de débito, creo que la perdí",
+          "gold": "accion_tarjeta",
+          "pred": "conocimiento_producto",
+          "stage": "lora"
+        }
+      ]
+    },
+    {
+      "clarify_threshold": 0.7,
+      "rules_share": 0.322,
+      "accuracy": 0.986,
+      "clarified": 3,
+      "errors_answered": 0,
+      "latency_p50_ms": 776.0,
+      "latency_mean_ms": 598.6,
+      "errors": []
+    },
+    {
+      "clarify_threshold": 0.8,
+      "rules_share": 0.322,
+      "accuracy": 0.986,
+      "clarified": 3,
+      "errors_answered": 0,
+      "latency_p50_ms": 776.0,
+      "latency_mean_ms": 598.6,
+      "errors": []
+    },
+    {
+      "clarify_threshold": 0.9,
+      "rules_share": 0.322,
+      "accuracy": 0.986,
+      "clarified": 7,
+      "errors_answered": 0,
+      "latency_p50_ms": 776.0,
+      "latency_mean_ms": 598.6,
+      "errors": []
+    },
+    {
+      "clarify_threshold": 0.95,
+      "rules_share": 0.322,
+      "accuracy": 0.986,
+      "clarified": 10,
+      "errors_answered": 0,
+      "latency_p50_ms": 776.0,
+      "latency_mean_ms": 598.6,
+      "errors": []
+    }
+  ],
+  "lora_only_test": [
+    {
+      "clarify_threshold": 0.5,
+      "rules_share": 0.0,
+      "accuracy": 0.965,
+      "clarified": 2,
+      "errors_answered": 4,
+      "latency_p50_ms": 841.9,
+      "latency_mean_ms": 867.1,
+      "errors": [
+        {
+          "text": "cobran manteinmiento en la cuenta de ahorro",
+          "gold": "conocimiento_producto",
+          "pred": "consulta_cuenta",
+          "stage": "lora"
+        },
+        {
+          "text": "me robaron la billetera, bloquea mi palstico",
+          "gold": "accion_tarjeta",
+          "pred": "queja_disputa",
+          "stage": "lora"
+        },
+        {
+          "text": "blouqéame la tarjeta de débito, creo que la perdí",
+          "gold": "accion_tarjeta",
+          "pred": "conocimiento_producto",
+          "stage": "lora"
+        },
+        {
+          "text": "hola, me robaron la billetera, bloquea mi tarjeta de débito",
+          "gold": "accion_tarjeta",
+          "pred": "queja_disputa",
+          "stage": "lora"
+        }
+      ]
+    },
+    {
+      "clarify_threshold": 0.6,
+      "rules_share": 0.0,
+      "accuracy": 0.965,
+      "clarified": 4,
+      "errors_answered": 3,
+      "latency_p50_ms": 841.9,
+      "latency_mean_ms": 867.1,
+      "errors": [
+        {
+          "text": "me robaron la billetera, bloquea mi palstico",
+          "gold": "accion_tarjeta",
+          "pred": "queja_disputa",
+          "stage": "lora"
+        },
+        {
+          "text": "blouqéame la tarjeta de débito, creo que la perdí",
+          "gold": "accion_tarjeta",
+          "pred": "conocimiento_producto",
+          "stage": "lora"
+        },
+        {
+          "text": "hola, me robaron la billetera, bloquea mi tarjeta de débito",
+          "gold": "accion_tarjeta",
+          "pred": "queja_disputa",
+          "stage": "lora"
+        }
+      ]
+    },
+    {
+      "clarify_threshold": 0.7,
+      "rules_share": 0.0,
+      "accuracy": 0.965,
+      "clarified": 8,
+      "errors_answered": 1,
+      "latency_p50_ms": 841.9,
+      "latency_mean_ms": 867.1,
+      "errors": [
+        {
+          "text": "hola, me robaron la billetera, bloquea mi tarjeta de débito",
+          "gold": "accion_tarjeta",
+          "pred": "queja_disputa",
+          "stage": "lora"
+        }
+      ]
+    },
+    {
+      "clarify_threshold": 0.8,
+      "rules_share": 0.0,
+      "accuracy": 0.965,
+      "clarified": 12,
+      "errors_answered": 1,
+      "latency_p50_ms": 841.9,
+      "latency_mean_ms": 867.1,
+      "errors": [
+        {
+          "text": "hola, me robaron la billetera, bloquea mi tarjeta de débito",
+          "gold": "accion_tarjeta",
+          "pred": "queja_disputa",
+          "stage": "lora"
+        }
+      ]
+    },
+    {
+      "clarify_threshold": 0.9,
+      "rules_share": 0.0,
+      "accuracy": 0.965,
+      "clarified": 18,
+      "errors_answered": 0,
+      "latency_p50_ms": 841.9,
+      "latency_mean_ms": 867.1,
+      "errors": []
+    },
+    {
+      "clarify_threshold": 0.95,
+      "rules_share": 0.0,
+      "accuracy": 0.965,
+      "clarified": 21,
+      "errors_answered": 0,
+      "latency_p50_ms": 841.9,
+      "latency_mean_ms": 867.1,
+      "errors": []
+    }
+  ],
+  "latency_lora_ms": {
+    "generate_p50": 841.9,
+    "scoring_p50": 172.3
+  }
+}

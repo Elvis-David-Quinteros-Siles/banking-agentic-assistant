@@ -72,3 +72,71 @@ def test_router_lora_failure_degrades_to_rules(monkeypatch):
     update = router.router_node(_state("¿cuál es mi saldo?"))
     assert update["degraded"] is True
     assert update["intent"] == "consulta_cuenta"
+
+
+class CountingClassifier(FakeClassifier):
+    def __init__(self, output, confidence=0.97):
+        super().__init__(output)
+        self.calls, self.confidence = 0, confidence
+
+    def classify(self, text):
+        self.calls += 1
+        return LoraPrediction(
+            output=self.output, confidence=self.confidence, latency_ms=700.0, raw="", tokens_in=95, tokens_out=24
+        )
+
+
+@pytest.mark.parametrize(
+    ("text", "intent"),
+    [
+        ("¿cuál es mi saldo?", "consulta_cuenta"),
+        ("me robaron la billetera, bloquea mi plástico", "accion_tarjeta"),  # el LoRA lo confunde con queja
+        ("¿quién ganó el partido de fútbol?", "fuera_de_alcance"),
+    ],
+)
+def test_cascade_resolves_trusted_intents_with_rules(monkeypatch, text, intent):
+    monkeypatch.setattr(router.get_settings(), "router_backend", "cascade")
+    fake = CountingClassifier({"intent": "queja_disputa", "producto": None, "monto": None, "moneda": None})
+    monkeypatch.setattr("app.llm.lora_router.get_lora_classifier", lambda: fake)
+
+    update = router.router_node(_state(text))
+    assert (update["intent"], update["router_stage"]) == (intent, "rules")
+    assert fake.calls == 0  # sin GPU ni ~700 ms de modelo
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "me clavaron un cobro raro en la tarjeta",  # reclamo: siempre al modelo (la queja más cara de perder)
+        "¿cuánto cuesta abrir un DPF?",  # conocimiento: precisión de las reglas 61%
+        "hola",  # las reglas no saben → modelo
+    ],
+)
+def test_cascade_sends_the_rest_to_lora(monkeypatch, text):
+    monkeypatch.setattr(router.get_settings(), "router_backend", "cascade")
+    fake = CountingClassifier({"intent": "conocimiento_producto", "producto": None, "monto": None, "moneda": None})
+    monkeypatch.setattr("app.llm.lora_router.get_lora_classifier", lambda: fake)
+
+    update = router.router_node(_state(text))
+    assert update["router_stage"] == "lora"
+    assert fake.calls == 1
+
+
+def test_clarify_threshold_is_per_stage(monkeypatch):
+    settings = router.get_settings()
+    monkeypatch.setattr(settings, "router_min_confidence", 0.6)
+    monkeypatch.setattr(settings, "lora_min_confidence", 0.7)
+    state = {"intent": "queja_disputa", "intent_confidence": 0.65}
+    # 0.65 alcanza para las reglas, no para el LoRA (otra escala de confianza, calibrate.py)
+    assert router.route_after_router({**state, "router_stage": "rules"}) == "complaint_agent"
+    assert router.route_after_router({**state, "router_stage": "lora"}) == "clarify"
+    assert router.route_after_router({**state, "intent_confidence": 0.75, "router_stage": "lora"}) == "complaint_agent"
+
+
+def test_cascade_falls_back_to_rules_when_lora_fails(monkeypatch):
+    monkeypatch.setattr(router.get_settings(), "router_backend", "cascade")
+    monkeypatch.setattr(
+        "app.llm.lora_router.get_lora_classifier", lambda: FakeClassifier(error=RuntimeError("sin GPU"))
+    )
+    update = router.router_node(_state("quiero hacer un reclamo por un doble cobro"))
+    assert (update["intent"], update["router_stage"], update["degraded"]) == ("queja_disputa", "rules", True)

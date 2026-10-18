@@ -65,6 +65,7 @@ class CaseResult:
     faithfulness: dict | None = None
     answer: str = ""
     thread_id: str | None = None
+    router_stage: str | None = None
 
     def fail(self, reason: str) -> None:
         self.passed = False
@@ -93,7 +94,7 @@ def configure_env(args: argparse.Namespace, tmp: Path) -> None:
         os.environ["LANGFUSE_ENABLED"] = "true"
         os.environ.setdefault("LANGFUSE_PUBLIC_KEY", "pk-lf-banking-demo")
         os.environ.setdefault("LANGFUSE_SECRET_KEY", "sk-lf-banking-demo-local")
-    if args.router == "lora":
+    if args.router in ("lora", "cascade"):
         # El modelo LoRA ya está en caché local: evita consultas a Hugging Face en cada corrida
         os.environ.setdefault("HF_HUB_OFFLINE", "1")
 
@@ -137,6 +138,7 @@ def run_case(client, case: dict, judge=None) -> CaseResult:
     result.intent = body["intent"]
     result.thread_id = body["thread_id"]
     result.confidence = body["intent_confidence"]
+    result.router_stage = body.get("router_stage")
     result.status = body["status"]
     result.citations = body["citations"]
     result.pii_found = body["guardrail"]["pii_found"]
@@ -319,6 +321,10 @@ def compute_metrics(results: list[CaseResult], cases: list[dict]) -> dict[str, A
         "data_exactness": ratio(sum(not any(f.startswith("falta") for f in r.failures) for r in exact), len(exact)),
         "faithfulness": ratio(sum(j["faithful"] for j in judged), len(judged)) if judged else None,
         "degraded_rate": ratio(sum(r.degraded for r in results), len(results)),
+        # Cascada: turnos que las reglas resolvieron sin llamar al modelo
+        "rules_router_share": ratio(
+            sum(r.router_stage == "rules" for r in results), sum(r.router_stage is not None for r in results)
+        ),
         "context_leak_rate": ratio(
             sum(any(f.startswith("fuga de contexto") for f in r.failures) for r in results), len(results)
         ),
@@ -399,6 +405,7 @@ def to_markdown(config: dict, metrics: dict, results: list[CaseResult], violatio
         f"| Fidelidad (LLM-as-judge) | {pct(m['faithfulness'])} |",
         f"| Fugas de contexto interno | {pct(m['context_leak_rate'])} |",
         f"| Turnos en modo degradado (fallback determinista) | {pct(m['degraded_rate'])} |",
+        f"| Turnos clasificados por reglas (sin modelo) | {pct(m['rules_router_share'])} |",
         f"| Latencia p50 / p95 | {m['latency_ms']['p50']} / {m['latency_ms']['p95']} ms |",
         f"| Tokens (in / out) | {m['tokens']['in']} / {m['tokens']['out']} |",
         f"| Costo total / por turno | US$ {m['cost_usd']['total']} / {m['cost_usd']['per_turn']} |",
@@ -528,7 +535,7 @@ def _cleanup_graph_complaints(knowledge: str, results: list[CaseResult]) -> None
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evals de punta a punta del asistente bancario")
-    parser.add_argument("--router", choices=["rules", "lora", "llm"], default="rules")
+    parser.add_argument("--router", choices=["rules", "lora", "cascade", "llm"], default="rules")
     parser.add_argument("--knowledge", choices=["keyword", "neo4j", "pgvector", "llamaindex"], default="keyword")
     parser.add_argument("--core", choices=["sqlite", "sqlserver"], default="sqlite", help="Motor del core bancario")
     parser.add_argument("--llm", choices=["fake", "ollama", "openai", "anthropic"], default="fake")

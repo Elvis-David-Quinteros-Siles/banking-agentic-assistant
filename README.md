@@ -45,7 +45,8 @@ las redacta el LLM; la columna del medio usa redacción determinista.
 
 - **Fine-tuning**: LoRA sobre Qwen2.5-0.5B, ~6 min por versión en una GPU de laptop (4 GB). Precisión
   en frases no vistas (6 intenciones, v3): **96,5%**, frente a 62,2% de las reglas y **25,2% del mismo
-  modelo sin ajustar**.
+  modelo sin ajustar**. En cascada con las reglas: **98,6%**, ningún error respondido (las dudas se
+  aclaran) y un tercio de los turnos sin pasar por el modelo.
 - **Costo**: ~US$ 12 por 100 000 turnos con un LLM cloud económico; −29% con el router local. Ver
   [Cost & Latency](docs/COST_LATENCY.md).
 - **Los Evals encontraron 17 problemas reales**, todos corregidos (los de código, con test de regresión):
@@ -76,7 +77,7 @@ flowchart TD
     U([Cliente]) --> API[FastAPI<br/>/chat · /chat/stream SSE]
     API --> GIN[input_guardrail<br/>PII · injection · datos ajenos]
     GIN -- bloqueado --> BLK[respuesta fija]
-    GIN --> R[router<br/>Qwen2.5-0.5B + LoRA · fallback reglas]
+    GIN --> R[router<br/>reglas → Qwen2.5-0.5B + LoRA en cascada]
     R -- consulta --> QA[query_agent<br/>ReAct + SQL parametrizado]
     R -- conocimiento --> KA[knowledge_agent<br/>Graph RAG Neo4j]
     R -- reclamo --> CA[complaint_agent<br/>borrador estructurado]
@@ -100,7 +101,7 @@ flowchart TD
 | Componente | Implementación | Detalle |
 |---|---|---|
 | Orquestación | LangGraph `StateGraph`, checkpointer SQLite, `interrupt()` + `Command(resume=…)` | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
-| Router | Qwen2.5-0.5B + LoRA (JSON: intención + producto + monto + moneda), con fallback a reglas | [finetune/](finetune/README.md) |
+| Router | Qwen2.5-0.5B + LoRA (JSON: intención + producto + monto + moneda), con fallback a reglas. **Cascada**: las reglas resuelven solas las intenciones en que no se equivocan (35% de los turnos, < 1 ms) y el resto va al LoRA, con su confianza medida (calibrada) y su propio umbral de aclaración | [finetune/](finetune/README.md#calibración-de-la-confianza-y-cascada-reglas--lora-calibratepy) |
 | Consultas | Loop ReAct escrito a mano (máx. 4 vueltas), tools SQL con el cliente fijado por sesión | `backend/app/graph/nodes/query_agent.py` |
 | Conocimiento | Recuperación híbrida: 2 índices vectoriales + full-text en español + entidad + expansión `(Producto)-[:TIENE_POLITICA]->(Politica)`, fusionados con RRF | `backend/app/rag/neo4j_retriever.py` |
 | HITL | El grafo se pausa; el estado sobrevive entre requests y reinicios; approve / edit / reject. **Back-office** (`#/operador`) con la cola ordenada por prioridad y espera; exige rol de operador | `backend/app/graph/nodes/hitl.py`, `backend/app/api/routes_operator.py` |
@@ -224,6 +225,7 @@ Neo4j vs pgvector en [evals/README.md](evals/README.md#neo4j-frente-a-pgvector-m
 pytest backend -q                                          # 121 tests (los de integración se saltan si falta el servicio)
 python evals/run_evals.py --check                          # Evals de punta a punta con umbrales
 python evals/run_evals.py --router lora --knowledge neo4j  # router LoRA + Graph RAG: 39/39
+python evals/run_evals.py --router cascade --knowledge neo4j  # reglas + LoRA en cascada: 39/39
 python evals/run_evals.py --router lora --knowledge neo4j --llm ollama --judge   # + LLM real y juez: 39/39
 cd frontend; npm test; npm run build
 python frontend/e2e/smoke_test.py                          # E2E con clics reales (Playwright + Edge/Chrome)
@@ -291,8 +293,6 @@ Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi sa
 - Trazas con OpenTelemetry / LangSmith / Langfuse, y los KPIs del dashboard exportados a
   Prometheus/Grafana con alertas de deriva (subida de `degraded`, de aclaraciones, de reclamos
   rechazados o de la espera en la cola HITL). La analítica iría a un data warehouse, no a SQLite.
-- Calibrar la confianza del LoRA (hoy sale ~0.99 casi siempre) para que el umbral de aclaración y
-  una cascada reglas → LoRA funcionen.
 - Pipeline de reentrenamiento (Airflow / Metaflow): datos nuevos del monitoreo → reentrenar →
   Evals como compuerta → despliegue del adaptador versionado.
 - Servir el LoRA con vLLM o llama.cpp y generar solo las claves no nulas para bajar la latencia

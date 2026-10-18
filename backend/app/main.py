@@ -49,7 +49,7 @@ async def lifespan(app: FastAPI):
             require_llm().invoke("Responde solo: ok")
         except Exception as error:  # noqa: BLE001
             logger.warning("No se pudo precalentar el LLM (%s): los nodos usarán su ruta determinista", error)
-    if settings.router_backend == "lora":
+    if settings.router_backend in ("lora", "cascade"):
         try:
             from app.llm.lora_router import get_lora_classifier
 

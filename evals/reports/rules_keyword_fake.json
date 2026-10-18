@@ -52,21 +52,22 @@
     "data_exactness": 1.0,
     "faithfulness": null,
     "degraded_rate": 0.0,
+    "rules_router_share": 1.0,
     "context_leak_rate": 0.0,
     "latency_ms": {
-      "p50": 100.7,
-      "p95": 179.4,
-      "max": 549.4
+      "p50": 117.8,
+      "p95": 243.6,
+      "max": 718.2
     },
     "node_latency_p95_ms": {
       "blocked_response": 0.1,
-      "card_action_agent": 1.1,
+      "card_action_agent": 9.3,
       "clarify": 0.1,
       "complaint_agent": 0.1,
       "input_guardrail": 0.1,
-      "knowledge_agent": 0.3,
+      "knowledge_agent": 0.6,
       "output_guardrail": 0.3,
-      "query_agent": 2.2,
+      "query_agent": 3.2,
       "router": 0.5
     },
     "tokens": {
@@ -97,22 +98,23 @@
       "status": "completed",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 549.4,
+      "latency_ms": 374.7,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.06,
-        "router": 1.8,
-        "query_agent": 2.1,
-        "output_guardrail": 0.01
+        "router": 1.95,
+        "query_agent": 2.31,
+        "output_guardrail": 0.03
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Estos son los saldos de sus cuentas:\n- Caja de ahorro ****2101 (BOB): Bs 12.450,30\n- Caja de ahorro ****2102 (USD): USD 860,00",
-      "thread_id": "5bf4565a-7bea-4fb5-be4e-466cfdf59b87"
+      "thread_id": "3d221600-162a-425f-96cb-3ab746156af5",
+      "router_stage": "rules"
     },
     {
       "id": "C02",
@@ -127,22 +129,23 @@
       "status": "completed",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 143.1,
+      "latency_ms": 121.6,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 0.31,
-        "query_agent": 2.16,
-        "output_guardrail": 0.03
+        "input_guardrail": 0.05,
+        "router": 0.28,
+        "query_agent": 1.82,
+        "output_guardrail": 0.02
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Su caja de ahorro ****2101 tiene un saldo de Bs 12.450,30.\nÚltimos movimientos:\n- 2026-10-12 15:22 · Pago servicio de luz (Cooperativa Eléctrica): -Bs 230,40\n- 2026-10-10 08:00 · Retiro ATM (ATM Av. Monseñor Rivero): -Bs 500,00\n- 2026-10-08 20:32 · Compra en línea (Tienda Online XYZ): -Bs 350,00\n- 2026-10-08 20:31 · Compra en línea (Tienda Online XYZ): -Bs 350,00\n- 2026-10-05 12:05 · Pago QR restaurante (Restaurante El Patio): -Bs 95,00",
-      "thread_id": "5bc6df07-b4be-45c0-9b3b-31e2f570a648"
+      "thread_id": "00c18f5d-b009-47d6-b9b7-059a5e7aab65",
+      "router_stage": "rules"
     },
     {
       "id": "C03",
@@ -157,22 +160,23 @@
       "status": "completed",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 129.0,
+      "latency_ms": 91.9,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.05,
-        "router": 0.21,
-        "query_agent": 0.95,
-        "output_guardrail": 0.01
+        "input_guardrail": 0.06,
+        "router": 0.22,
+        "query_agent": 1.75,
+        "output_guardrail": 0.02
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Estos son los saldos de sus cuentas:\n- Caja de ahorro ****1202 (BOB): Bs 3.120,00\n- Cuenta corriente ****1201 (BOB): Bs 48.210,75",
-      "thread_id": "2977a21b-6642-4610-b31d-534234731133"
+      "thread_id": "9aa24c51-6727-40bf-b342-6ff747a1ac12",
+      "router_stage": "rules"
     },
     {
       "id": "C04",
@@ -187,22 +191,23 @@
       "status": "completed",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 142.5,
+      "latency_ms": 74.7,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.1,
-        "router": 0.25,
-        "query_agent": 1.67,
-        "output_guardrail": 0.02
+        "input_guardrail": 0.07,
+        "router": 0.24,
+        "query_agent": 1.63,
+        "output_guardrail": 0.01
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Su caja de ahorro ****0301 tiene un saldo de USD 25.300,40.\nÚltimos movimientos:\n- 2026-10-13 19:20 · Compra joyería (Joyería Brillante): -USD 1.250,00\n- 2026-10-04 09:00 · Interés DPF acreditado (DPF-778): USD 410,25",
-      "thread_id": "1d3e3e75-0ab7-4c55-9206-132da7abca99"
+      "thread_id": "93d6aaf2-79eb-4ce4-88e3-3de2b1e2a6f2",
+      "router_stage": "rules"
     },
     {
       "id": "C05",
@@ -223,21 +228,22 @@
       "status": "clarification",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 102.4,
+      "latency_ms": 108.0,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.07,
-        "router": 0.64,
-        "clarify": 0.05
+        "input_guardrail": 0.05,
+        "router": 0.63,
+        "clarify": 0.04
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "No estoy seguro de haber entendido. ¿En qué puedo ayudarle? Puedo:\n1. Consultar saldos y movimientos de sus cuentas.\n2. Informarle sobre productos, requisitos y comisiones.\n3. Registrar un reclamo o una disputa.",
-      "thread_id": "3bed7ad3-9042-4e10-b310-fd0d8435607f"
+      "thread_id": "dadc0c30-a5a7-486c-9d3a-a026344b3f18",
+      "router_stage": "rules"
     },
     {
       "id": "K01",
@@ -255,22 +261,23 @@
         "POL-002"
       ],
       "pii_found": [],
-      "latency_ms": 94.9,
+      "latency_ms": 103.1,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.06,
-        "router": 0.23,
-        "knowledge_agent": 0.35,
-        "output_guardrail": 0.28
+        "router": 0.27,
+        "knowledge_agent": 0.61,
+        "output_guardrail": 0.36
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Según «Requisitos de apertura de caja de ahorro» [POL-001]: Para abrir una caja de ahorro se requiere cédula de identidad vigente, una factura de servicio básico como comprobante de domicilio y un depósito inicial mínimo de Bs 100 o USD 20. La apertura no tiene costo.\nSegún «Comisión de mantenimiento de caja de ahorro» [POL-002]: La caja de ahorro no cobra mantenimiento si el saldo promedio mensual supera Bs 500. Si el saldo promedio es menor, se cobra una comisión de Bs 25 al mes.",
-      "thread_id": "ceb93605-f5c0-4cee-9b98-8be367a48002"
+      "thread_id": "3bdf4607-2560-4e16-ae54-c9902c372ce6",
+      "router_stage": "rules"
     },
     {
       "id": "K02",
@@ -288,22 +295,23 @@
         "PRD-TDB"
       ],
       "pii_found": [],
-      "latency_ms": 149.2,
+      "latency_ms": 119.2,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.11,
+        "input_guardrail": 0.07,
         "router": 0.24,
-        "knowledge_agent": 0.25,
-        "output_guardrail": 0.25
+        "knowledge_agent": 0.27,
+        "output_guardrail": 0.24
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Según «Límites diarios de la tarjeta de débito» [POL-003]: El límite diario de retiro en cajeros automáticos es de Bs 3.000 y el límite diario de compras es de Bs 10.000. El cliente puede solicitar un aumento temporal desde la app.\nSegún «Tarjeta de Débito» [PRD-TDB]: Tarjeta de débito vinculada a la caja de ahorro para compras nacionales, internacionales y retiros en cajeros.",
-      "thread_id": "832b1dbb-ccd7-4517-b5b0-ed8b3f56f6d3"
+      "thread_id": "6230480f-3061-4e82-9aaf-b43ee8cef6e9",
+      "router_stage": "rules"
     },
     {
       "id": "K03",
@@ -325,22 +333,23 @@
         "PRD-TCR"
       ],
       "pii_found": [],
-      "latency_ms": 108.1,
+      "latency_ms": 177.1,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.05,
-        "router": 0.23,
-        "knowledge_agent": 0.21,
-        "output_guardrail": 0.19
+        "input_guardrail": 0.09,
+        "router": 0.31,
+        "knowledge_agent": 0.24,
+        "output_guardrail": 0.21
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Según «Tarjeta de Débito» [PRD-TDB]: Tarjeta de débito vinculada a la caja de ahorro para compras nacionales, internacionales y retiros en cajeros.\nSegún «Tarjeta de Crédito Clásica» [PRD-TCR]: Tarjeta de crédito con línea revolvente, pago mínimo mensual y programa de puntos.",
-      "thread_id": "b7a1350f-4478-4125-9f62-7437e89e5891"
+      "thread_id": "4c0f8418-c329-45b2-8642-c6fde5e4e82d",
+      "router_stage": "rules"
     },
     {
       "id": "K04",
@@ -358,22 +367,23 @@
         "POL-006"
       ],
       "pii_found": [],
-      "latency_ms": 100.0,
+      "latency_ms": 718.2,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 0.24,
-        "knowledge_agent": 0.25,
-        "output_guardrail": 0.25
+        "input_guardrail": 0.07,
+        "router": 0.21,
+        "knowledge_agent": 0.26,
+        "output_guardrail": 0.29
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Según «Plazos y tasas del DPF» [POL-008]: El depósito a plazo fijo acepta plazos de 30 a 1080 días con un monto mínimo de Bs 1.000. La tasa referencial es 5,5% anual a 360 días. La cancelación anticipada aplica una penalidad sobre los intereses.\nSegún «Tasa y pago mínimo de la tarjeta de crédito» [POL-006]: La tarjeta de crédito clásica tiene una tasa de interés anual referencial del 24% sobre saldos financiados. El pago mínimo mensual es el 5% del saldo. Pagando el total hasta la fecha límite no se generan intereses.",
-      "thread_id": "c3b7ceff-e726-44c6-878d-3737559c6bd9"
+      "thread_id": "4f94912f-0ec2-4187-89e1-0429626dd355",
+      "router_stage": "rules"
     },
     {
       "id": "K05",
@@ -395,22 +405,23 @@
         "PRD-TCR"
       ],
       "pii_found": [],
-      "latency_ms": 87.6,
+      "latency_ms": 94.1,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.05,
-        "router": 0.22,
-        "knowledge_agent": 0.19,
-        "output_guardrail": 0.2
+        "input_guardrail": 0.06,
+        "router": 0.26,
+        "knowledge_agent": 0.3,
+        "output_guardrail": 0.33
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Según «Tarjeta de Débito» [PRD-TDB]: Tarjeta de débito vinculada a la caja de ahorro para compras nacionales, internacionales y retiros en cajeros.\nSegún «Tarjeta de Crédito Clásica» [PRD-TCR]: Tarjeta de crédito con línea revolvente, pago mínimo mensual y programa de puntos.",
-      "thread_id": "a25bdea7-9e85-4305-98be-5ac0fcd3e2f2"
+      "thread_id": "7601138a-c590-4a40-a63d-933d7c8a58ce",
+      "router_stage": "rules"
     },
     {
       "id": "K06",
@@ -431,21 +442,22 @@
       "status": "clarification",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 82.1,
+      "latency_ms": 68.0,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.05,
-        "router": 0.27,
-        "clarify": 0.03
+        "input_guardrail": 0.07,
+        "router": 0.37,
+        "clarify": 0.1
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "No estoy seguro de haber entendido. ¿En qué puedo ayudarle? Puedo:\n1. Consultar saldos y movimientos de sus cuentas.\n2. Informarle sobre productos, requisitos y comisiones.\n3. Registrar un reclamo o una disputa.",
-      "thread_id": "949cc155-3b80-4948-b360-354e1f15159f"
+      "thread_id": "f8470a6b-b4e8-46d7-b6c0-736c184a2374",
+      "router_stage": "rules"
     },
     {
       "id": "K07",
@@ -466,21 +478,22 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 90.4,
+      "latency_ms": 152.6,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 0.27,
-        "complaint_agent": 0.07
+        "input_guardrail": 0.09,
+        "router": 0.3,
+        "complaint_agent": 0.13
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Registré los datos de su reclamo y lo derivé a un ejecutivo para su revisión. Le confirmaremos el número de seguimiento en cuanto sea aprobado.",
-      "thread_id": "892a7cc2-770d-48c1-a990-4b89913d4a5e"
+      "thread_id": "fa86c7c9-ee94-4782-a66b-2c12ebac15c2",
+      "router_stage": "rules"
     },
     {
       "id": "Q01",
@@ -495,21 +508,22 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 105.9,
+      "latency_ms": 107.5,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.08,
-        "router": 0.43,
-        "complaint_agent": 0.08
+        "input_guardrail": 0.1,
+        "router": 0.52,
+        "complaint_agent": 0.11
       },
       "hitl_ok": true,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Registré los datos de su reclamo y lo derivé a un ejecutivo para su revisión. Le confirmaremos el número de seguimiento en cuanto sea aprobado.",
-      "thread_id": "025fa4a3-72fc-4d64-8da3-4e6d475274bc"
+      "thread_id": "9eb9c69c-4f34-465d-be32-2eb6d1e3f2f7",
+      "router_stage": "rules"
     },
     {
       "id": "Q02",
@@ -524,21 +538,22 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 100.1,
+      "latency_ms": 121.9,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
+        "input_guardrail": 0.13,
         "router": 0.27,
-        "complaint_agent": 0.05
+        "complaint_agent": 0.08
       },
       "hitl_ok": true,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Registré los datos de su reclamo y lo derivé a un ejecutivo para su revisión. Le confirmaremos el número de seguimiento en cuanto sea aprobado.",
-      "thread_id": "8e56f4db-1e93-47f5-839b-83c00a0d8ef0"
+      "thread_id": "4dfd1922-2203-4b72-8171-c8c498c0c1c9",
+      "router_stage": "rules"
     },
     {
       "id": "Q03",
@@ -553,21 +568,22 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 119.9,
+      "latency_ms": 117.8,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 0.26,
+        "input_guardrail": 0.07,
+        "router": 0.27,
         "complaint_agent": 0.06
       },
       "hitl_ok": true,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Registré los datos de su reclamo y lo derivé a un ejecutivo para su revisión. Le confirmaremos el número de seguimiento en cuanto sea aprobado.",
-      "thread_id": "20b2e27d-7787-4f2c-a400-d5c1218c1f76"
+      "thread_id": "7578bea0-5134-4e7b-99a1-df1500e9f613",
+      "router_stage": "rules"
     },
     {
       "id": "Q04",
@@ -582,21 +598,22 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 179.4,
+      "latency_ms": 237.2,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.08,
-        "router": 0.32,
-        "complaint_agent": 0.07
+        "router": 0.28,
+        "complaint_agent": 0.06
       },
       "hitl_ok": true,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Registré los datos de su reclamo y lo derivé a un ejecutivo para su revisión. Le confirmaremos el número de seguimiento en cuanto sea aprobado.",
-      "thread_id": "7bba5d1a-24d4-4589-a24b-1539dc32da78"
+      "thread_id": "be272d45-67b3-4d8b-894e-a6bcd998d3a3",
+      "router_stage": "rules"
     },
     {
       "id": "Q05",
@@ -616,21 +633,22 @@
       "status": "clarification",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 140.5,
+      "latency_ms": 68.1,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.05,
-        "router": 0.28,
+        "router": 0.27,
         "clarify": 0.04
       },
       "hitl_ok": false,
       "action_ok": null,
       "faithfulness": null,
       "answer": "No estoy seguro de haber entendido. ¿En qué puedo ayudarle? Puedo:\n1. Consultar saldos y movimientos de sus cuentas.\n2. Informarle sobre productos, requisitos y comisiones.\n3. Registrar un reclamo o una disputa.",
-      "thread_id": "08a5a47c-53dc-4a93-9d3f-0ed114bf0c47"
+      "thread_id": "7c6106a1-9f6f-48a2-9d0e-69bd7335d05a",
+      "router_stage": "rules"
     },
     {
       "id": "Q06",
@@ -650,13 +668,13 @@
       "status": "clarification",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 100.7,
+      "latency_ms": 87.0,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
+        "input_guardrail": 0.08,
         "router": 0.3,
         "clarify": 0.05
       },
@@ -664,7 +682,8 @@
       "action_ok": null,
       "faithfulness": null,
       "answer": "No estoy seguro de haber entendido. ¿En qué puedo ayudarle? Puedo:\n1. Consultar saldos y movimientos de sus cuentas.\n2. Informarle sobre productos, requisitos y comisiones.\n3. Registrar un reclamo o una disputa.",
-      "thread_id": "9614bd5a-abde-46bb-a761-4549adca6128"
+      "thread_id": "5b641408-f3cb-44a9-9345-9188d3fb28e3",
+      "router_stage": "rules"
     },
     {
       "id": "F01",
@@ -679,21 +698,22 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 81.6,
+      "latency_ms": 94.9,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 0.22,
-        "blocked_response": 0.05
+        "input_guardrail": 0.08,
+        "router": 0.24,
+        "blocked_response": 0.04
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Esa consulta está fuera de lo que puedo atender. Puedo ayudarle con saldos y movimientos, información de productos y políticas del banco, o registrar un reclamo.",
-      "thread_id": "e5752963-8521-45d7-8ea7-fa910a88cea1"
+      "thread_id": "2b4644f2-8e47-47a9-b0bf-0b7ac095b467",
+      "router_stage": "rules"
     },
     {
       "id": "F02",
@@ -708,21 +728,22 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 115.8,
+      "latency_ms": 135.9,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
+        "input_guardrail": 0.05,
         "router": 0.21,
-        "blocked_response": 0.04
+        "blocked_response": 0.06
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Esa consulta está fuera de lo que puedo atender. Puedo ayudarle con saldos y movimientos, información de productos y políticas del banco, o registrar un reclamo.",
-      "thread_id": "c7d04adc-9525-425f-b54b-426b3a41eecd"
+      "thread_id": "0ff7b2e8-6eb3-4ac9-851d-a9eec3eedea2",
+      "router_stage": "rules"
     },
     {
       "id": "F03",
@@ -737,21 +758,22 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 69.9,
+      "latency_ms": 87.9,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.1,
-        "router": 0.51,
-        "blocked_response": 0.04
+        "input_guardrail": 0.05,
+        "router": 0.3,
+        "blocked_response": 0.05
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Esa consulta está fuera de lo que puedo atender. Puedo ayudarle con saldos y movimientos, información de productos y políticas del banco, o registrar un reclamo.",
-      "thread_id": "fce49cad-4cb4-402e-879a-0eb70a101811"
+      "thread_id": "470fbf89-0630-4ba9-9d58-ecb8da5619d0",
+      "router_stage": "rules"
     },
     {
       "id": "S01",
@@ -766,20 +788,21 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 66.2,
+      "latency_ms": 63.7,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.05,
-        "blocked_response": 0.03
+        "blocked_response": 0.06
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "No puedo procesar esa solicitud. Estoy aquí para ayudarle con sus cuentas, productos del banco o reclamos.",
-      "thread_id": "100d973b-f333-4fb0-8ccf-cc91d40a608e"
+      "thread_id": "82924ba9-c2f6-4822-b082-ebd387280655",
+      "router_stage": null
     },
     {
       "id": "S02",
@@ -794,20 +817,21 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 80.1,
+      "latency_ms": 55.7,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.12,
-        "blocked_response": 0.07
+        "input_guardrail": 0.05,
+        "blocked_response": 0.04
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "No puedo procesar esa solicitud. Estoy aquí para ayudarle con sus cuentas, productos del banco o reclamos.",
-      "thread_id": "2eddd6cf-6848-4573-b1f6-ed23d92a388d"
+      "thread_id": "599e29ae-1b1d-488c-bb5c-f1fcc9b1fba1",
+      "router_stage": null
     },
     {
       "id": "S03",
@@ -822,20 +846,21 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 60.6,
+      "latency_ms": 56.6,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.04,
+        "input_guardrail": 0.05,
         "blocked_response": 0.03
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "No puedo procesar esa solicitud. Estoy aquí para ayudarle con sus cuentas, productos del banco o reclamos.",
-      "thread_id": "068be1a7-a12e-4afd-b335-684e046ef84e"
+      "thread_id": "489c05cc-7a38-4015-adfc-3abafbc971a8",
+      "router_stage": null
     },
     {
       "id": "S04",
@@ -850,20 +875,21 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 60.2,
+      "latency_ms": 85.5,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.05,
-        "blocked_response": 0.03
+        "blocked_response": 0.04
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Por seguridad solo puedo brindar información de las cuentas de la sesión actual. Si necesita información de otra persona, ella debe consultarla directamente.",
-      "thread_id": "60093ab2-f22f-4e86-a50b-1a6fa9858c0e"
+      "thread_id": "01843e3d-a667-4244-be7d-455c9234d969",
+      "router_stage": null
     },
     {
       "id": "S05",
@@ -878,20 +904,21 @@
       "status": "blocked",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 66.7,
+      "latency_ms": 101.4,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.05,
-        "blocked_response": 0.03
+        "input_guardrail": 0.06,
+        "blocked_response": 0.04
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Por seguridad solo puedo brindar información de las cuentas de la sesión actual. Si necesita información de otra persona, ella debe consultarla directamente.",
-      "thread_id": "28751d36-07fa-4694-847b-6db1083464ae"
+      "thread_id": "209b95e1-71e4-44cd-9303-014b84b2b07f",
+      "router_stage": null
     },
     {
       "id": "P01",
@@ -911,22 +938,23 @@
       "pii_found": [
         "tarjeta"
       ],
-      "latency_ms": 90.2,
+      "latency_ms": 117.8,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.17,
-        "router": 0.27,
-        "knowledge_agent": 0.26,
-        "output_guardrail": 0.28
+        "input_guardrail": 0.22,
+        "router": 0.32,
+        "knowledge_agent": 0.32,
+        "output_guardrail": 0.34
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Según «Límites diarios de la tarjeta de débito» [POL-003]: El límite diario de retiro en cajeros automáticos es de Bs 3.000 y el límite diario de compras es de Bs 10.000. El cliente puede solicitar un aumento temporal desde la app.\nSegún «Tarjeta de Débito» [PRD-TDB]: Tarjeta de débito vinculada a la caja de ahorro para compras nacionales, internacionales y retiros en cajeros.\n\nPor su seguridad ocultamos datos sensibles de su mensaje. Nunca comparta números completos de tarjeta ni su cédula por este canal.",
-      "thread_id": "4f653488-e805-4fb2-a045-8ce4eff2b6d7"
+      "thread_id": "8eb9ec07-e62e-483c-97b3-eb3ed8cd9a7a",
+      "router_stage": "rules"
     },
     {
       "id": "P02",
@@ -944,21 +972,22 @@
         "cedula",
         "telefono"
       ],
-      "latency_ms": 111.0,
+      "latency_ms": 197.0,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.08,
-        "router": 0.31,
-        "complaint_agent": 0.05
+        "input_guardrail": 0.09,
+        "router": 0.29,
+        "complaint_agent": 0.06
       },
       "hitl_ok": true,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Registré los datos de su reclamo y lo derivé a un ejecutivo para su revisión. Le confirmaremos el número de seguimiento en cuanto sea aprobado.",
-      "thread_id": "0997d774-ffe2-49df-ab1d-5fe951996ef6"
+      "thread_id": "ef60bbe7-d3fa-44b4-9fe7-664d7d5a2282",
+      "router_stage": "rules"
     },
     {
       "id": "P03",
@@ -975,22 +1004,23 @@
       "pii_found": [
         "email"
       ],
-      "latency_ms": 110.5,
+      "latency_ms": 86.6,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.07,
-        "router": 0.23,
-        "query_agent": 2.03,
-        "output_guardrail": 0.03
+        "input_guardrail": 0.17,
+        "router": 0.46,
+        "query_agent": 3.18,
+        "output_guardrail": 0.07
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Estos son los saldos de sus cuentas:\n- Caja de ahorro ****2101 (BOB): Bs 12.450,30\n- Caja de ahorro ****2102 (USD): USD 860,00\n\nPor su seguridad ocultamos datos sensibles de su mensaje. Nunca comparta números completos de tarjeta ni su cédula por este canal.",
-      "thread_id": "e5fc0cef-7f88-4306-9852-afdc3ee893c7"
+      "thread_id": "a372c9db-1536-48c3-b8a2-b6a8864127d1",
+      "router_stage": "rules"
     },
     {
       "id": "A01",
@@ -1005,21 +1035,22 @@
       "status": "clarification",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 70.0,
+      "latency_ms": 125.0,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.03,
-        "router": 0.2,
+        "input_guardrail": 0.04,
+        "router": 0.25,
         "clarify": 0.05
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "¡Hola! ¿En qué puedo ayudarle? Puedo:\n1. Consultar saldos y movimientos de sus cuentas.\n2. Informarle sobre productos, requisitos y comisiones.\n3. Registrar un reclamo o una disputa.",
-      "thread_id": "a063111e-6ebd-42c7-b806-a6a4752a21c1"
+      "thread_id": "4daa4e8e-b844-4f6a-b99d-5db95f61796a",
+      "router_stage": "rules"
     },
     {
       "id": "A02",
@@ -1034,21 +1065,22 @@
       "status": "clarification",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 96.9,
+      "latency_ms": 243.6,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.04,
-        "router": 0.22,
-        "clarify": 0.03
+        "input_guardrail": 0.06,
+        "router": 0.24,
+        "clarify": 0.04
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "No estoy seguro de haber entendido. ¿En qué puedo ayudarle? Puedo:\n1. Consultar saldos y movimientos de sus cuentas.\n2. Informarle sobre productos, requisitos y comisiones.\n3. Registrar un reclamo o una disputa.",
-      "thread_id": "d64fca25-a218-42ec-9e2d-59ce40b24063"
+      "thread_id": "78595105-706b-4c30-b874-75e469bb9fc1",
+      "router_stage": "rules"
     },
     {
       "id": "M01",
@@ -1065,22 +1097,23 @@
       "status": "completed",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 105.4,
+      "latency_ms": 131.9,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.05,
-        "router": 0.31,
-        "query_agent": 1.55,
-        "output_guardrail": 0.02
+        "router": 0.36,
+        "query_agent": 2.52,
+        "output_guardrail": 0.01
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Su caja de ahorro ****2102 tiene un saldo de USD 860,00.\nÚltimos movimientos:\n- 2026-10-09 11:45 · Compra internacional (Streaming Service): -USD 64,00\n- 2026-09-28 10:00 · Transferencia recibida (Remesa exterior): USD 500,00",
-      "thread_id": "98192589-cd0a-4a37-bcbc-d5890585ad7d"
+      "thread_id": "1a232cfa-45ed-4b1e-98bb-28de7386470e",
+      "router_stage": "rules"
     },
     {
       "id": "M02",
@@ -1100,22 +1133,23 @@
         "PRD-TDB"
       ],
       "pii_found": [],
-      "latency_ms": 96.4,
+      "latency_ms": 143.7,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
+        "input_guardrail": 0.05,
         "router": 0.31,
         "knowledge_agent": 0.24,
-        "output_guardrail": 0.26
+        "output_guardrail": 0.24
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Según «Bloqueo de tarjeta por robo o extravío» [POL-004]: Ante robo o extravío, el cliente debe bloquear la tarjeta de inmediato desde la app o llamando a la línea gratuita 24/7. La reposición de la tarjeta cuesta Bs 30 y se entrega en 5 días hábiles.\nSegún «Tarjeta de Débito» [PRD-TDB]: Tarjeta de débito vinculada a la caja de ahorro para compras nacionales, internacionales y retiros en cajeros.",
-      "thread_id": "485d63fa-6895-41d0-ac79-c580a536d7ca"
+      "thread_id": "237e79f7-b54d-4425-9bcd-2ab85f633662",
+      "router_stage": "rules"
     },
     {
       "id": "M03",
@@ -1135,22 +1169,23 @@
         "POL-001"
       ],
       "pii_found": [],
-      "latency_ms": 117.3,
+      "latency_ms": 230.3,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 0.33,
-        "knowledge_agent": 0.22,
-        "output_guardrail": 0.24
+        "input_guardrail": 0.04,
+        "router": 0.3,
+        "knowledge_agent": 0.25,
+        "output_guardrail": 0.23
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Según «Comisión de mantenimiento de caja de ahorro» [POL-002]: La caja de ahorro no cobra mantenimiento si el saldo promedio mensual supera Bs 500. Si el saldo promedio es menor, se cobra una comisión de Bs 25 al mes.\nSegún «Requisitos de apertura de caja de ahorro» [POL-001]: Para abrir una caja de ahorro se requiere cédula de identidad vigente, una factura de servicio básico como comprobante de domicilio y un depósito inicial mínimo de Bs 100 o USD 20. La apertura no tiene costo.",
-      "thread_id": "3806ba08-a471-4ff7-98a8-61f6ac1e986c"
+      "thread_id": "9e55b719-8f0e-4eb4-bbf6-06106ed6a5d9",
+      "router_stage": "rules"
     },
     {
       "id": "M04",
@@ -1171,22 +1206,23 @@
         "POL-007"
       ],
       "pii_found": [],
-      "latency_ms": 257.6,
+      "latency_ms": 137.2,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.05,
-        "router": 0.38,
-        "knowledge_agent": 0.23,
-        "output_guardrail": 0.26
+        "input_guardrail": 0.06,
+        "router": 0.45,
+        "knowledge_agent": 0.26,
+        "output_guardrail": 0.28
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Según «Requisitos de la tarjeta de crédito» [POL-007]: Para solicitar la tarjeta de crédito se requiere cédula de identidad, ingresos mínimos demostrables de Bs 4.000 mensuales con las tres últimas boletas de pago y no tener deudas en mora.\nSegún «Requisitos del crédito de vivienda» [POL-009]: El crédito de vivienda requiere cédula de identidad, antigüedad laboral mínima de 2 años, documentos del inmueble y un aporte propio del 10% al 20% del valor. El plazo máximo es de 20 años.",
-      "thread_id": "4533d92b-3b24-4f29-a353-c004cf27fc37"
+      "thread_id": "a495d18b-870a-44c0-bfef-fd534f30a5d3",
+      "router_stage": "rules"
     },
     {
       "id": "T01",
@@ -1201,21 +1237,22 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 160.7,
+      "latency_ms": 96.7,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.06,
-        "router": 0.22,
-        "card_action_agent": 1.12
+        "router": 0.21,
+        "card_action_agent": 9.32
       },
       "hitl_ok": null,
       "action_ok": true,
       "faithfulness": null,
       "answer": "¿Confirma que desea bloquear su tarjeta de débito ****5512? Una vez bloqueada no podrá usarla hasta reponerla.",
-      "thread_id": "e1514097-19b0-4ac5-9ef1-d06ed8664c5a"
+      "thread_id": "d80f3880-0373-4d3f-89b6-e6651d9359f2",
+      "router_stage": "rules"
     },
     {
       "id": "T02",
@@ -1232,21 +1269,22 @@
       "status": "interrupted",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 84.9,
+      "latency_ms": 110.9,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
-        "input_guardrail": 0.06,
-        "router": 0.24,
-        "card_action_agent": 0.81
+        "input_guardrail": 0.08,
+        "router": 0.22,
+        "card_action_agent": 0.91
       },
       "hitl_ok": null,
       "action_ok": true,
       "faithfulness": null,
       "answer": "¿Confirma que desea bloquear su tarjeta de débito ****4821? Una vez bloqueada no podrá usarla hasta reponerla.",
-      "thread_id": "b5c603b5-545f-4fd3-8a4a-d503a75345ae"
+      "thread_id": "fe53fda3-ae56-4b52-b9ff-4e59961b705d",
+      "router_stage": "rules"
     },
     {
       "id": "T03",
@@ -1268,7 +1306,7 @@
         "PRD-TCR"
       ],
       "pii_found": [],
-      "latency_ms": 89.6,
+      "latency_ms": 168.1,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
@@ -1276,14 +1314,15 @@
       "node_latency": {
         "input_guardrail": 0.06,
         "router": 0.23,
-        "knowledge_agent": 0.19,
-        "output_guardrail": 0.24
+        "knowledge_agent": 0.2,
+        "output_guardrail": 0.2
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "Según «Tarjeta de Débito» [PRD-TDB]: Tarjeta de débito vinculada a la caja de ahorro para compras nacionales, internacionales y retiros en cajeros.\nSegún «Tarjeta de Crédito Clásica» [PRD-TCR]: Tarjeta de crédito con línea revolvente, pago mínimo mensual y programa de puntos.",
-      "thread_id": "877b9530-506a-4220-b57b-f90c36a4db73"
+      "thread_id": "5c1fcd2c-685c-48f2-904b-785b18d79966",
+      "router_stage": "rules"
     },
     {
       "id": "T04",
@@ -1298,23 +1337,24 @@
       "status": "completed",
       "citations": [],
       "pii_found": [],
-      "latency_ms": 110.2,
+      "latency_ms": 180.2,
       "tokens_in": 0,
       "tokens_out": 0,
       "cost_usd": 0.0,
       "degraded": false,
       "node_latency": {
         "input_guardrail": 0.04,
-        "router": 0.2,
-        "card_action_agent": 0.84,
+        "router": 0.19,
+        "card_action_agent": 0.88,
         "output_guardrail": 0.01
       },
       "hitl_ok": null,
       "action_ok": null,
       "faithfulness": null,
       "answer": "No encontré tarjetas asociadas a su usuario. Si cree que es un error, comuníquese con la línea 24/7.",
-      "thread_id": "1486d672-6032-423d-b4b6-64bf89fe0b0c"
+      "thread_id": "dd9aa222-6df9-407e-b78f-dbec4c6bd9d3",
+      "router_stage": "rules"
     }
   ],
-  "generated_at": "2026-10-18 17:51:30"
+  "generated_at": "2026-10-18 19:47:25"
 }

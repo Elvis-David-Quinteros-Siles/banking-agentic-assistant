@@ -78,7 +78,7 @@ START
 | Nodo | Tipo | Qué hace | Por qué así |
 |---|---|---|---|
 | `input_guardrail` | Determinista (regex + reglas) + LLM opcional | Detecta y **enmascara PII** (tarjeta con Luhn, CI, teléfono, email) *antes* de que llegue a cualquier LLM; detecta prompt injection y contenido tóxico | Barato y rápido: corta antes de gastar tokens. La PII nunca sale a un proveedor externo |
-| `router` | LLM con salida estructurada **o** modelo LoRA local | Clasifica intención + extrae entidades (`producto`, `monto`, `fecha`, `cuenta`) | Backend intercambiable (`ROUTER_BACKEND=llm|lora|rules`) para comparar costo/latencia/precisión en Evals |
+| `router` | LLM con salida estructurada **o** modelo LoRA local | Clasifica intención + extrae entidades (`producto`, `monto`, `fecha`, `cuenta`) | Backend intercambiable (`ROUTER_BACKEND=llm|lora|cascade|rules`) para comparar costo/latencia/precisión en Evals |
 | `clarify` | LLM | Si la confianza es baja, pregunta en vez de adivinar | Reduce enrutamientos erróneos (optimización en producción) |
 | `query_agent` | ReAct (`create_react_agent`) | Usa tools `get_accounts`, `get_balance`, `get_transactions` | **Sin text-to-SQL libre**: SQL parametrizado; `customer_id` se inyecta desde el estado, no desde el LLM (evita IDOR por prompt injection) |
 | `knowledge_agent` | RAG | Recuperación híbrida (vector + full-text + expansión Cypher), fusión RRF, respuesta con citas | Si no hay contexto con score suficiente → **se abstiene** ("no tengo esa información") |

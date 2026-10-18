@@ -27,6 +27,9 @@ router:
   lora:
     routing_accuracy: {min: 0.90}
     complaint_recall: {min: 0.95}            # un reclamo no detectado no pasa por HITL
+  cascade:                                   # reglas para sus intenciones confiables, el resto LoRA
+    routing_accuracy: {min: 0.90}
+    complaint_recall: {min: 0.95}            # los reclamos los clasifica siempre el LoRA
   llm:
     routing_accuracy: {min: 0.90}
     complaint_recall: {min: 0.95}
@@ -45,10 +48,12 @@ knowledge:
 latency:
   rules: {p95_ms_max: 1500}
   lora: {p95_ms_max: 3000}
+  cascade: {p95_ms_max: 3000}
   llm: {p95_ms_max: 8000}
 
 # Con un LLM real redactando las respuestas (Ollama on-premise en GPU de 4 GB, o API cloud)
 latency_with_llm:
   rules: {p95_ms_max: 15000}
   lora: {p95_ms_max: 15000}
+  cascade: {p95_ms_max: 15000}
   llm: {p95_ms_max: 20000}

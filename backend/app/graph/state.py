@@ -17,6 +17,7 @@ class AgentState(TypedDict, total=False):
     customer_id: str  # cliente autenticado (lo fija la API, nunca el LLM)
     intent: str | None
     intent_confidence: float | None
+    router_stage: str | None  # quién clasificó: rules | lora | llm (la cascada usa reglas o LoRA)
     entities: dict[str, Any]
     guardrail: dict[str, Any]  # {"blocked", "reason", "pii_found"}
     retrieved_context: list[dict[str, Any]]
@@ -43,6 +44,7 @@ def turn_reset(customer_id: str) -> dict[str, Any]:
         "customer_id": customer_id,
         "intent": None,
         "intent_confidence": None,
+        "router_stage": None,
         "entities": {},
         "guardrail": {"blocked": False, "reason": None, "pii_found": []},
         "retrieved_context": [],

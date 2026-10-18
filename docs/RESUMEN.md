@@ -24,6 +24,8 @@ garantías, y **todo corre on-premise** (sin enviar datos de clientes a la nube)
 
 El router que decide a qué agente va cada mensaje es un **modelo propio (Qwen2.5-0.5B ajustado con
 LoRA)**: 96,5% de precisión en frases nunca vistas, frente a 62% de un sistema por palabras clave.
+Combinado en cascada con esas reglas (que resuelven solas lo que nunca confunden): **98,6%**, y un
+tercio de los mensajes se clasifica en menos de 1 ms, sin GPU.
 
 ## Cómo sé que funciona
 

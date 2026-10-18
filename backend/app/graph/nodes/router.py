@@ -4,6 +4,9 @@ Backends (ROUTER_BACKEND):
 - rules: baseline por palabras clave ponderadas. Fallback y piso de comparación en Evals.
 - llm:   LLM base con salida estructurada (Pydantic). Si falla, cae a rules.
 - lora:  modelo pequeño fine-tuneado (Fase 4).
+- cascade: reglas primero, solo para las intenciones en que son confiables (cascade_rule_intents);
+  el resto, LoRA. Un tercio de los turnos se resuelve en < 1 ms y sin GPU, y la accuracy sube:
+  las reglas aciertan pedidos de bloqueo que el LoRA confunde (finetune/README.md).
 """
 
 import re
@@ -280,10 +283,21 @@ def is_followup(text: str, previous: str) -> bool:
     return bool(FOLLOWUP_REF_RE.search(normalized)) and (intent == "ambiguo" or confidence < 0.6)
 
 
+def _rules_result(text: str, entities: dict, degraded: bool = False) -> dict:
+    intent, confidence = classify_rules(text)
+    result = {"intent": intent, "intent_confidence": confidence, "entities": entities, "router_stage": "rules"}
+    return {**result, "degraded": True} if degraded else result
+
+
 def _classify(text: str, entities: dict) -> dict:
     """Clasificación con el backend configurado (con degradación a reglas si el modelo falla)."""
     settings = get_settings()
-    if settings.router_backend == "lora":
+    if settings.router_backend == "cascade":
+        intent, confidence = classify_rules(text)
+        if intent in settings.cascade_rule_intents and confidence >= settings.router_min_confidence:
+            return {"intent": intent, "intent_confidence": confidence, "entities": entities, "router_stage": "rules"}
+
+    if settings.router_backend in ("lora", "cascade"):
         try:
             output, confidence, usage = classify_lora(text)
             lora_entities = {k: output[k] for k in ("producto", "monto", "moneda") if output.get(k) is not None}
@@ -291,12 +305,12 @@ def _classify(text: str, entities: dict) -> dict:
                 "intent": output["intent"],
                 "intent_confidence": confidence,
                 "entities": {**lora_entities, **entities},  # la regex prevalece en montos
+                "router_stage": "lora",
                 "_usage": usage,
             }
         except Exception as error:  # noqa: BLE001 - modelo no entrenado, JSON inválido, sin GPU...
             log_fallback("router(lora)", error)
-            intent, confidence = classify_rules(text)
-            return {"intent": intent, "intent_confidence": confidence, "entities": entities, "degraded": True}
+            return _rules_result(text, entities, degraded=True)
 
     if settings.router_backend == "llm" and get_chat_model() is not None:
         try:
@@ -307,15 +321,14 @@ def _classify(text: str, entities: dict) -> dict:
                 "intent": routed.intent,
                 "intent_confidence": round(routed.confidence, 2),
                 "entities": {**llm_entities, **entities},
+                "router_stage": "llm",
                 "_usage": usage,
             }
         except Exception as error:  # noqa: BLE001 - cualquier fallo del LLM degrada a reglas
             log_fallback("router", error)
-            intent, confidence = classify_rules(text)
-            return {"intent": intent, "intent_confidence": confidence, "entities": entities, "degraded": True}
+            return _rules_result(text, entities, degraded=True)
 
-    intent, confidence = classify_rules(text)
-    return {"intent": intent, "intent_confidence": confidence, "entities": entities}
+    return _rules_result(text, entities)
 
 
 ROUTABLE_INTENTS = ("consulta_cuenta", "conocimiento_producto", "queja_disputa", "accion_tarjeta")
@@ -344,11 +357,17 @@ def router_node(state: AgentState) -> dict:
     return update
 
 
+def min_confidence(stage: str | None) -> float:
+    """Cada clasificador tiene su escala de confianza: el umbral de aclaración es por etapa."""
+    settings = get_settings()
+    return settings.lora_min_confidence if stage == "lora" else settings.router_min_confidence
+
+
 def route_after_router(state: AgentState) -> str:
     intent = state.get("intent")
     if intent == "fuera_de_alcance":
         return "blocked_response"
-    if intent == "ambiguo" or (state.get("intent_confidence") or 0) < get_settings().router_min_confidence:
+    if intent == "ambiguo" or (state.get("intent_confidence") or 0) < min_confidence(state.get("router_stage")):
         return "clarify"
     routes = {
         "consulta_cuenta": "query_agent",

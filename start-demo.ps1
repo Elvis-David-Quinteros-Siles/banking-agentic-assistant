@@ -172,8 +172,8 @@ if ($Lite) {
     # Router LoRA: requiere el adaptador entrenado y torch/peft instalados
     $router = "rules"
     if ((Test-Path $Adapter) -and (Test-Python "import torch, peft")) {
-        $router = "lora"
-        Write-Ok "Router LoRA disponible"
+        $router = "cascade"  # reglas para lo obvio, LoRA para el resto (finetune/README.md)
+        Write-Ok "Router en cascada: reglas + LoRA"
     } else {
         Write-Note "Router LoRA no disponible (falta el adaptador o torch/peft): se usa el router por reglas."
         Write-Note "Para habilitarlo: pip install -r finetune\requirements.txt; python finetune\train_lora.py"

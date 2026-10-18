@@ -35,8 +35,14 @@ class Settings(BaseSettings):
     anthropic_model: str = "claude-haiku-5-5"
 
     # --- Router -----------------------------------------------------------
-    router_backend: Literal["rules", "llm", "lora"] = "rules"
+    router_backend: Literal["rules", "llm", "lora", "cascade"] = "rules"
     router_min_confidence: float = 0.6
+    # Cascada: las reglas resuelven solas estas intenciones (precisión 100% en train+val con soporte
+    # >= 30, finetune/calibrate.py); el resto pasa al LoRA. Los reclamos van siempre al modelo.
+    cascade_rule_intents: tuple[str, ...] = ("accion_tarjeta", "consulta_cuenta", "fuera_de_alcance")
+    # Umbral de aclaración del LoRA: su confianza tiene otra escala que la de las reglas. Con 0.7, en
+    # el test (plantillas nunca vistas) la cascada no responde ningún error y aclara el 2%
+    lora_min_confidence: float = 0.7
     # Router LoRA (Fase 4): Qwen2.5-0.5B + adaptador entrenado con finetune/train_lora.py
     lora_base_model: str = "Qwen/Qwen2.5-0.5B-Instruct"
     lora_adapter_path: Path = REPO_DIR / "finetune" / "adapters" / "qwen2.5-0.5b-intent-lora"

@@ -70,8 +70,57 @@ Lectura (v1/v2):
   8 plantillas coloquiales **solo en entrenamiento** ("¿cuánta plata tengo en mi cuenta?",
   "platita"...), con el test intacto (mismo archivo). Esto corrige la cobertura de vocabulario, no
   memoriza el test. Aun así, 100% en un test sintético de 24 plantillas no implica 100% en producción.
-- La confianza (probabilidad de los tokens de `intent`) sale ~0.99 casi siempre: el modelo está
-  **sobreconfiado**, y el umbral de aclaración del router sirve poco con LoRA hasta calibrarlo.
+- En v2, la confianza (probabilidad de los tokens de `intent`) salía ~0.99 casi siempre: con 100%
+  de aciertos no había errores contra los cuales medirla. En v3 sí los hay, y la confianza resultó
+  estar bien calibrada (sección siguiente).
+
+## Calibración de la confianza y cascada reglas → LoRA (`calibrate.py`)
+
+**Hipótesis inicial (descartada)**: el LoRA está sobreconfiado y hay que calibrarlo con temperatura.
+Se midió sobre el test (143 ejemplos, plantillas nunca vistas) comparando la confianza de producción
+(greedy) con una distribución sobre las 6 etiquetas, puntuadas una por una y escaladas con una
+temperatura ajustada por validación cruzada agrupada por plantilla:
+
+| Confianza | ECE | Brier | AUROC aciertos vs errores | Costo extra |
+|---|---|---|---|---|
+| **Greedy (producción)** | 0.024 | **0.0226** | **0.971** | 0 |
+| 6 etiquetas + temperatura (fuera de muestra) | **0.008** | 0.0255 | 0.961 | +172 ms por turno |
+
+La confianza greedy **ya está calibrada**: cuando dice ≥ 0.9 acierta 125 de 125, y por debajo de
+0.7 acierta la mitad. La temperatura mejora el ECE en un margen que con 5 errores es ruido, empeora
+la separación de errores y cuesta 172 ms. **No se usa**.
+
+**Lo que sí funcionó**:
+
+1. **Un umbral de aclaración propio del LoRA** (`LORA_MIN_CONFIDENCE=0.7`): las reglas y el LoRA
+   miden la confianza en escalas distintas, y compartían el umbral de 0.6.
+2. **Cascada** (`ROUTER_BACKEND=cascade`): las reglas resuelven solas las intenciones en que no se
+   equivocan, y el resto va al LoRA. Las intenciones se eligen en train+val (precisión ≥ 0.99 con
+   soporte ≥ 30) y se miden en test:
+
+| Intención (reglas, conf. ≥ 0.6) | Precisión train+val | Precisión test | Quién la resuelve |
+|---|---|---|---|
+| consulta_cuenta | 1.000 (66) | 1.000 (15) | reglas |
+| accion_tarjeta | 1.000 (72) | 1.000 (18) | reglas |
+| fuera_de_alcance | 1.000 (79) | 1.000 (13) | reglas |
+| queja_disputa | 0.968 (63) | 1.000 (6) | LoRA: "¿en cuánto tiempo responden un reclamo?" no es un reclamo |
+| conocimiento_producto | 0.611 (157) | 0.765 (17) | LoRA: "tarjeta" y "bloqueo" no alcanzan |
+
+| Router (test, 143) | Accuracy | Errores respondidos | Aclaraciones | Latencia media del router | Turnos sin modelo |
+|---|---|---|---|---|---|
+| LoRA, umbral 0.6 (antes) | 0.965 | 3 | 4 | 867 ms | 0% |
+| LoRA, umbral 0.7 | 0.965 | 1 | 8 | 867 ms | 0% |
+| **Cascada, umbral 0.7** | **0.986** | **0** | **3** | **599 ms** | **32%** |
+
+- La cascada **también sube la accuracy**: 3 de los 5 errores del LoRA eran pedidos de bloqueo
+  ("me robaron la billetera, bloquea mi plástico" → queja) que las reglas reconocen por el verbo.
+- Los reclamos los clasifica siempre el LoRA: un reclamo no detectado no pasa por HITL.
+- En los Evals de punta a punta, cascada + Neo4j: **39/39**, 35% de los turnos sin modelo y
+  latencia media del router 761 → 529 ms.
+- Límites: el umbral 0.7 se eligió mirando el test (val no sirve: el modelo acierta todo ahí) y
+  la precisión de las reglas se midió sobre frases sintéticas. En producción, las dos cosas se
+  vuelven a medir con conversaciones reales etiquetadas; `calibrate.py analyze` lo recalcula en
+  segundos a partir de `reports/router_scores.jsonl`.
 
 ### Entrenamiento
 
@@ -115,13 +164,15 @@ python -c "import torch; print(torch.__version__, torch.cuda.is_available())"   
 python finetune/generate_dataset.py --n 600 --seed 42
 python finetune/train_lora.py                  # o --qlora para 4 bits
 python finetune/eval_classifier.py             # escribe finetune/reports/router_eval.{json,md}
+python finetune/calibrate.py collect           # puntuaciones de reglas y LoRA sobre val y test (~4 min)
+python finetune/calibrate.py analyze           # calibración y cascada → reports/calibration.{json,md}
 
 # 3. Probar
 python finetune/infer.py "me cobraron Bs 350 dos veces en la tarjeta"
 python finetune/infer.py --no-adapter "..."    # mismo texto con el modelo base, para comparar
 
 # 4. Usarlo en el backend
-$env:ROUTER_BACKEND="lora"; uvicorn app.main:app --port 8000   # desde backend/
+$env:ROUTER_BACKEND="cascade"; uvicorn app.main:app --port 8000   # desde backend/ (o "lora": solo el modelo)
 ```
 
 ## Integración en el grafo
@@ -137,7 +188,6 @@ entrenamiento y la inferencia. En el nodo `router`:
 
 - Ampliar vocabulario coloquial con frases reales (anonimizadas) del canal, no solo plantillas
   (v2 lo hizo a mano para "plata"; en producción saldría del monitoreo de conversaciones).
-- Calibrar la confianza (temperature scaling sobre val) para que el umbral de aclaración funcione.
 - Bajar latencia: limitar la salida a las claves no nulas, exportar a ONNX/llama.cpp, o usar un
   clasificador de cabeza lineal sobre el encoder para la intención y dejar el LLM solo para entidades.
 - Comparar con Llama-3.2-3B + QLoRA (el script ya lo soporta con `--qlora --base-model ...`).

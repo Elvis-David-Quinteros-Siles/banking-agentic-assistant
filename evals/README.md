@@ -147,12 +147,19 @@ En las corridas finales, 3 de 39 turnos (7,7%) usan la respuesta del código por
 rechazó el texto del modelo: C05 y P03 (como antes) y M01 (el movimiento inventado). Es el
 comportamiento buscado: ante la duda, el dato sale de la base.
 
+### Quinto ciclo: cascada reglas → LoRA
+
+| # | Hallazgo | Corrección | Efecto |
+|---|---|---|---|
+| 18 | Se asumía que el LoRA estaba sobreconfiado y había que calibrarlo. Medido sobre el test del router (`finetune/calibrate.py`): la confianza **ya está calibrada** (ECE 0,024, separa errores con AUROC 0,97); la temperatura no aportaba. Lo que fallaba era el umbral: reglas y LoRA compartían 0,6 con escalas distintas | Umbral propio del LoRA (0,7) y **cascada**: las reglas resuelven solas las 3 intenciones en que no se equivocan (100% en train+val) y el resto va al LoRA; los reclamos, siempre al modelo | Test del router: 96,5% → **98,6%**, 0 errores respondidos. Evals: **39/39**, 35% de turnos sin modelo, router 761 → 529 ms |
+
 ## Cómo ejecutar
 
 ```powershell
 python evals/run_evals.py                                    # rules + BM25 + sin LLM (igual que el CI)
 python evals/run_evals.py --knowledge neo4j                  # Graph RAG (Neo4j levantado y cargado)
 python evals/run_evals.py --router lora --knowledge neo4j    # router fine-tuneado (GPU recomendada)
+python evals/run_evals.py --router cascade --knowledge neo4j # reglas para lo obvio + LoRA para el resto
 python evals/run_evals.py --router lora --knowledge neo4j --llm ollama --judge   # configuración completa con LLM real
 #   requiere: docker compose up -d ollama  +  docker exec bank-ollama ollama pull qwen2.5:3b
 python evals/run_evals.py --check                            # exit 1 si algún umbral no se cumple
@@ -170,5 +177,5 @@ Cada corrida usa bases SQLite temporales y borra de Neo4j las quejas que crea: n
   ese modo porque requiere GPU. Un modelo distinto (más grande o cloud) necesita su propia corrida.
 - El juez usa el mismo LLM que responde; en producción convendría un juez distinto, validado contra
   etiquetas humanas.
-- La confianza de LoRA sale ~0.99 casi siempre (sobreconfianza). El umbral de aclaración del router
-  aporta poco con LoRA hasta calibrarlo (p. ej. temperature scaling con datos reales).
+- El umbral de aclaración del LoRA (0,7) y las intenciones que resuelven las reglas se midieron
+  sobre frases sintéticas; con tráfico real se recalculan (`finetune/calibrate.py`).

@@ -38,6 +38,7 @@ export interface ChatResponse {
   answer: string;
   intent: string | null;
   intent_confidence: number | null;
+  router_stage?: "rules" | "lora" | "llm" | null;
   citations: string[];
   interrupt: InterruptInfo | null;
   guardrail: { blocked: boolean; reason: string | null; pii_found: string[] };

@@ -61,6 +61,7 @@ class ChatResponse(BaseModel):
     answer: str
     intent: str | None = None
     intent_confidence: float | None = None
+    router_stage: str | None = None  # rules | lora | llm: quién clasificó el turno
     citations: list[str] = []
     interrupt: InterruptInfo | None = None
     guardrail: GuardrailInfo = GuardrailInfo()

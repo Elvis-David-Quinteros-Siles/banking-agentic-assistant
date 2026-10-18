@@ -56,7 +56,7 @@ def _check_knowledge_store() -> str:
 
 def _check_lora() -> str:
     """Solo informa si el modelo ya está en memoria (no lo carga: /health debe ser instantáneo)."""
-    if get_settings().router_backend != "lora":
+    if get_settings().router_backend not in ("lora", "cascade"):
         return "disabled"
     from app.llm import lora_router
 
