@@ -49,11 +49,14 @@ las redacta el LLM; la columna del medio usa redacción determinista.
   aclaran) y un tercio de los turnos sin pasar por el modelo.
 - **Costo**: ~US$ 12 por 100 000 turnos con un LLM cloud económico; −29% con el router local. Ver
   [Cost & Latency](docs/COST_LATENCY.md).
-- **Los Evals encontraron 17 problemas reales**, todos corregidos (los de código, con test de regresión):
+- **Los Evals encontraron 21 problemas reales**, todos corregidos (los de código, con test de regresión):
   4 con redacción determinista (entre ellos un bug de fusión RRF) y 6 al pasar a un LLM real (un
   ReAct que pedía el número de cuenta, citas mal atribuidas, extractos parafraseados, el contexto
   interno filtrado al cliente, un movimiento bancario inventado...). Con LLM real: 28/31 → 31/31,
   y sobre los 39 casos: 38/39 → 39/39.
+- **Red teaming** con 208 ataques (técnicas de evasión, OWASP LLM Top 10) contra el LLM real:
+  **0 con daño**. Encontró un filtro que bloqueaba al 20% de los clientes legítimos y una respuesta
+  que decía "gratis" sobre algo que cuesta Bs 30. Ver [red teaming](docs/REDTEAM.md).
   Ver [ciclo de mejora](evals/README.md#ciclo-de-mejora-guiado-por-evals).
 
 ---
@@ -107,7 +110,8 @@ flowchart TD
 | HITL | El grafo se pausa; el estado sobrevive entre requests y reinicios; approve / edit / reject. **Back-office** (`#/operador`) con la cola ordenada por prioridad y espera; exige rol de operador | `backend/app/graph/nodes/hitl.py`, `backend/app/api/routes_operator.py` |
 | Acciones | Bloqueo de tarjeta con confirmación del cliente: pausa en `action_confirmation`, `/confirm` valida que quien confirma sea el dueño de la conversación; `usp_BlockCard` valida pertenencia, es idempotente y audita en una transacción | `backend/app/graph/nodes/card_action.py`, `backend/app/api/routes_confirm.py` |
 | Autenticación | **JWT**: la identidad sale del token, no del cuerpo. Roles `customer` (chat, `/confirm`) y `operator` (`/approve`, cola, KPIs); una conversación solo la continúa su dueño. Emisor de demo HS256 en `/auth/demo-token`; en producción, tokens RS256 del IdP del banco verificados contra su JWKS (OIDC). 11 tests de ataque: sin token, vencido, firma falsa, `alg: none`, suplantación por cuerpo, robo de conversación, rol equivocado | `backend/app/api/auth.py` |
-| Guardrails | PII (tarjeta con Luhn, CI boliviano, celular, email), injection, acceso ajeno, grounding de cifras | `backend/app/guardrails/` |
+| Guardrails | PII (tarjeta con Luhn, CI boliviano, celular, email), injection con des-ofuscación (invisibles, homoglifos, leetspeak, base64), acceso ajeno, grounding de cifras y de "es gratis" | `backend/app/guardrails/` |
+| Red teaming | 128 ataques en CI (OWASP LLM Top 10: injection, datos ajenos, agencia excesiva, prompt, desinformación) × 8 técnicas de evasión; mide **daño**, no bloqueos. Con LLM real: 0 ataques con daño, 0 falsos positivos | [docs/REDTEAM.md](docs/REDTEAM.md) |
 | LangChain | Generación RAG como cadena LCEL (`prompt | llm`); adaptador `BaseRetriever` que expone cualquier backend de conocimiento a cadenas y agentes de LangChain | `backend/app/rag/langchain_adapter.py` |
 | LlamaIndex | Cuarto backend de conocimiento: `VectorStoreIndex` + `BM25Retriever` + filtro por producto, fusionados con `QueryFusionRetriever`; comparado con Neo4j y pgvector en los Evals (39/39 con LoRA) | `backend/app/rag/llamaindex_retriever.py` |
 | CrewAI | Informe ejecutivo semanal de reclamos en batch: 3 agentes (analista, normativa con tool, redactor con salida estructurada) sobre Ollama; las cifras las inserta el código y 5 verificaciones marcan lo que el revisor debe corregir | [crew/](crew/README.md) |
@@ -134,7 +138,7 @@ El sistema empeora en redacción, no en exactitud ni seguridad.
 | Evals: precisión/recall, alucinación, KPIs | `evals/`: precision/recall por intención, grounding de cifras, LLM-as-judge opcional, umbrales en CI |
 | LLMs, prompt y context engineering | Prompts cortos por nodo, presupuesto de contexto (top-4, 6 mensajes), vecinos del grafo en el contexto |
 | Fine-tuning | LoRA/QLoRA, dataset sintético con split por plantilla, comparación con el modelo base |
-| Guardrails y HITL | Entrada y salida deterministas; HITL obligatorio en reclamos, con edición del operador |
+| Guardrails y HITL | Entrada y salida deterministas; HITL obligatorio en reclamos, con edición del operador · **red teaming** automatizado en CI ([docs/REDTEAM.md](docs/REDTEAM.md)) |
 | SQL (SQL Server on-premise) | **SQL Server 2022** en Docker: procedimientos almacenados que validan la pertenencia de cada cuenta y un login de aplicación con **mínimo privilegio** (sin `SELECT` sobre tablas). SQLite para desarrollo y CI, detrás del mismo repositorio |
 | Hybrid retrieval, vector DB (pgvector), multi-agente, ReAct | Recuperación híbrida en **Neo4j, pgvector y LlamaIndex** (HNSW + tsvector + RRF), comparadas con los Evals; router + 3 subagentes; ReAct propio |
 | LangChain y LlamaIndex (deseables) | LCEL y `BaseRetriever` en el agente de conocimiento; LlamaIndex como backend intercambiable (`KNOWLEDGE_BACKEND=llamaindex`), medido contra Neo4j y pgvector con los mismos Evals | [evals/](evals/README.md#neo4j-pgvector-y-llamaindex-mismos-embeddings-misma-abstención) |
@@ -285,7 +289,8 @@ Demo por consola: `python backend/scripts/chat_cli.py --stream "¿Cuál es mi sa
   `/approve` en un back-office separado con auditoría (quién aprobó qué y cuándo); cola de HITL con
   SLA y escalamiento. Refresh tokens y revocación.
 - NER (p. ej. Presidio) además de las regex de PII; PII fuera de los logs; política de retención.
-- Red teaming periódico con un set de ataques más amplio que los 5 casos actuales.
+- Red team externo y corpus de ataques de terceros (garak, promptfoo) además del propio; inyección
+  indirecta (instrucciones dentro de un documento recuperado).
 
 **Calidad y operación**
 - Evals sobre conversaciones reales anonimizadas y etiquetadas por humanos; los 39 casos sintéticos

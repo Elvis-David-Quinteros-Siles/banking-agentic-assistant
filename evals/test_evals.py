@@ -93,3 +93,22 @@ def test_judge_claims_not_in_the_answer_are_discarded():
     # Una afirmación que SÍ está en la respuesta se conserva
     real = {"faithful": False, "unsupported_claims": ["la reposición cuesta Bs 30"]}
     assert validate_verdict(real, answer)["faithful"] is False
+
+
+def test_judge_claims_literally_in_the_context_are_discarded():
+    from judge import validate_verdict
+
+    # Caso real (M02, quinto ciclo): el juez marcó como no respaldado un texto literal de POL-003
+    context = [
+        {
+            "id": "POL-003",
+            "title": "Límites",
+            "text": "El límite diario de retiro en cajeros automáticos es de Bs 3.000.",
+        }
+    ]
+    answer = "El límite diario de retiro en cajeros automáticos es de Bs 3.000."
+    verdict = {"faithful": False, "unsupported_claims": [answer]}
+    assert validate_verdict(verdict, answer, context)["faithful"] is True
+    # Una cifra cambiada NO se esconde: Bs 5.000 no está en el contexto
+    wrong = "El límite diario de retiro en cajeros automáticos es de Bs 5.000."
+    assert validate_verdict({"faithful": False, "unsupported_claims": [wrong]}, wrong, context)["faithful"] is False

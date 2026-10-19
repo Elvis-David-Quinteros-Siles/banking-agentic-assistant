@@ -63,9 +63,15 @@ jobs:
         run: pytest evals -q
       - name: Evals con LlamaIndex como backend de conocimiento
         run: python evals/run_evals.py --knowledge llamaindex --check
+      - name: Red teaming (128 ataques + set de reserva; falla si alguno causa daño o hay falsos positivos)
+        run: |
+          python evals/redteam/run_redteam.py --check --quiet
+          python evals/redteam/run_redteam.py --set holdout --check --quiet
       - name: Publicar reporte en el resumen del job
         if: always()
-        run: cat evals/reports/rules_keyword_fake.md >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          cat evals/reports/rules_keyword_fake.md >> "$GITHUB_STEP_SUMMARY"
+          cat evals/reports/redteam_rules_fake.md >> "$GITHUB_STEP_SUMMARY" || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:

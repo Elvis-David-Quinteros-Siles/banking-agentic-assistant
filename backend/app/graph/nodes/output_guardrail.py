@@ -1,7 +1,8 @@
 """Nodo output_guardrail: última verificación antes de responder al cliente.
 
 1. Grounding (solo knowledge_agent): si la respuesta trae cifras que no están en el
-   contexto o casi no se apoya en él, se reemplaza por una respuesta extractiva.
+   contexto, dice "gratis" sobre algo que el contexto cobra o casi no se apoya en él, se
+   reemplaza por una respuesta extractiva.
    En la Fase 6 se mide además con un LLM-judge (faithfulness) en los Evals.
 2. Enmascara números largos (cuentas/tarjetas) que pudieran filtrarse: solo últimos 4 dígitos.
 3. Si el cliente envió PII, se añade un aviso de seguridad.
@@ -32,9 +33,10 @@ def output_guardrail_node(state: AgentState) -> dict:
     if state.get("intent") == "conocimiento_producto" and state.get("retrieved_context"):
         result = check_grounding(answer, state["retrieved_context"])
         guardrail["grounding_support"] = result.support
-        if result.unsupported_numbers or result.support < MIN_LEXICAL_SUPPORT:
+        if result.unsupported_numbers or result.cost_contradictions or result.support < MIN_LEXICAL_SUPPORT:
             guardrail["grounding_fallback"] = True
             guardrail["unsupported_numbers"] = result.unsupported_numbers
+            guardrail["cost_contradictions"] = result.cost_contradictions
             answer = extractive_answer(state["retrieved_context"])
             update["citations"] = [d["id"] for d in state["retrieved_context"][:2]]
 

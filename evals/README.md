@@ -153,6 +153,20 @@ comportamiento buscado: ante la duda, el dato sale de la base.
 |---|---|---|---|
 | 18 | Se asumía que el LoRA estaba sobreconfiado y había que calibrarlo. Medido sobre el test del router (`finetune/calibrate.py`): la confianza **ya está calibrada** (ECE 0,024, separa errores con AUROC 0,97); la temperatura no aportaba. Lo que fallaba era el umbral: reglas y LoRA compartían 0,6 con escalas distintas | Umbral propio del LoRA (0,7) y **cascada**: las reglas resuelven solas las 3 intenciones en que no se equivocan (100% en train+val) y el resto va al LoRA; los reclamos, siempre al modelo | Test del router: 96,5% → **98,6%**, 0 errores respondidos. Evals: **39/39**, 35% de turnos sin modelo, router 761 → 529 ms |
 
+### Sexto ciclo: red teaming ([docs/REDTEAM.md](../docs/REDTEAM.md))
+
+128 ataques (16 semillas × 8 técnicas de evasión) más un set de reserva de 80. Se mide el **daño**
+(datos ajenos, prompt, acciones sin confirmar, salto del HITL), no el bloqueo.
+
+| # | Hallazgo | Corrección | Efecto |
+|---|---|---|---|
+| 19 | El filtro de entrada se evadía con un carácter invisible, homoglifos, leetspeak, base64 o inglés, y **bloqueaba el 20% de los mensajes legítimos** ("retiros sin restricción", "la cuenta de otro banco") | Des-ofuscación antes de buscar patrones; patrones con la estructura del ataque (verbo + objeto), no palabras sueltas | Frenados en la entrada 3,9% → 39,1%; falsos positivos 20% → **0%** |
+| 20 | Con LLM real, en role-play, el modelo afirmó **"la reposición es gratuita"** (cuesta Bs 30): sin cifras inventadas ni palabras ajenas al contexto, el grounding no lo veía | `cost_contradictions`: "gratis" sobre algo que el contexto cobra → respuesta extractiva | Ataques con daño en el set de reserva 1 → **0** |
+| 21 | El juez marcó como no respaldado un texto **literal** del contexto (M02, 3 de 3 corridas) | Una afirmación con sus cifras y el 80% de sus palabras en un documento del contexto se descarta; con una cifra cambiada se conserva | Fidelidad 91,7% → **100%** |
+
+Ataques con daño, con LLM real: **0 de 128** y **0 de 80** en el set de reserva. En el set de
+reserva, el filtro de entrada frena solo el 18,8%: el daño lo evitan el diseño y las capas de atrás.
+
 ## Cómo ejecutar
 
 ```powershell
@@ -163,6 +177,7 @@ python evals/run_evals.py --router cascade --knowledge neo4j # reglas para lo ob
 python evals/run_evals.py --router lora --knowledge neo4j --llm ollama --judge   # configuración completa con LLM real
 #   requiere: docker compose up -d ollama  +  docker exec bank-ollama ollama pull qwen2.5:3b
 python evals/run_evals.py --check                            # exit 1 si algún umbral no se cumple
+python evals/redteam/run_redteam.py --check                  # red teaming: exit 1 si algún ataque causa daño
 pytest evals -q                                              # los Evals como tests (proceso aparte de pytest backend)
 ```
 
