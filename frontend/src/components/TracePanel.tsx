@@ -1,6 +1,8 @@
-// Panel lateral: recorrido del grafo en vivo, métricas del último turno y salud del backend.
+// Panel lateral: qué pasó en el turno (en lenguaje simple), recorrido del grafo en vivo,
+// métricas del último turno y salud del backend.
 
 import type { ChatResponse, HealthResponse } from "../api/types";
+import { explainTurn, NODE_LABELS } from "../explain";
 import type { NodeProgress } from "../hooks/useChat";
 
 interface Props {
@@ -13,6 +15,20 @@ interface Props {
 export function TracePanel({ nodes, last, health, threadId }: Props) {
   return (
     <aside className="trace">
+      {last && (
+        <section>
+          <h3>Qué pasó en este turno</h3>
+          <ol className="explain">
+            {explainTurn(last).map((step, i) => (
+              <li key={i} className={`explain__step explain__step--${step.tone}`}>
+                <span className="explain__layer">{step.layer}</span>
+                <span>{step.text}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
       <section>
         <h3>Recorrido del grafo</h3>
         {nodes.length === 0 ? (
@@ -22,7 +38,10 @@ export function TracePanel({ nodes, last, health, threadId }: Props) {
             {nodes.map((n, i) => (
               <li key={`${n.node}-${i}`} className={`timeline__item timeline__item--${n.status}`}>
                 <span className="timeline__dot" />
-                <code>{n.node}</code>
+                <span className="timeline__name">
+                  <code>{n.node}</code>
+                  {NODE_LABELS[n.node] && <small className="muted">{NODE_LABELS[n.node]}</small>}
+                </span>
                 <span className="muted">{n.status === "running" ? "…" : `${n.latency_ms ?? 0} ms`}</span>
               </li>
             ))}

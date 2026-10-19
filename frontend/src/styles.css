@@ -92,6 +92,23 @@ h1, h2, h3 { margin: 0; line-height: 1.25; }
   padding: 6px 12px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 13px;
 }
 .chip:hover { border-color: var(--primary); }
+.chip:disabled { opacity: 0.5; cursor: default; border-color: var(--border); }
+
+/* Ejemplos agrupados: en la pantalla vacía y, plegados, sobre el compositor */
+.empty { max-width: 760px; }
+.demo-note {
+  margin: 12px auto 0; max-width: 620px; font-size: 13px; padding: 8px 12px; border-radius: 10px;
+  background: var(--cite-bg); color: var(--cite-text);
+}
+.example-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-top: 16px; text-align: left; }
+.example-group { border: 1px solid var(--border); border-radius: 10px; padding: 12px; background: var(--surface); }
+.example-group h3 { font-size: 14px; }
+.example-group p { margin: 2px 0 0; font-size: 12.5px; }
+.example-group .examples { justify-content: flex-start; margin-top: 10px; }
+.example-group .chip { text-align: left; }
+.more-examples { border-top: 1px solid var(--border); padding: 8px 12px 0; }
+.more-examples summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+.more-examples .example-groups { margin: 8px 0 4px; max-height: 40vh; overflow-y: auto; }
 
 .bubble { max-width: min(78%, 640px); padding: 10px 14px; border-radius: 14px; }
 .bubble--user { align-self: flex-end; background: var(--user-bubble); color: var(--user-text); border-bottom-right-radius: 4px; }
@@ -160,6 +177,15 @@ input:focus, select:focus { outline: 2px solid var(--primary); outline-offset: -
 .timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .timeline__item { display: grid; grid-template-columns: 12px 1fr auto; gap: 8px; align-items: center; font-size: 13px; }
 .timeline__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+.timeline__name { display: flex; flex-direction: column; min-width: 0; }
+.timeline__name small { font-size: 11.5px; line-height: 1.3; }
+
+/* Explicación del turno en lenguaje simple */
+.explain { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.explain__step { display: grid; grid-template-columns: 64px 1fr; gap: 8px; font-size: 13px; padding-left: 8px; border-left: 3px solid var(--ok); }
+.explain__step--warn { border-left-color: var(--warn-text); }
+.explain__step--info { border-left-color: var(--cite-text); }
+.explain__layer { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); padding-top: 1px; }
 .timeline__item--running .timeline__dot { background: var(--cite-text); animation: blink 0.8s steps(2) infinite; }
 .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; font-size: 13px; }
 .kv dt { color: var(--muted); }

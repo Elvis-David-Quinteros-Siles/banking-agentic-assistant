@@ -18,7 +18,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.api import auth, routes_chat, routes_confirm, routes_health, routes_hitl, routes_operator
 from app.api.rate_limit import RateLimitMiddleware, SlidingWindowLimiter
 from app.config import get_settings
-from app.db.sqlite import init_db
+from app.db.sqlite import init_db, restore_seed_cards
 from app.graph.builder import build_graph
 from app.services.chat_service import ThreadError
 from app.tools.knowledge_base import get_retriever
@@ -26,6 +26,18 @@ from app.tools.knowledge_base import get_retriever
 settings = get_settings()
 logging.basicConfig(level=settings.log_level)
 logger = logging.getLogger(settings.app_name)
+
+
+async def restore_cards_periodically(minutes: int) -> None:
+    """Demo pública: el bloqueo de tarjeta se puede probar una y otra vez."""
+    while True:
+        await asyncio.sleep(minutes * 60)
+        try:
+            changed = restore_seed_cards(settings.sqlite_path, settings.seed_dir / "customers.json")
+            if changed:
+                logger.info("Demo: %d tarjeta(s) devueltas al estado inicial", changed)
+        except Exception as error:  # noqa: BLE001
+            logger.warning("Demo: no se pudieron restaurar las tarjetas: %s", error)
 
 
 @asynccontextmanager
@@ -65,6 +77,8 @@ async def lifespan(app: FastAPI):
             from app.analytics.demo_seed import seed_demo_traffic
 
             app.state.seed_task = asyncio.create_task(seed_demo_traffic(app.state.graph))
+        if settings.demo_reset_minutes > 0 and settings.core_backend == "sqlite":
+            app.state.reset_task = asyncio.create_task(restore_cards_periodically(settings.demo_reset_minutes))
         logger.info(
             "Grafo compilado (llm=%s, router=%s, knowledge=%s, core=%s)",
             settings.llm_provider,

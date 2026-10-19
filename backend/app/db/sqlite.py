@@ -88,16 +88,17 @@ def connect(db_path: Path):
 
 
 def init_db(db_path: Path, seed_file: Path, reset: bool = False) -> None:
-    """Crea el esquema y carga los datos semilla si la base está vacía (o si reset=True)."""
+    """Crea el esquema y carga los datos semilla en cada tabla vacía (o en todas si reset=True).
+
+    Por tabla, no por base: una base creada antes de que existiera una tabla (cards llegó en la
+    Fase 6) recibe sus datos en el siguiente arranque en lugar de quedar vacía para siempre.
+    """
     db_path.parent.mkdir(parents=True, exist_ok=True)
     if reset and db_path.exists():
         db_path.unlink()
 
     with connect(db_path) as conn:
         conn.executescript(SCHEMA)
-        if conn.execute("SELECT COUNT(*) FROM customers").fetchone()[0] > 0:
-            return
-
         seed = json.loads(seed_file.read_text(encoding="utf-8"))
         for table, rows in (
             ("customers", seed["customers"]),
@@ -105,7 +106,7 @@ def init_db(db_path: Path, seed_file: Path, reset: bool = False) -> None:
             ("transactions", seed["transactions"]),
             ("cards", seed.get("cards", [])),
         ):
-            if not rows:
+            if not rows or conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] > 0:
                 continue
             columns = list(rows[0].keys())
             placeholders = ", ".join("?" for _ in columns)
@@ -113,6 +114,22 @@ def init_db(db_path: Path, seed_file: Path, reset: bool = False) -> None:
                 f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({placeholders})",
                 [tuple(row[c] for c in columns) for row in rows],
             )
+
+
+def restore_seed_cards(db_path: Path, seed_file: Path) -> int:
+    """Devuelve cada tarjeta al estado de la semilla. Solo para la demo pública: si un visitante
+    bloquea la tarjeta de CLI-001, el siguiente vuelve a encontrarla activa. La auditoría
+    (card_actions) no se toca. Devuelve cuántas tarjetas cambiaron."""
+    seed = json.loads(seed_file.read_text(encoding="utf-8"))
+    with connect(db_path) as conn:
+        changed = 0
+        for card in seed.get("cards", []):
+            cursor = conn.execute(
+                "UPDATE cards SET status = ? WHERE card_id = ? AND status <> ?",
+                (card["status"], card["card_id"], card["status"]),
+            )
+            changed += cursor.rowcount
+        return changed
 
 
 class SQLiteRepository:

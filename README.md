@@ -162,6 +162,9 @@ Requisitos: Python 3.11+, Node 20+. Opcional: Docker (Neo4j), GPU NVIDIA (router
 
 **Demo pública**: el `Dockerfile` de la raíz empaqueta frontend + API en modo liviano (~220 MB, sin GPU
 ni servicios externos) para publicarla gratis en Render o Hugging Face Spaces: ver [docs/DEPLOY.md](docs/DEPLOY.md).
+Trae ejemplos agrupados (consultas, acciones con control humano, ataques) y un panel que explica cada
+turno capa por capa; cada 15 minutos las tarjetas vuelven a su estado inicial (`DEMO_RESET_MINUTES`)
+para que el bloqueo se pueda probar siempre, sin borrar la auditoría.
 
 Los pasos manuales equivalentes son los siguientes.
 

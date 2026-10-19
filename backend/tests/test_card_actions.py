@@ -79,3 +79,34 @@ def test_action_confirmations_do_not_enter_operator_queue(client):
     queue = client.get("/operator/queue").json()["items"]
     assert body["thread_id"] not in [i["thread_id"] for i in queue]
     client.post(f"/confirm/{body['thread_id']}", json={"customer_id": "CLI-002", "confirm": False})
+
+
+def test_demo_reset_restores_seed_cards_and_keeps_audit(tmp_path, settings):
+    from app.db.sqlite import init_db, restore_seed_cards
+
+    db = tmp_path / "bank.db"
+    seed_file = settings.seed_dir / "customers.json"
+    init_db(db, seed_file)
+    with sqlite3.connect(db) as conn:
+        conn.execute("UPDATE cards SET status = 'bloqueada' WHERE last4 = '4821'")
+        conn.execute(
+            "INSERT INTO card_actions (card_id, customer_id, action, reason, thread_id, created_at) "
+            "SELECT card_id, customer_id, 'bloqueo', 'robo', 't-1', '2026-10-19' FROM cards WHERE last4 = '4821'"
+        )
+    assert restore_seed_cards(db, seed_file) == 1
+    assert card_status(db, "4821") == "activa"
+    assert restore_seed_cards(db, seed_file) == 0  # ya está en el estado de la semilla
+    with sqlite3.connect(db) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM card_actions").fetchone()[0] == 1  # la auditoría queda
+
+
+def test_init_db_seeds_a_table_added_after_the_database_was_created(tmp_path, settings):
+    from app.db.sqlite import init_db
+
+    db = tmp_path / "bank.db"
+    seed_file = settings.seed_dir / "customers.json"
+    init_db(db, seed_file)
+    with sqlite3.connect(db) as conn:
+        conn.execute("DELETE FROM cards")  # como una base creada antes de la Fase 6
+    init_db(db, seed_file)
+    assert card_status(db, "4821") == "activa"

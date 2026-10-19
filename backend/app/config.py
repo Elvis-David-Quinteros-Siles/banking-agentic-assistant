@@ -95,6 +95,8 @@ class Settings(BaseSettings):
     operator_token: str | None = None
     # Demo pública: al arrancar con analítica vacía, genera tráfico de ejemplo para el dashboard
     demo_seed_traffic: bool = False
+    # Demo pública: cada N minutos las tarjetas vuelven al estado de la semilla (0 = nunca)
+    demo_reset_minutes: int = 0
     # Servidor MCP: cliente de la sesión. MCP_CUSTOMER_ID solo con AUTH_MODE=off (desarrollo)
     mcp_customer_id: str = "CLI-001"
     mcp_access_token: str | None = None  # con AUTH_MODE=jwt: token del cliente (demo-token o IdP)
